@@ -12,8 +12,22 @@ end
 
 VEGAS(;nbins = 100,ncalls = 1000) = VEGAS(nbins,ncalls)
 
+abstract type AbstractCubaAlgorithm <: DiffEqBase.AbstractQuadratureAlgorithm end
+struct CubaVegas <:AbstractCubaAlgorithm end
+struct CubaSUAVE <: AbstractCubaAlgorithm end
+struct CubaDivonne <: AbstractCubaAlgorithm end
+struct CubaCuhre <: AbstractCubaAlgorithm end
 
-function DiffEqBase.solve(prob::QuadratureProblem,::Nothing;
+abstract type AbstractCubatureJLAlgorithm <: DiffEqBase.AbstractQuadratureAlgorithm end
+struct CubatureJLh <: AbstractCubatureJLAlgorithm end
+struct CubatureJLp <: AbstractCubatureJLAlgorithm end
+
+function scale_x!(_x,ub,lb,x)
+    _x .= (ub .- lb) .* x .+ lb
+    _x
+end
+
+function DiffEqBase.solve(prob::QuadratureProblem,::Nothing,args...;
                           reltol = 1e-8, abstol = 1e-8, kwargs...)
     if prob.lb isa Number
         solve(prob,QuadGKJL();reltol=reltol,abstol=abstol,kwargs...)
@@ -24,7 +38,7 @@ function DiffEqBase.solve(prob::QuadratureProblem,::Nothing;
     end
 end
 
-function DiffEqBase.solve(prob::QuadratureProblem,::QuadGKJL;
+function DiffEqBase.solve(prob::QuadratureProblem,::QuadGKJL,args...;
                           reltol = 1e-8, abstol = 1e-8,
                           maxiters = typemax(Int),
                           kwargs...)
@@ -33,17 +47,19 @@ function DiffEqBase.solve(prob::QuadratureProblem,::QuadGKJL;
     end
     @assert !prob.batch
     @assert prob.nout == 1
+    p = prob.p
     f = x -> prob.f(x,p)
-    val,err = QuadGK.quadgk(f, prob.lb, prob.ub,
-                            rtol=reltol, atol=abstol,
-                            kwargs...)
-    build_solution(prob,QuadGKJL(),val,err,retcode = :Success)
+    val,err = quadgk(f, prob.lb, prob.ub,
+                     rtol=reltol, atol=abstol,
+                     kwargs...)
+    DiffEqBase.build_solution(prob,QuadGKJL(),val,err,retcode = :Success)
 end
 
-function DiffEqBase.solve(prob::QuadratureProblem,::HCubatureJL;
+function DiffEqBase.solve(prob::QuadratureProblem,::HCubatureJL,args...;
                           reltol = 1e-8, abstol = 1e-8,
                           maxiters = typemax(Int),
                           kwargs...)
+    p = prob.p
     if isinplace(prob)
         dx = similar(a)
         f = (x) -> (prob.f(dx,x,p); dx)
@@ -52,16 +68,23 @@ function DiffEqBase.solve(prob::QuadratureProblem,::HCubatureJL;
     end
     @assert !prob.batch
     @assert prob.nout == 1
-    val,err = hcubature(f, prob.lb, prob.ub;
-                        rtol=reltol, atol=abstol,
-                        maxevals=maxiters, initdiv=1)
-    build_solution(prob,HCubatureJL(),val,err,retcode = :Success)
+    if prob.lb isa Number
+        val,err = hquadrature(f, prob.lb, prob.ub;
+                            rtol=reltol, atol=abstol,
+                            maxevals=maxiters, initdiv=1)
+    else
+        val,err = hcubature(f, prob.lb, prob.ub;
+                            rtol=reltol, atol=abstol,
+                            maxevals=maxiters, initdiv=1)
+    end
+    DiffEqBase.build_solution(prob,HCubatureJL(),val,err,retcode = :Success)
 end
 
-function DiffEqBase.solve(prob::QuadratureProblem,alg::VEGAS;
+function DiffEqBase.solve(prob::QuadratureProblem,alg::VEGAS,args...;
                           reltol = 1e-8, abstol = 1e-8,
                           maxiters = typemax(Int),
                           kwargs...)
+    p = prob.p
     @assert prob.nout == 1
     if !prob.batch
         if isinplace(prob)
@@ -81,15 +104,12 @@ function DiffEqBase.solve(prob::QuadratureProblem,alg::VEGAS;
     val,err,chi = vegas(f, prob.lb, prob.ub, rtol=reltol, atol=abstol,
                         maxiter = maxiters, nbins = alg.nbins,
                         ncalls = alg.ncalls, kwargs...)
-    build_solution(prob,alg,val,err,chi=chi,retcode = :Success)
+    DiffEqBase.build_solution(prob,alg,val,err,chi=chi,retcode = :Success)
 end
 
 @require Cubature="667455a9-e2ce-5579-9412-b964f529a492" begin
-    abstract type AbstractCubatureJLAlgorithm <: DiffEqBase.AbstractQuadratureAlgorithm end
-    struct CubatureJLh <: AbstractCubatureJLAlgorithm end
-    struct CubatureJLp <: AbstractCubatureJLAlgorithm end
-
-    function DiffEqBase.solve(prob::QuadratureProblem,alg::AbstractCubatureJLAlgorithm;
+    function DiffEqBase.solve(prob::QuadratureProblem,
+                              alg::AbstractCubatureJLAlgorithm, args...;
                               reltol = 1e-8, abstol = 1e-8,
                               maxiters = typemax(Int),
                               kwargs...)
@@ -98,9 +118,9 @@ end
             if !prob.batch
                 if isinplace(prob)
                     dx = similar(a)
-                    f = (x) -> (prob.f(dx,x,p); dx)
+                    f = (x) -> (prob.f(dx,x,prob.p); dx)
                 else
-                    f = (x) -> prob.f(x,p)
+                    f = (x) -> prob.f(x,prob.p)
                 end
                 if prob.lb isa Number
                     if alg isa CubatureJLh
@@ -125,9 +145,9 @@ end
                  end
             else
                 if isinplace(prob)
-                    f = (x,dx) -> prob.f(dx,x,p)
+                    f = (x,dx) -> prob.f(dx,x,prob.p)
                 else
-                    f = (x,dx) -> (dx .= prob.f(x,p))
+                    f = (x,dx) -> (dx .= prob.f(x,prob.p))
                 end
                 if prob.lb isa Number
                     if alg isa CubatureJLh
@@ -209,47 +229,40 @@ end
                   end
               end
           end
-          build_solution(prob,alg,val,err,retcode = :Success)
+          DiffEqBase.build_solution(prob,alg,val,err,retcode = :Success)
     end
-    export CubatureJLh, CubatureJLp
 end
 
-
 @require Cuba="8a292aeb-7a57-582c-b821-06e4c11590b1" begin
-    abstract type AbstractCubaAlgorithm <: DiffEqBase.AbstractQuadratureAlgorithm end
-    struct CubaVegas <:AbstractCubaAlgorithm end
-    struct CubaSUAVE <: AbstractCubaAlgorithm end
-    struct CubaDivonne <: AbstractCubaAlgorithm end
-    struct CubaCuhre <: AbstractCubaAlgorithm end
-
-    function scale_x!(_x,ub,lb,x)
-        _x .= (ub .- lb).*x .+ lb
-        _x
-    end
-
-    function DiffEqBase.solve(prob::QuadratureProblem,alg::AbstractCubaAlgorithm;
+    function DiffEqBase.solve(prob::QuadratureProblem,alg::AbstractCubaAlgorithm,
+                              args...;
                               reltol = 1e-8, abstol = 1e-8,
                               maxiters = typemax(Int),
                               kwargs...)
-      _x = similar(x)
+      p = prob.p
+      if prob.lb isa Number
+          _x = Float64[prob.lb]
+      else
+          _x = similar(prob.lb)
+      end
       ub = prob.ub
       lb = prob.lb
 
       if isinplace(prob)
-          f = (x,dx) -> prob.f(dx,scale_x!(_x,ub,lb,x),p)
+          f = (x,dx) -> (prob.f(dx,scale_x!(_x,ub,lb,x),p); dx .*= prod((x)->x[1]-x[2],zip(ub,lb)))
       else
-          f = (x,dx) -> (dx .= prob.f(scale_x!(_x,ub,lb,x),p))
+          f = (x,dx) -> (dx .= prob.f(scale_x!(_x,ub,lb,x),p) .* prod((x)->x[1]-x[2],zip(ub,lb)))
       end
       ndim = length(prob.lb)
 
       if alg isa CubaVegas
-          out = vegas(f, ndim, prob.nout; rtol = reltol, atol = abstol, kwargs...)
+          out = Cuba.vegas(f, ndim, prob.nout; rtol = reltol, atol = abstol, kwargs...)
       elseif alg isa CubaSUAVE
-          out = suave(f, ndim, prob.nout; rtol = reltol, atol = abstol, kwargs...)
+          out = Cuba.suave(f, ndim, prob.nout; rtol = reltol, atol = abstol, kwargs...)
       elseif alg isa CubaDivonne
-          out = divonne(f, ndim, prob.nout; rtol = reltol, atol = abstol, kwargs...)
+          out = Cuba.divonne(f, ndim, prob.nout; rtol = reltol, atol = abstol, kwargs...)
       elseif alg isa CubaCuhre
-          out = cuhre(f, ndim, prob.nout; rtol = reltol, atol = abstol, kwargs...)
+          out = Cuba.cuhre(f, ndim, prob.nout; rtol = reltol, atol = abstol, kwargs...)
       end
 
       if prob.nout == 1
@@ -258,13 +271,12 @@ end
           val = out.integral
       end
 
-      build_solution(prob,alg,val,out.error,
-                     chi=out.probl,retcode = :Success)
+      DiffEqBase.build_solution(prob,alg,val,out.error,
+                     chi=out.probability,retcode = :Success)
     end
-
-    export CubaVegas, CubaSUAVE, CubaDivonne, CubaCuhre
 end
 
 export QuadGKJL, HCubatureJL, VEGAS
-
+export CubatureJLh, CubatureJLp
+export CubaVegas, CubaSUAVE, CubaDivonne, CubaCuhre
 end # module
