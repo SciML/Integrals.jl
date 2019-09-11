@@ -61,8 +61,8 @@ function DiffEqBase.solve(prob::QuadratureProblem,::HCubatureJL,args...;
                           kwargs...)
     p = prob.p
     if isinplace(prob)
-        dx = similar(a)
-        f = (x) -> (prob.f(dx,x,p); dx)
+        dx = zeros(1)
+        f = (x) -> (prob.f(dx,x,p); dx[1])
     else
         f = (x) -> prob.f(x,p)
     end
@@ -88,14 +88,14 @@ function DiffEqBase.solve(prob::QuadratureProblem,alg::VEGAS,args...;
     @assert prob.nout == 1
     if prob.batch == 0
         if isinplace(prob)
-          dx = similar(a)
-          f = (x) -> (prob.f(dx,x,p); dx)
+          dx = zeros(1)
+          f = (x) -> (prob.f(dx,x,p); dx[1])
         else
           f = (x) -> prob.f(x,p)
         end
     else
         if isinplace(prob)
-          dx = similar(a)
+          dx = zeros(prob.batch)
           f = (x) -> (prob.f(dx,x',p); dx)
         else
           f = (x) -> prob.f(x',p)
@@ -118,8 +118,8 @@ function __init__()
             if nout == 1
                 if prob.batch == 0
                     if isinplace(prob)
-                        dx = similar(a)
-                        f = (x) -> (prob.f(dx,x,prob.p); dx)
+                        dx = zeros(1)
+                        f = (x) -> (prob.f(dx,x,prob.p); dx[1])
                     else
                         f = (x) -> prob.f(x,prob.p)
                     end
@@ -241,25 +241,52 @@ function __init__()
                                   maxiters = typemax(Int),
                                   kwargs...)
           p = prob.p
-          if prob.lb isa Number
+          if prob.lb isa Number && prob.batch == 0
               _x = Float64[prob.lb]
+          elseif prob.lb isa Number
+              _x = zeros(prob.batch)
+          elseif prob.batch == 0
+              _x = zeros(length(prob.lb))
           else
-              _x = similar(prob.lb)
+              _x = zeros(length(prob.lb),prob.batch)
           end
           ub = prob.ub
           lb = prob.lb
 
           if prob.batch == 0
               if isinplace(prob)
-                  f = (x,dx) -> (prob.f(dx,scale_x!(_x,ub,lb,x),p); dx .*= prod((x)->x[1]-x[2],zip(ub,lb)))
+                  f = function (x,dx)
+                      prob.f(dx,scale_x!(_x,ub,lb,x),p)
+                      dx .*= prod((y)->y[1]-y[2],zip(ub,lb))
+                  end
               else
-                  f = (x,dx) -> (dx .= prob.f(scale_x!(_x,ub,lb,x),p) .* prod((x)->x[1]-x[2],zip(ub,lb)))
+                  f = function (x,dx)
+                      dx .= prob.f(scale_x!(_x,ub,lb,x),p) .* prod((y)->y[1]-y[2],zip(ub,lb))
+                  end
               end
           else
-              if isinplace(prob)
-                  f = (x,dx) -> (prob.f(dx,scale_x!(_x,ub,lb,x)',p); dx .*= prod((x)->x[1]-x[2],zip(ub,lb)))
+              if prob.lb isa Number
+                  if isinplace(prob)
+                      f = function (x,dx)
+                          prob.f(dx',scale_x!(view(_x,1:length(x)),ub,lb,x),p)
+                          dx .*= prod((y)->y[1]-y[2],zip(ub,lb))
+                      end
+                  else
+                      f = function (x,dx)
+                          dx .= prob.f(scale_x!(view(_x,1:length(x))',ub,lb,x),p)' .* prod((y)->y[1]-y[2],zip(ub,lb))
+                      end
+                  end
               else
-                  f = (x,dx) -> (dx .= prob.f(scale_x!(_x,ub,lb,x)',p) .* prod((x)->x[1]-x[2],zip(ub,lb)))
+                  if isinplace(prob)
+                      f = function (x,dx)
+                          prob.f(dx',scale_x!(view(_x,1:size(x,1),1:size(x,2)),ub,lb,x),p)
+                          dx .*= prod((y)->y[1]-y[2],zip(ub,lb))
+                      end
+                  else
+                      f = function (x,dx)
+                          dx .= prob.f(scale_x!(view(_x,1:size(x,1),1:size(x,2)),ub,lb,x),p)' .* prod((y)->y[1]-y[2],zip(ub,lb))
+                      end
+                  end
               end
           end
 
