@@ -14,6 +14,7 @@ Requires = "ae029012-a4dd-5104-9daa-d747884805df"
 
 [compat]
 julia = "1"
+DiffEqBase = "6.1"
 
 [extras]
 Cuba = "8a292aeb-7a57-582c-b821-06e4c11590b1"
