@@ -45,7 +45,7 @@ function DiffEqBase.solve(prob::QuadratureProblem,::QuadGKJL,args...;
     if isinplace(prob) || prob.lb isa AbstractArray || prob.ub isa AbstractArray
         error("QuadGKJL only accepts one-dimensional quadrature problems.")
     end
-    @assert !prob.batch
+    @assert prob.batch == 0
     @assert prob.nout == 1
     p = prob.p
     f = x -> prob.f(x,p)
@@ -66,7 +66,7 @@ function DiffEqBase.solve(prob::QuadratureProblem,::HCubatureJL,args...;
     else
         f = (x) -> prob.f(x,p)
     end
-    @assert !prob.batch
+    @assert prob.batch == 0
     @assert prob.nout == 1
     if prob.lb isa Number
         val,err = hquadrature(f, prob.lb, prob.ub;
@@ -86,7 +86,7 @@ function DiffEqBase.solve(prob::QuadratureProblem,alg::VEGAS,args...;
                           kwargs...)
     p = prob.p
     @assert prob.nout == 1
-    if !prob.batch
+    if prob.batch == 0
         if isinplace(prob)
           dx = similar(a)
           f = (x) -> (prob.f(dx,x,p); dx)
@@ -103,176 +103,189 @@ function DiffEqBase.solve(prob::QuadratureProblem,alg::VEGAS,args...;
     end
     val,err,chi = vegas(f, prob.lb, prob.ub, rtol=reltol, atol=abstol,
                         maxiter = maxiters, nbins = alg.nbins,
-                        ncalls = alg.ncalls, kwargs...)
+                        ncalls = alg.ncalls, batch=prob.batch != 0, kwargs...)
     DiffEqBase.build_solution(prob,alg,val,err,chi=chi,retcode = :Success)
 end
 
-@require Cubature="667455a9-e2ce-5579-9412-b964f529a492" begin
-    function DiffEqBase.solve(prob::QuadratureProblem,
-                              alg::AbstractCubatureJLAlgorithm, args...;
-                              reltol = 1e-8, abstol = 1e-8,
-                              maxiters = typemax(Int),
-                              kwargs...)
-        nout = prob.nout
-        if nout == 1
-            if !prob.batch
-                if isinplace(prob)
-                    dx = similar(a)
-                    f = (x) -> (prob.f(dx,x,prob.p); dx)
-                else
-                    f = (x) -> prob.f(x,prob.p)
-                end
-                if prob.lb isa Number
-                    if alg isa CubatureJLh
-                        val,err = Cubature.hquadrature(f, prob.lb, prob.ub;
-                                                       reltol=reltol, abstol=abstol,
-                                                       maxevals=maxiters)
+function __init__()
+    @require Cubature="667455a9-e2ce-5579-9412-b964f529a492" begin
+        function DiffEqBase.solve(prob::QuadratureProblem,
+                                  alg::AbstractCubatureJLAlgorithm, args...;
+                                  reltol = 1e-8, abstol = 1e-8,
+                                  maxiters = typemax(Int),
+                                  kwargs...)
+            nout = prob.nout
+            if nout == 1
+                if prob.batch == 0
+                    if isinplace(prob)
+                        dx = similar(a)
+                        f = (x) -> (prob.f(dx,x,prob.p); dx)
                     else
-                        val,err = Cubature.pquadrature(f, prob.lb, prob.ub;
-                                                       reltol=reltol, abstol=abstol,
-                                                       maxevals=maxiters)
+                        f = (x) -> prob.f(x,prob.p)
                     end
-                else
-                    if alg isa CubatureJLh
-                        val,err = Cubature.hcubature(f, prob.lb, prob.ub;
-                                                     reltol=reltol, abstol=abstol,
-                                                     maxevals=maxiters)
+                    if prob.lb isa Number
+                        if alg isa CubatureJLh
+                            val,err = Cubature.hquadrature(f, prob.lb, prob.ub;
+                                                           reltol=reltol, abstol=abstol,
+                                                           maxevals=maxiters)
+                        else
+                            val,err = Cubature.pquadrature(f, prob.lb, prob.ub;
+                                                           reltol=reltol, abstol=abstol,
+                                                           maxevals=maxiters)
+                        end
                     else
-                        val,err = Cubature.pcubature(f, prob.lb, prob.ub;
-                                                     reltol=reltol, abstol=abstol,
-                                                     maxevals=maxiters)
-                    end
-                 end
-            else
-                if isinplace(prob)
-                    f = (x,dx) -> prob.f(dx,x,prob.p)
-                else
-                    f = (x,dx) -> (dx .= prob.f(x,prob.p))
-                end
-                if prob.lb isa Number
-                    if alg isa CubatureJLh
-                        val,err = Cubature.hquadrature_v(f, prob.lb, prob.ub;
+                        if alg isa CubatureJLh
+                            val,err = Cubature.hcubature(f, prob.lb, prob.ub;
                                                          reltol=reltol, abstol=abstol,
                                                          maxevals=maxiters)
-                    else
-                        val,err = Cubature.pquadrature_v(f, prob.lb, prob.ub;
+                        else
+                            val,err = Cubature.pcubature(f, prob.lb, prob.ub;
                                                          reltol=reltol, abstol=abstol,
                                                          maxevals=maxiters)
-                    end
+                        end
+                     end
                 else
-                    if alg isa CubatureJLh
-                        val,err = Cubature.hcubature_v(f, prob.lb, prob.ub;
-                                                       reltol=reltol, abstol=abstol,
-                                                       maxevals=maxiters)
+                    if isinplace(prob)
+                        f = (x,dx) -> prob.f(dx,x,prob.p)
                     else
-                        val,err = Cubature.pcubature_v(f, prob.lb, prob.ub;
-                                                       reltol=reltol, abstol=abstol,
-                                                       maxevals=maxiters)
+                        f = (x,dx) -> (dx .= prob.f(x,prob.p))
                     end
-                 end
-             end
-         else
-             if !prob.batch
-                 if isinplace(prob)
-                     dx = similar(a)
-                     f = (x,dx) -> (prob.f(dx,x,p); dx)
-                 else
-                     f = (x,dx) -> (dx .= prob.f(x,p))
-                 end
-                 if prob.lb isa Number
-                     if alg isa CubatureJLh
-                         val,err = Cubature.hquadrature(nout, f, prob.lb, prob.ub;
-                                                        reltol=reltol, abstol=abstol,
-                                                        maxevals=maxiters)
-                     else
-                         val,err = Cubature.pquadrature(nout, f, prob.lb, prob.ub;
-                                                        reltol=reltol, abstol=abstol,
-                                                        maxevals=maxiters)
+                    if prob.lb isa Number
+                        if alg isa CubatureJLh
+                            val,err = Cubature.hquadrature_v(f, prob.lb, prob.ub;
+                                                             reltol=reltol, abstol=abstol,
+                                                             maxevals=maxiters)
+                        else
+                            val,err = Cubature.pquadrature_v(f, prob.lb, prob.ub;
+                                                             reltol=reltol, abstol=abstol,
+                                                             maxevals=maxiters)
+                        end
+                    else
+                        if alg isa CubatureJLh
+                            val,err = Cubature.hcubature_v(f, prob.lb, prob.ub;
+                                                           reltol=reltol, abstol=abstol,
+                                                           maxevals=maxiters)
+                        else
+                            val,err = Cubature.pcubature_v(f, prob.lb, prob.ub;
+                                                           reltol=reltol, abstol=abstol,
+                                                           maxevals=maxiters)
+                        end
                      end
-                 else
-                     if alg isa CubatureJLh
-                         val,err = Cubature.hcubature(nout, f, prob.lb, prob.ub;
-                                                      reltol=reltol, abstol=abstol,
-                                                      maxevals=maxiters)
-                     else
-                         val,err = Cubature.pcubature(nout, f, prob.lb, prob.ub;
-                                                      reltol=reltol, abstol=abstol,
-                                                      maxevals=maxiters)
-                     end
-                  end
+                 end
              else
-                 if isinplace(prob)
-                     f = (x,dx) -> prob.f(dx,x,p)
-                 else
-                     f = (x,dx) -> (dx .= prob.f(x,p))
-                 end
-                 if prob.lb isa Number
-                     if alg isa CubatureJLh
-                         val,err = Cubature.hquadrature_v(nout, f, prob.lb, prob.ub;
+                 if prob.batch == 0
+                     if isinplace(prob)
+                         dx = similar(a)
+                         f = (x,dx) -> (prob.f(dx,x,p); dx)
+                     else
+                         f = (x,dx) -> (dx .= prob.f(x,p))
+                     end
+                     if prob.lb isa Number
+                         if alg isa CubatureJLh
+                             val,err = Cubature.hquadrature(nout, f, prob.lb, prob.ub;
+                                                            reltol=reltol, abstol=abstol,
+                                                            maxevals=maxiters)
+                         else
+                             val,err = Cubature.pquadrature(nout, f, prob.lb, prob.ub;
+                                                            reltol=reltol, abstol=abstol,
+                                                            maxevals=maxiters)
+                         end
+                     else
+                         if alg isa CubatureJLh
+                             val,err = Cubature.hcubature(nout, f, prob.lb, prob.ub;
                                                           reltol=reltol, abstol=abstol,
                                                           maxevals=maxiters)
-                     else
-                         val,err = Cubature.pquadrature_v(nout, f, prob.lb, prob.ub;
+                         else
+                             val,err = Cubature.pcubature(nout, f, prob.lb, prob.ub;
                                                           reltol=reltol, abstol=abstol,
                                                           maxevals=maxiters)
-                     end
+                         end
+                      end
                  else
-                     if alg isa CubatureJLh
-                         val,err = Cubature.hcubature_v(nout, f, prob.lb, prob.ub;
-                                                        reltol=reltol, abstol=abstol,
-                                                        maxevals=maxiters)
+                     if isinplace(prob)
+                         f = (x,dx) -> prob.f(dx,x,p)
                      else
-                         val,err = Cubature.pcubature_v(nout, f, prob.lb, prob.ub;
-                                                        reltol=reltol, abstol=abstol,
-                                                        maxevals=maxiters)
+                         f = (x,dx) -> (dx .= prob.f(x,p))
                      end
+                     if prob.lb isa Number
+                         if alg isa CubatureJLh
+                             val,err = Cubature.hquadrature_v(nout, f, prob.lb, prob.ub;
+                                                              reltol=reltol, abstol=abstol,
+                                                              maxevals=maxiters)
+                         else
+                             val,err = Cubature.pquadrature_v(nout, f, prob.lb, prob.ub;
+                                                              reltol=reltol, abstol=abstol,
+                                                              maxevals=maxiters)
+                         end
+                     else
+                         if alg isa CubatureJLh
+                             val,err = Cubature.hcubature_v(nout, f, prob.lb, prob.ub;
+                                                            reltol=reltol, abstol=abstol,
+                                                            maxevals=maxiters)
+                         else
+                             val,err = Cubature.pcubature_v(nout, f, prob.lb, prob.ub;
+                                                            reltol=reltol, abstol=abstol,
+                                                            maxevals=maxiters)
+                         end
+                      end
                   end
               end
-          end
-          DiffEqBase.build_solution(prob,alg,val,err,retcode = :Success)
+              DiffEqBase.build_solution(prob,alg,val,err,retcode = :Success)
+        end
     end
-end
 
-@require Cuba="8a292aeb-7a57-582c-b821-06e4c11590b1" begin
-    function DiffEqBase.solve(prob::QuadratureProblem,alg::AbstractCubaAlgorithm,
-                              args...;
-                              reltol = 1e-8, abstol = 1e-8,
-                              maxiters = typemax(Int),
-                              kwargs...)
-      p = prob.p
-      if prob.lb isa Number
-          _x = Float64[prob.lb]
-      else
-          _x = similar(prob.lb)
-      end
-      ub = prob.ub
-      lb = prob.lb
+    @require Cuba="8a292aeb-7a57-582c-b821-06e4c11590b1" begin
+        function DiffEqBase.solve(prob::QuadratureProblem,alg::AbstractCubaAlgorithm,
+                                  args...;
+                                  reltol = 1e-8, abstol = 1e-8,
+                                  maxiters = typemax(Int),
+                                  kwargs...)
+          p = prob.p
+          if prob.lb isa Number
+              _x = Float64[prob.lb]
+          else
+              _x = similar(prob.lb)
+          end
+          ub = prob.ub
+          lb = prob.lb
 
-      if isinplace(prob)
-          f = (x,dx) -> (prob.f(dx,scale_x!(_x,ub,lb,x),p); dx .*= prod((x)->x[1]-x[2],zip(ub,lb)))
-      else
-          f = (x,dx) -> (dx .= prob.f(scale_x!(_x,ub,lb,x),p) .* prod((x)->x[1]-x[2],zip(ub,lb)))
-      end
-      ndim = length(prob.lb)
+          if prob.batch == 0
+              if isinplace(prob)
+                  f = (x,dx) -> (prob.f(dx,scale_x!(_x,ub,lb,x),p); dx .*= prod((x)->x[1]-x[2],zip(ub,lb)))
+              else
+                  f = (x,dx) -> (dx .= prob.f(scale_x!(_x,ub,lb,x),p) .* prod((x)->x[1]-x[2],zip(ub,lb)))
+              end
+          else
+              if isinplace(prob)
+                  f = (x,dx) -> (prob.f(dx,scale_x!(_x,ub,lb,x)',p); dx .*= prod((x)->x[1]-x[2],zip(ub,lb)))
+              else
+                  f = (x,dx) -> (dx .= prob.f(scale_x!(_x,ub,lb,x)',p) .* prod((x)->x[1]-x[2],zip(ub,lb)))
+              end
+          end
 
-      if alg isa CubaVegas
-          out = Cuba.vegas(f, ndim, prob.nout; rtol = reltol, atol = abstol, kwargs...)
-      elseif alg isa CubaSUAVE
-          out = Cuba.suave(f, ndim, prob.nout; rtol = reltol, atol = abstol, kwargs...)
-      elseif alg isa CubaDivonne
-          out = Cuba.divonne(f, ndim, prob.nout; rtol = reltol, atol = abstol, kwargs...)
-      elseif alg isa CubaCuhre
-          out = Cuba.cuhre(f, ndim, prob.nout; rtol = reltol, atol = abstol, kwargs...)
-      end
+          ndim = length(prob.lb)
 
-      if prob.nout == 1
-          val = out.integral[1]
-      else
-          val = out.integral
-      end
+          nvec = prob.batch == 0 ? 1 : prob.batch
 
-      DiffEqBase.build_solution(prob,alg,val,out.error,
-                     chi=out.probability,retcode = :Success)
+          if alg isa CubaVegas
+              out = Cuba.vegas(f, ndim, prob.nout; rtol = reltol, atol = abstol, nvec = nvec, kwargs...)
+          elseif alg isa CubaSUAVE
+              out = Cuba.suave(f, ndim, prob.nout; rtol = reltol, atol = abstol, nvec = nvec, kwargs...)
+          elseif alg isa CubaDivonne
+              out = Cuba.divonne(f, ndim, prob.nout; rtol = reltol, atol = abstol, nvec = nvec, kwargs...)
+          elseif alg isa CubaCuhre
+              out = Cuba.cuhre(f, ndim, prob.nout; rtol = reltol, atol = abstol, nvec = nvec, kwargs...)
+          end
+
+          if prob.nout == 1
+              val = out.integral[1]
+          else
+              val = out.integral
+          end
+
+          DiffEqBase.build_solution(prob,alg,val,out.error,
+                         chi=out.probability,retcode = :Success)
+        end
     end
 end
 
