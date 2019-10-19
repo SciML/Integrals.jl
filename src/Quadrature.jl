@@ -295,13 +295,21 @@ function __init__()
           nvec = prob.batch == 0 ? 1 : prob.batch
 
           if alg isa CubaVegas
-              out = Cuba.vegas(f, ndim, prob.nout; rtol = reltol, atol = abstol, nvec = nvec, kwargs...)
+              out = Cuba.vegas(f, ndim, prob.nout; rtol = reltol,
+                               atol = abstol, nvec = nvec,
+                               maxevals = maxiters, kwargs...)
           elseif alg isa CubaSUAVE
-              out = Cuba.suave(f, ndim, prob.nout; rtol = reltol, atol = abstol, nvec = nvec, kwargs...)
+              out = Cuba.suave(f, ndim, prob.nout; rtol = reltol,
+                               atol = abstol, nvec = nvec,
+                               maxevals = maxiters, kwargs...)
           elseif alg isa CubaDivonne
-              out = Cuba.divonne(f, ndim, prob.nout; rtol = reltol, atol = abstol, nvec = nvec, kwargs...)
+              out = Cuba.divonne(f, ndim, prob.nout; rtol = reltol,
+                                 atol = abstol, nvec = nvec,
+                                 maxevals = maxiters, kwargs...)
           elseif alg isa CubaCuhre
-              out = Cuba.cuhre(f, ndim, prob.nout; rtol = reltol, atol = abstol, nvec = nvec, kwargs...)
+              out = Cuba.cuhre(f, ndim, prob.nout; rtol = reltol,
+                               atol = abstol, nvec = nvec,
+                               maxevals = maxiters, kwargs...)
           end
 
           if prob.nout == 1
