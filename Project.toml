@@ -13,8 +13,9 @@ Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 Requires = "ae029012-a4dd-5104-9daa-d747884805df"
 
 [compat]
-julia = "1"
 DiffEqBase = "6.1"
+HCubature = "1.4"
+julia = "1"
 
 [extras]
 Cuba = "8a292aeb-7a57-582c-b821-06e4c11590b1"
@@ -22,4 +23,4 @@ Cubature = "667455a9-e2ce-5579-9412-b964f529a492"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Cuba","Cubature","Test"]
+test = ["Cuba", "Cubature", "Test"]
