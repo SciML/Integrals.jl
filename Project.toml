@@ -1,7 +1,7 @@
 name = "Quadrature"
 uuid = "67601950-bd08-11e9-3c89-fd23fb4432d2"
 authors = ["Chris Rackauckas <accounts@chrisrackauckas.com>"]
-version = "0.1.1"
+version = "1.0.0"
 
 [deps]
 CommonSolve = "38540f10-b2f7-11e9-35d8-d573e4eb0ff2"
