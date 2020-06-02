@@ -78,10 +78,10 @@ The following algorithms are available:
 - `VEGAS`: Uses MonteCarloIntegration.jl. Requires `nout=1`.
 - `CubatureJLh`: h-Cubature from Cubature.jl. Requires `using Cubature`.
 - `CubatureJLp`: p-Cubature from Cubature.jl. Requires `using Cubature`.
-- `CubaVegas`: Vegas from Cuba.jl.
-- `CubaSUAVE`: SUAVE from Cuba.jl.
-- `CubaDivonne`: Divonne from Cuba.jl.
-- `CubaCuhre`: Cuhre from Cuba.jl
+- `CubaVegas`: Vegas from Cuba.jl. Requires `using Cuba`.
+- `CubaSUAVE`: SUAVE from Cuba.jl. Requires `using Cuba`.
+- `CubaDivonne`: Divonne from Cuba.jl. Requires `using Cuba`.
+- `CubaCuhre`: Cuhre from Cuba.jl. Requires `using Cuba`.
 
 ## Common Solve Keyword Arguments
 
@@ -92,4 +92,3 @@ The following algorithms are available:
 Additionally, the extra keyword arguments are splatted to the library calls, so
 see the documentation of the integrator library for all of the extra details.
 These extra keyword arguments are not guaranteed to act uniformly.
-
