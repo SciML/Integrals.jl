@@ -5,37 +5,37 @@ using Test
 singledim_algs = [
         QuadGKJL(),
         HCubatureJL(),
-        VEGAS(),
+        # VEGAS(),
         CubatureJLh(),
         CubatureJLp(),
-        CubaVegas(),
+        # CubaVegas(),
         CubaSUAVE()
         ]
 
 multidim_algs = [
         HCubatureJL(),
-        VEGAS(),
+        # VEGAS(),
         CubatureJLh(),
         CubatureJLp(),
-        CubaVegas(),
+        # CubaVegas(),
         CubaSUAVE(),
         CubaDivonne(),
         CubaCuhre()
         ]
 
 singledim_batch_algs = [
-        VEGAS(),
+        # VEGAS(),
         CubatureJLh(),
         CubatureJLp(),
-        CubaVegas(),
+        # CubaVegas(),
         CubaSUAVE()
         ]
 
 multidim_batch_algs = [
-        VEGAS(),
+        # VEGAS(),
         CubatureJLh(),
         CubatureJLp(),
-        CubaVegas(),
+        # CubaVegas(),
         CubaSUAVE(),
         CubaDivonne(),
         CubaCuhre()
