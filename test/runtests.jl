@@ -2,44 +2,18 @@ using Quadrature
 using Cubature, Cuba
 using Test
 
-singledim_algs = [
-        QuadGKJL(),
-        HCubatureJL(),
-        # VEGAS(),
-        CubatureJLh(),
-        CubatureJLp(),
-        # CubaVegas(),
-        CubaSUAVE()
-        ]
+algs = [QuadGKJL(), HCubatureJL(), CubatureJLh(), CubatureJLp(), #VEGAS(), CubaVegas(),
+        CubaSUAVE(),CubaDivonne(), CubaCuhre()]
 
-multidim_algs = [
-        HCubatureJL(),
-        # VEGAS(),
-        CubatureJLh(),
-        CubatureJLp(),
-        # CubaVegas(),
-        CubaSUAVE(),
-        CubaDivonne(),
-        CubaCuhre()
-        ]
-
-singledim_batch_algs = [
-        # VEGAS(),
-        CubatureJLh(),
-        CubatureJLp(),
-        CubaVegas(),
-        CubaSUAVE()
-        ]
-
-multidim_batch_algs = [
-        # VEGAS(),
-        CubatureJLh(),
-        CubatureJLp(),
-        # CubaVegas(),
-        CubaSUAVE(),
-        CubaDivonne(),
-        CubaCuhre()
-        ]
+alg_req=Dict(QuadGKJL()=>     (nout=1,   batch=0,   max_dim=1,   min_dim=1, allows_iip = false),
+             HCubatureJL()=>  (nout=Inf, batch=0,   max_dim=Inf, min_dim=1, allows_iip = true ),
+             VEGAS()=>        (nout=1,   batch=Inf, max_dim=Inf, min_dim=1, allows_iip = true ),
+             CubatureJLh()=>  (nout=Inf, batch=Inf, max_dim=Inf, min_dim=1, allows_iip = true ),
+             CubatureJLp()=>  (nout=Inf, batch=Inf, max_dim=Inf, min_dim=1, allows_iip = true ),
+             CubaVegas()=>    (nout=Inf, batch=Inf, max_dim=Inf, min_dim=1, allows_iip = true ),
+             CubaSUAVE()=>    (nout=Inf, batch=Inf, max_dim=Inf, min_dim=1, allows_iip = true ),
+             CubaDivonne()=>  (nout=Inf, batch=Inf, max_dim=Inf, min_dim=2, allows_iip = true ),
+             CubaCuhre()=>    (nout=Inf, batch=Inf, max_dim=Inf, min_dim=2, allows_iip = true ))
 
 integrands = [
               (x,p) -> 1,
@@ -79,8 +53,10 @@ solve(prob,CubatureJLh(),reltol=1e-3,abstol=1e-3)
     lb,ub = (1,3)
     for i in 1:length(integrands)
         prob = QuadratureProblem(integrands[i],lb,ub)
-        # _sol = solve(prob,HCubatureJL())
-        for alg in singledim_algs
+        for alg in algs#singledim_algs
+            if alg_req[alg].min_dim > 1
+                continue
+            end
             @info "Dimension = 1, Alg = $alg, Integrand = $i"
             sol = solve(prob,alg,reltol=1e-3,abstol=1e-3)
             @test sol.u ≈ exact_sol[i](1,1,lb,ub) rtol = 1e-2
@@ -93,10 +69,9 @@ end
         for dim = 1:5
             lb, ub = (ones(dim), 3ones(dim))
             prob = QuadratureProblem(integrands[i],lb,ub)
-            # _sol = solve(prob,CubatureJLh())
-            for alg in multidim_algs
-                if dim == 1 && (alg isa CubaDivonne || alg isa CubaCuhre) ||
-                    dim > 3 && alg isa VEGAS
+            for alg in algs
+                req = alg_req[alg]
+                if dim > req.max_dim || dim < req.min_dim || alg isa QuadGKJL  #QuadGKJL requires numbers, not single element arrays
                     continue
                 end
                 @info "Dimension = $dim, Alg = $alg, Integrand = $i"
@@ -113,9 +88,9 @@ end
             lb, ub = (ones(dim), 3ones(dim))
             prob = QuadratureProblem(iip_integrands[i],lb,ub)
             _sol = solve(prob,CubatureJLh())
-            for alg in multidim_algs
-                if dim == 1 && (alg isa CubaDivonne || alg isa CubaCuhre) ||
-                    dim > 3 && alg isa VEGAS # Large VEGAS omitted because it's slow!
+            for alg in algs
+                req = alg_req[alg]
+                if dim > req.max_dim || dim < req.min_dim || alg isa QuadGKJL  #QuadGKJL requires numbers, not single element arrays
                     continue
                 end
                 @info "Dimension = $dim, Alg = $alg, Integrand = $i"
