@@ -112,7 +112,7 @@ function __init__()
         function DiffEqBase.solve(prob::QuadratureProblem,
                                   alg::AbstractCubatureJLAlgorithm, args...;
                                   reltol = 1e-8, abstol = 1e-8,
-                                  maxiters = typemax(Int),
+                                  maxiters = alg isa CubaSUAVE ? 1000000 : typemax(Int),
                                   kwargs...)
             nout = prob.nout
             if nout == 1
