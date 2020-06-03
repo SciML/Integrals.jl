@@ -160,25 +160,22 @@ end
         end
     end
 end
-# #
-# # @testset "In-Place Batched Standard Integrands" begin
-# #     for i in 1:length(iip_integrands)
-# #         for dim = 1:5
-# #             _prob = QuadratureProblem(iip_integrands[i],ones(dim),3ones(dim))
-# #             _sol = solve(_prob,CubatureJLh())
-# #             prob = QuadratureProblem(batch_iip_f(integrands[i]),ones(dim),3ones(dim),batch=10)
-# #             for alg in multidim_batch_algs
-# #                 if dim == 1 && (alg isa CubaDivonne || alg isa CubaCuhre)
-# #                     continue
-# #                 end
-# #                 @info "Dimension = $dim, Alg = $alg, Integrand = $i"
-# #                 if alg isa VEGAS
-# #                     @test_broken sol = solve(prob,alg,reltol=1e-3,abstol=1e-3).retcode == :Success
-# #                 else
-# #                     sol = solve(prob,alg,reltol=1e-3,abstol=1e-3)
-# #                     @test sol.u ≈ _sol.u rtol = 1e-2
-# #                 end
-# #             end
-# #         end
-# #     end
-# # end
+
+@testset "In-Place Batched Standard Integrands" begin
+    nout = 1
+    for i in 1:length(iip_integrands)
+        for dim = 1:5
+            (lb,ub) = (ones(dim),3ones(dim))
+            prob = QuadratureProblem(batch_iip_f(integrands[i]),lb,ub,batch=10)
+            for alg in algs
+                req = req = alg_req[alg]
+                if dim > req.max_dim || dim < req.min_dim || !req.allows_batch || !req.allows_iip
+                    continue
+                end
+                @info "Dimension = $dim, Alg = $alg, Integrand = $i"
+                sol = solve(prob,alg,reltol=1e-3,abstol=1e-3)
+                @test sol.u ≈ exact_sol[i](dim,nout,lb,ub) rtol = 1e-2
+            end
+        end
+    end
+end
