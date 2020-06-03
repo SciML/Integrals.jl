@@ -250,7 +250,7 @@ function __init__()
           if prob.lb isa Number && prob.batch == 0
               _x = Float64[prob.lb]
           elseif prob.lb isa Number
-              _x = zeros(length(prob.lb),prob.batch) #zeros(prob.batch)
+              _x = zeros(length(prob.lb),prob.batch)
           elseif prob.batch == 0
               _x = zeros(length(prob.lb))
           else
