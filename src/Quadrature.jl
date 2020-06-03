@@ -27,6 +27,10 @@ function scale_x!(_x,ub,lb,x)
     _x
 end
 
+function scale_x(ub,lb,x)
+    (ub .- lb) .* x .+ lb
+end
+
 function DiffEqBase.solve(prob::QuadratureProblem,::Nothing,args...;
                           reltol = 1e-8, abstol = 1e-8, kwargs...)
     if prob.lb isa Number
@@ -148,7 +152,7 @@ function __init__()
                     if isinplace(prob)
                         f = (x,dx) -> prob.f(dx,x,prob.p)
                     else
-                        f = (x,dx) -> (dx .= prob.f(x,prob.p))
+                        f = (x,dx) -> (dx .= prob.f(x',prob.p)')
                     end
                     if prob.lb isa Number
                         if alg isa CubatureJLh
@@ -244,7 +248,7 @@ function __init__()
           if prob.lb isa Number && prob.batch == 0
               _x = Float64[prob.lb]
           elseif prob.lb isa Number
-              _x = zeros(prob.batch)
+              _x = zeros(length(prob.lb),prob.batch) #zeros(prob.batch)
           elseif prob.batch == 0
               _x = zeros(length(prob.lb))
           else
@@ -268,22 +272,26 @@ function __init__()
               if prob.lb isa Number
                   if isinplace(prob)
                       f = function (x,dx)
+                          #todo check scale_x!
                           prob.f(dx',scale_x!(view(_x,1:length(x)),ub,lb,x),p)
                           dx .*= prod((y)->y[1]-y[2],zip(ub,lb))
                       end
                   else
                       f = function (x,dx)
-                          dx .= prob.f(scale_x!(view(_x,1:length(x))',ub,lb,x),p)' .* prod((y)->y[1]-y[2],zip(ub,lb))
+                          dx .= prob.f(scale_x(ub,lb,x),p) .* prod((y)->y[1]-y[2],zip(ub,lb))
+                          # dx .= prob.f(scale_x!(_x,ub,lb,x),p) .* prod((y)->y[1]-y[2],zip(ub,lb))
                       end
                   end
               else
                   if isinplace(prob)
                       f = function (x,dx)
+                          #todo scale_x!
                           prob.f(dx',scale_x!(view(_x,1:size(x,1),1:size(x,2)),ub,lb,x),p)
                           dx .*= prod((y)->y[1]-y[2],zip(ub,lb))
                       end
                   else
                       f = function (x,dx)
+                          #todo scale_x!
                           dx .= prob.f(scale_x!(view(_x,1:size(x,1),1:size(x,2)),ub,lb,x),p)' .* prod((y)->y[1]-y[2],zip(ub,lb))
                       end
                   end
