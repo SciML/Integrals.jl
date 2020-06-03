@@ -280,7 +280,7 @@ function __init__()
                       end
                   else
                       f = function (x,dx)
-                          dx .= prob.f(scale_x(ub,lb,x),p) .* prod((y)->y[1]-y[2],zip(ub,lb)
+                          dx .= prob.f(scale_x(ub,lb,x),p)' .* prod((y)->y[1]-y[2],zip(ub,lb))
                       end
                   end
               else
@@ -292,7 +292,7 @@ function __init__()
                       end
                   else
                       f = function (x,dx)
-                          dx .= prob.f(scale_x(ub,lb,x),p) .* prod((y)->y[1]-y[2],zip(ub,lb))
+                          dx .= prob.f(scale_x(ub,lb,x),p)' .* prod((y)->y[1]-y[2],zip(ub,lb))
                       end
                   end
               end

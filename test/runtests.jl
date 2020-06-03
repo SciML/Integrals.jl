@@ -30,7 +30,9 @@ exact_sol = [
             ]
 
 batch_f(f) = (pts,p) -> begin
-  fevals = zero(pts)
+  # fevals = zero(pts)
+  # @show pts
+  fevals = zeros(size(pts,2))
   for i = 1:size(pts, 2)
      x = pts[:,i]
      fevals[i] = f(x,p)
@@ -46,9 +48,29 @@ batch_iip_f(f) = (fevals,pts,p) -> begin
   nothing
 end
 
-prob = QuadratureProblem(integrands[1],ones(2),3ones(2))
-_sol = solve(prob,HCubatureJL())
-solve(prob,CubatureJLh(),reltol=1e-3,abstol=1e-3)
+# alg = CubatureJLh()
+# # alg = CubaSUAVE()
+# (dim, nout) = (1,1)
+# i=2
+#
+# (lb,ub) = (0,1)
+# prob = QuadratureProblem(batch_f(integrands[i]),lb,ub,batch=10)
+# sol = solve(prob,alg,reltol=1e-3,abstol=1e-3).u
+# hquadrature_v((x,v) -> v.= batch_f(integrands[i])(x',1.0),lb,ub)
+# # suave((x,v) -> v.= batch_f(integrands[i])(x,1.0)',1,1, nvec=10)[1][1]
+# exact_sol[i](dim,nout,lb,ub)
+#
+# (lb,ub) = (zeros(1),ones(1))
+# prob = QuadratureProblem(batch_f(integrands[i]),lb,ub,batch=10)
+# sol = solve(prob,alg,reltol=1e-3,abstol=1e-3).u
+# hcubature_v((x,v) -> begin @show size(x),size(v); v.= batch_f(integrands[i])(x,1.0); end,lb,ub)
+# # suave((x,v) -> begin @show size(x),size(v); v.= batch_f(integrands[i])(x,1.0)'; end,1,1, nvec=10)[1][1]
+# exact_sol[i](dim,nout,lb,ub)
+
+
+
+##
+
 
 @testset "Standard Single Dimension Integrands" begin
     lb,ub = (1,3)
@@ -103,11 +125,9 @@ end
 end
 
 ########## put vector valued function tests here ##############
-
-
 @testset "Batched Single Dimension Integrands" begin
     (lb,ub) = (1,3)
-    (ndim, nout) = (1,1)
+    (dim, nout) = (1,1)
     for i in 1:length(integrands)
         prob = QuadratureProblem(batch_f(integrands[i]),lb,ub,batch=10)
         for alg in algs
@@ -115,32 +135,31 @@ end
             if req.min_dim > 1 || !req.allows_batch
                 continue
             end
-
             @info "Dimension = 1, Alg = $alg, Integrand = $i"
             sol = solve(prob,alg,reltol=1e-3,abstol=1e-3)
-            @test sol.u ≈ exact_sol[i](ndim,nout,lb,ub) rtol = 1e-2
+            @test sol.u ≈ exact_sol[i](dim,nout,lb,ub) rtol = 1e-2
         end
     end
 end
-# #
-# # @testset "Batched Standard Integrands" begin
-# #     for i in 1:length(integrands)
-# #         for dim = 1:5
-# #             _prob = QuadratureProblem(integrands[i],ones(dim),3ones(dim))
-# #             _sol = solve(_prob,CubatureJLh())
-# #             prob = QuadratureProblem(batch_f(integrands[i]),ones(dim),3ones(dim),batch=10)
-# #             for alg in multidim_batch_algs
-# #                 if dim == 1 && (alg isa CubaDivonne || alg isa CubaCuhre) ||
-# #                    dim > 3 && alg isa VEGAS # Large VEGAS omitted because it's slow!
-# #                     continue
-# #                 end
-# #                 @info "Dimension = $dim, Alg = $alg, Integrand = $i"
-# #                 sol = solve(prob,alg,reltol=1e-3,abstol=1e-3)
-# #                 @test sol.u ≈ _sol.u rtol = 1e-2
-# #             end
-# #         end
-# #     end
-# # end
+
+@testset "Batched Standard Integrands" begin
+    nout = 1
+    for i in 1:length(integrands)
+        for dim = 1:5
+            (lb,ub) = (ones(dim),3ones(dim))
+            prob = QuadratureProblem(batch_f(integrands[i]),lb,ub,batch=10)
+            for alg in algs
+                req = alg_req[alg]
+                if dim > req.max_dim || dim < req.min_dim || !req.allows_batch
+                    continue
+                end
+                @info "Dimension = $dim, Alg = $alg, Integrand = $i"
+                sol = solve(prob,alg,reltol=1e-3,abstol=1e-3)
+                @test sol.u ≈ exact_sol[i](dim,nout,lb,ub) rtol = 1e-2
+            end
+        end
+    end
+end
 # #
 # # @testset "In-Place Batched Standard Integrands" begin
 # #     for i in 1:length(iip_integrands)
