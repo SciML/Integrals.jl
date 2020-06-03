@@ -151,8 +151,10 @@ function __init__()
                 else
                     if isinplace(prob)
                         f = (x,dx) -> prob.f(dx,x,prob.p)
-                    else
+                    elseif prob.lb isa Number
                         f = (x,dx) -> (dx .= prob.f(x',prob.p)')
+                    else
+                        f = (x,dx) -> (dx' .= prob.f(x,prob.p))
                     end
                     if prob.lb isa Number
                         if alg isa CubatureJLh
