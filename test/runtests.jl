@@ -55,16 +55,19 @@ batch_iip_f(f) = (fevals,pts,p) -> begin
   nothing
 end
 
-alg = CubatureJLh()
+# alg = CubatureJLh()
+alg = CubaSUAVE()
 ndim = 1
-nout = 2
+nout = 1
 lb,ub = (0.0,1.0)
 i = 2
-f = (x,p) -> begin @show x; integrands_v[i](x,p,nout=nout); end
+# f = (x,p) -> begin @show x; integrands_v[i](x,p,nout=nout); end
+f = (x,p) -> integrands_v[i](x,p,nout=nout)
 prob = QuadratureProblem(f,lb,ub,nout=nout)
 @show v1 = solve(prob,alg,reltol=1e-3,abstol=1e-3).u
 @show v2 = hquadrature(nout, (x,v) -> v .= integrands_v[i](x,1.0,nout=nout) , lb, ub, reltol = 1e-3, abstol=1e-3)[1]
-v1≈v2
+@show v3 = suave((x,v) -> v .= integrands_v[i](x,1.0,nout=nout) , ndim, nout,rtol = 1e-3, atol=1e-3)[1]
+# v1≈v2
 
 ##
 @testset "Standard Single Dimension Integrands" begin

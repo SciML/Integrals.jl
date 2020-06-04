@@ -321,10 +321,18 @@ function __init__()
                                maxevals = maxiters, kwargs...)
           end
 
-          if prob.nout == 1
-              val = out.integral[1]
+          if isinplace(prob) || prob.batch != 0
+              if prob.nout == 1
+                  val = out.integral[1]
+              else
+                  val = out.integral
+              end
           else
-              val = out.integral
+              if prob.nout == 1 && prob.f(prob.lb, prob.p) isa Number
+                  val = out.integral[1]
+              else
+                  val = out.integral
+              end
           end
 
           DiffEqBase.build_solution(prob,alg,val,out.error,
