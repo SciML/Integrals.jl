@@ -20,13 +20,22 @@ integrands = [
               (x,p) -> 1.0,
               (x,p) -> x isa Number ? cos(x) : prod(cos.(x))
              ]
-
 iip_integrands = [ (dx,x,p)-> (dx .= f(x,p)) for f ∈ integrands]
 
+integrands_v = [
+                (x,p; nout=2) -> collect(1:nout)
+                (x,p; nout=2) -> integrands[2](x,p)*collect(1:nout)
+                ]
+iip_integrands_v = [ (dx,x,p)-> (dx .= f(x,p)) for f ∈ integrands_v]
 
 exact_sol = [
                 (ndim, nout, lb, ub) -> prod(ub-lb),
                 (ndim, nout, lb, ub) -> prod(sin.(ub)-sin.(lb))
+            ]
+
+exact_sol_v = [
+                (ndim, nout, lb, ub) -> prod(ub-lb) * collect(1:nout),
+                (ndim, nout, lb, ub) -> exact_sol[2](ndim,nout,lb,ub) * collect(1:nout)
             ]
 
 batch_f(f) = (pts,p) -> begin
@@ -45,6 +54,17 @@ batch_iip_f(f) = (fevals,pts,p) -> begin
   end
   nothing
 end
+
+alg = CubatureJLh()
+ndim = 1
+nout = 2
+lb,ub = (0.0,1.0)
+i = 2
+f = (x,p) -> begin @show x; integrands_v[i](x,p,nout=nout); end
+prob = QuadratureProblem(f,lb,ub,nout=nout)
+@show v1 = solve(prob,alg,reltol=1e-3,abstol=1e-3).u
+@show v2 = hquadrature(nout, (x,v) -> v .= integrands_v[i](x,1.0,nout=nout) , lb, ub, reltol = 1e-3, abstol=1e-3)[1]
+v1≈v2
 
 ##
 @testset "Standard Single Dimension Integrands" begin
@@ -153,3 +173,114 @@ end
         end
     end
 end
+
+######## Vector Valued Integrands
+@testset "Standard Single Dimension Vector Integrands" begin
+    lb,ub = (1,3)
+    for i in 1:length(integrands_v)
+        for nout = 1:4
+            prob = QuadratureProblem((x,p) -> integrands_v[i](x,p,nout=nout),lb,ub)
+            for alg in algs
+                req = alg_req[alg]
+                if req.min_dim > 1 || req.nout < nout
+                    continue
+                end
+                @info "Dimension = 1, Alg = $alg, Integrand = $i, Output Dimension = $nout"
+                sol = solve(prob,alg,reltol=1e-3,abstol=1e-3)
+                @test sol.u ≈ exact_sol_v[i](1,nout,lb,ub) rtol = 1e-2
+            end
+        end
+    end
+end
+
+# @testset "Standard Vector Integrands" begin
+#     for i in 1:length(integrands_v)
+#         for dim = 1:5
+#             lb, ub = (ones(dim), 3ones(dim))
+#             prob = QuadratureProblem(integrands_v[i],lb,ub)
+#             for alg in algs
+#                 req = alg_req[alg]
+#                 if dim > req.max_dim || dim < req.min_dim || req.nout < nout || alg isa QuadGKJL  #QuadGKJL requires numbers, not single element arrays
+#                     continue
+#                 end
+#                 @info "Dimension = 1, Alg = $alg, Integrand = $i, Output Dimension = $nout"
+#                 sol = solve(prob,alg,reltol=1e-3,abstol=1e-3)
+#                 @test sol.u ≈ exact_sol_v[i](dim,nout,lb,ub) rtol = 1e-2
+#             end
+#         end
+#     end
+# end
+#
+# @testset "In-place Standard Vector Integrands" begin
+#     for i in 1:length(iip_integrands_v)
+#         for dim = 1:5
+#             lb, ub = (ones(dim), 3ones(dim))
+#             prob = QuadratureProblem(iip_integrands_v[i],lb,ub)
+#             _sol = solve(prob,CubatureJLh())
+#             for alg in algs
+#                 req = alg_req[alg]
+#                 if dim > req.max_dim || dim < req.min_dim || req.nout < nout || alg isa QuadGKJL  #QuadGKJL requires numbers, not single element arrays
+#                     continue
+#                 end
+#                 @info "Dimension = 1, Alg = $alg, Integrand = $i, Output Dimension = $nout"
+#                 sol = solve(prob,alg,reltol=1e-3,abstol=1e-3)
+#                 @test sol.u ≈ exact_sol_v[i](dim,nout,lb,ub) rtol = 1e-2
+#             end
+#         end
+#     end
+# end
+#
+# @testset "Batched Single Dimension Vector Integrands" begin
+#     (lb,ub) = (1,3)
+#     (dim, nout) = (1,1)
+#     for i in 1:length(integrands_v)
+#         prob = QuadratureProblem(batch_f(integrands_v[i]),lb,ub,batch=10)
+#         for alg in algs
+#             req = alg_req[alg]
+#             if req.min_dim > 1 || !req.allows_batch || req.nout < nout
+#                 continue
+#             end
+#             @info "Dimension = 1, Alg = $alg, Integrand = $i, Output Dimension = $nout"
+#             sol = solve(prob,alg,reltol=1e-3,abstol=1e-3)
+#             @test sol.u ≈ exact_sol_v[i](dim,nout,lb,ub) rtol = 1e-2
+#         end
+#     end
+# end
+#
+# @testset "Batched Standard Vector Integrands" begin
+#     nout = 1
+#     for i in 1:length(integrands_v)
+#         for dim = 1:5
+#             (lb,ub) = (ones(dim),3ones(dim))
+#             prob = QuadratureProblem(batch_f(integrands_v[i]),lb,ub,batch=10)
+#             for alg in algs
+#                 req = alg_req[alg]
+#                 if dim > req.max_dim || dim < req.min_dim || !req.allows_batch || req.nout < nout
+#                     continue
+#                 end
+#                 @info "Dimension = 1, Alg = $alg, Integrand = $i, Output Dimension = $nout"
+#                 sol = solve(prob,alg,reltol=1e-3,abstol=1e-3)
+#                 @test sol.u ≈ exact_sol_v[i](dim,nout,lb,ub) rtol = 1e-2
+#             end
+#         end
+#     end
+# end
+#
+# @testset "In-Place Batched Standard Vector Integrands" begin
+#     nout = 1
+#     for i in 1:length(iip_integrands_v)
+#         for dim = 1:5
+#             (lb,ub) = (ones(dim),3ones(dim))
+#             prob = QuadratureProblem(batch_iip_f(integrands_v[i]),lb,ub,batch=10)
+#             for alg in algs
+#                 req = req = alg_req[alg]
+#                 if dim > req.max_dim || dim < req.min_dim || !req.allows_batch || !req.allows_iip || req.nout < nout
+#                     continue
+#                 end
+#                 @info "Dimension = 1, Alg = $alg, Integrand = $i, Output Dimension = $nout"
+#                 sol = solve(prob,alg,reltol=1e-3,abstol=1e-3)
+#                 @test sol.u ≈ exact_sol_v[i](dim,nout,lb,ub) rtol = 1e-2
+#             end
+#         end
+#     end
+# end

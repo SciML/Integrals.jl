@@ -125,18 +125,19 @@ function __init__()
                         dx = zeros(1)
                         f = (x) -> (prob.f(dx,x,prob.p); dx[1])
                     else
-                        f = (x) -> prob.f(x,prob.p)
+                        f = (x) -> prob.f(x,prob.p)[1]
                     end
                     if prob.lb isa Number
                         if alg isa CubatureJLh
-                            val,err = Cubature.hquadrature(f, prob.lb, prob.ub;
+                            _val,err = Cubature.hquadrature(f, prob.lb, prob.ub;
                                                            reltol=reltol, abstol=abstol,
                                                            maxevals=maxiters)
                         else
-                            val,err = Cubature.pquadrature(f, prob.lb, prob.ub;
+                            _val,err = Cubature.pquadrature(f, prob.lb, prob.ub;
                                                            reltol=reltol, abstol=abstol,
                                                            maxevals=maxiters)
                         end
+                        val = prob.f(prob.lb,prob.p) isa Number ? _val : [_val]
                     else
                         if alg isa CubatureJLh
                             val,err = Cubature.hcubature(f, prob.lb, prob.ub;
@@ -182,9 +183,9 @@ function __init__()
                  if prob.batch == 0
                      if isinplace(prob)
                          dx = similar(a)
-                         f = (x,dx) -> (prob.f(dx,x,p); dx)
+                         f = (x,dx) -> (prob.f(dx,x,prob.p); dx)
                      else
-                         f = (x,dx) -> (dx .= prob.f(x,p))
+                         f = (x,dx) -> (dx .= prob.f(x,prob.p))
                      end
                      if prob.lb isa Number
                          if alg isa CubatureJLh
