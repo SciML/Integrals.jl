@@ -71,7 +71,7 @@ function DiffEqBase.solve(prob::QuadratureProblem,::HCubatureJL,args...;
         f = (x) -> prob.f(x,p)
     end
     @assert prob.batch == 0
-    @assert prob.nout == 1
+
     if prob.lb isa Number
         val,err = hquadrature(f, prob.lb, prob.ub;
                             rtol=reltol, atol=abstol,

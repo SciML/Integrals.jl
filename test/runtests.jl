@@ -182,7 +182,7 @@ end
     lb,ub = (1,3)
     for i in 1:length(integrands_v)
         for nout = 1:4
-            prob = QuadratureProblem((x,p) -> integrands_v[i](x,p,nout=nout),lb,ub)
+            prob = QuadratureProblem((x,p) -> integrands_v[i](x,p,nout=nout),lb,ub, nout = nout)
             for alg in algs
                 req = alg_req[alg]
                 if req.min_dim > 1 || req.nout < nout
@@ -200,7 +200,7 @@ end
 #     for i in 1:length(integrands_v)
 #         for dim = 1:5
 #             lb, ub = (ones(dim), 3ones(dim))
-#             prob = QuadratureProblem(integrands_v[i],lb,ub)
+#             prob = QuadratureProblem(integrands_v[i],lb,ub,nout = nout)
 #             for alg in algs
 #                 req = alg_req[alg]
 #                 if dim > req.max_dim || dim < req.min_dim || req.nout < nout || alg isa QuadGKJL  #QuadGKJL requires numbers, not single element arrays
@@ -218,7 +218,7 @@ end
 #     for i in 1:length(iip_integrands_v)
 #         for dim = 1:5
 #             lb, ub = (ones(dim), 3ones(dim))
-#             prob = QuadratureProblem(iip_integrands_v[i],lb,ub)
+#             prob = QuadratureProblem(iip_integrands_v[i],lb,ub,nout = nout)
 #             _sol = solve(prob,CubatureJLh())
 #             for alg in algs
 #                 req = alg_req[alg]
@@ -237,7 +237,7 @@ end
 #     (lb,ub) = (1,3)
 #     (dim, nout) = (1,1)
 #     for i in 1:length(integrands_v)
-#         prob = QuadratureProblem(batch_f(integrands_v[i]),lb,ub,batch=10)
+#         prob = QuadratureProblem(batch_f(integrands_v[i]),lb,ub,batch=10,nout = nout)
 #         for alg in algs
 #             req = alg_req[alg]
 #             if req.min_dim > 1 || !req.allows_batch || req.nout < nout
@@ -255,7 +255,7 @@ end
 #     for i in 1:length(integrands_v)
 #         for dim = 1:5
 #             (lb,ub) = (ones(dim),3ones(dim))
-#             prob = QuadratureProblem(batch_f(integrands_v[i]),lb,ub,batch=10)
+#             prob = QuadratureProblem(batch_f(integrands_v[i]),lb,ub,batch=10,nout = nout)
 #             for alg in algs
 #                 req = alg_req[alg]
 #                 if dim > req.max_dim || dim < req.min_dim || !req.allows_batch || req.nout < nout
@@ -274,7 +274,7 @@ end
 #     for i in 1:length(iip_integrands_v)
 #         for dim = 1:5
 #             (lb,ub) = (ones(dim),3ones(dim))
-#             prob = QuadratureProblem(batch_iip_f(integrands_v[i]),lb,ub,batch=10)
+#             prob = QuadratureProblem(batch_iip_f(integrands_v[i]),lb,ub,batch=10,nout = nout)
 #             for alg in algs
 #                 req = req = alg_req[alg]
 #                 if dim > req.max_dim || dim < req.min_dim || !req.allows_batch || !req.allows_iip || req.nout < nout
