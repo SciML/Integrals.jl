@@ -140,13 +140,18 @@ function __init__()
                         val = prob.f(prob.lb,prob.p) isa Number ? _val : [_val]
                     else
                         if alg isa CubatureJLh
-                            val,err = Cubature.hcubature(f, prob.lb, prob.ub;
+                            _val,err = Cubature.hcubature(f, prob.lb, prob.ub;
                                                          reltol=reltol, abstol=abstol,
                                                          maxevals=maxiters)
                         else
-                            val,err = Cubature.pcubature(f, prob.lb, prob.ub;
+                            _val,err = Cubature.pcubature(f, prob.lb, prob.ub;
                                                          reltol=reltol, abstol=abstol,
                                                          maxevals=maxiters)
+                        end
+                        if isinplace(prob)
+                            val = _val
+                        else
+                            val = prob.f(prob.lb,prob.p) isa Number ? _val : [_val]
                         end
                      end
                 else

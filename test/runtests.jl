@@ -55,18 +55,18 @@ batch_iip_f(f) = (fevals,pts,p) -> begin
   nothing
 end
 
-# alg = CubatureJLh()
-alg = CubaSUAVE()
+alg = CubatureJLh()
+# alg = CubaSUAVE()
 ndim = 1
 nout = 1
-lb,ub = (0.0,1.0)
-i = 2
+lb,ub = ([0.0],[1.0])
+i = 1
 # f = (x,p) -> begin @show x; integrands_v[i](x,p,nout=nout); end
 f = (x,p) -> integrands_v[i](x,p,nout=nout)
 prob = QuadratureProblem(f,lb,ub,nout=nout)
 @show v1 = solve(prob,alg,reltol=1e-3,abstol=1e-3).u
 @show v2 = hquadrature(nout, (x,v) -> v .= integrands_v[i](x,1.0,nout=nout) , lb, ub, reltol = 1e-3, abstol=1e-3)[1]
-@show v3 = suave((x,v) -> v .= integrands_v[i](x,1.0,nout=nout) , ndim, nout,rtol = 1e-3, atol=1e-3)[1]
+# @show v3 = suave((x,v) -> v .= integrands_v[i](x,1.0,nout=nout) , ndim, nout,rtol = 1e-3, atol=1e-3)[1]
 # v1≈v2
 
 ##
@@ -196,23 +196,25 @@ end
     end
 end
 
-# @testset "Standard Vector Integrands" begin
-#     for i in 1:length(integrands_v)
-#         for dim = 1:5
-#             lb, ub = (ones(dim), 3ones(dim))
-#             prob = QuadratureProblem(integrands_v[i],lb,ub,nout = nout)
-#             for alg in algs
-#                 req = alg_req[alg]
-#                 if dim > req.max_dim || dim < req.min_dim || req.nout < nout || alg isa QuadGKJL  #QuadGKJL requires numbers, not single element arrays
-#                     continue
-#                 end
-#                 @info "Dimension = 1, Alg = $alg, Integrand = $i, Output Dimension = $nout"
-#                 sol = solve(prob,alg,reltol=1e-3,abstol=1e-3)
-#                 @test sol.u ≈ exact_sol_v[i](dim,nout,lb,ub) rtol = 1e-2
-#             end
-#         end
-#     end
-# end
+@testset "Standard Vector Integrands" begin
+    for i in 1:length(integrands_v)
+        for dim = 1:3
+            lb, ub = (ones(dim), 3ones(dim))
+            for nout = 1:3
+                prob = QuadratureProblem((x,p) -> integrands_v[i](x,p,nout=nout),lb,ub, nout = nout)
+                for alg in algs
+                    req = alg_req[alg]
+                    if dim > req.max_dim || dim < req.min_dim || req.nout < nout || alg isa QuadGKJL  #QuadGKJL requires numbers, not single element arrays
+                        continue
+                    end
+                    @info "Dimension = 1, Alg = $alg, Integrand = $i, Output Dimension = $nout"
+                    sol = solve(prob,alg,reltol=1e-3,abstol=1e-3)
+                    @test sol.u ≈ exact_sol_v[i](dim,nout,lb,ub) rtol = 1e-2
+                end
+            end
+        end
+    end
+end
 #
 # @testset "In-place Standard Vector Integrands" begin
 #     for i in 1:length(iip_integrands_v)
