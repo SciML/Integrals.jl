@@ -64,9 +64,14 @@ function DiffEqBase.solve(prob::QuadratureProblem,::HCubatureJL,args...;
                           maxiters = typemax(Int),
                           kwargs...)
     p = prob.p
+
     if isinplace(prob)
-        dx = zeros(1)
-        f = (x) -> (prob.f(dx,x,p); dx[1])
+        # dx = zeros(1)
+        # f = (x) -> (prob.f(dx,x,p); dx[1])
+        dx = zeros(prob.nout)
+        # f = (x) -> (prob.f(dx,x,p); prob.nout == 1 ? dx[1] : dx)
+        f = (x) -> (prob.f(dx,x,p); dx)
+
     else
         f = (x) -> prob.f(x,p)
     end
@@ -92,8 +97,8 @@ function DiffEqBase.solve(prob::QuadratureProblem,alg::VEGAS,args...;
     @assert prob.nout == 1
     if prob.batch == 0
         if isinplace(prob)
-          dx = zeros(1)
-          f = (x) -> (prob.f(dx,x,p); dx[1])
+          dx = zeros(prob.nout)
+          f = (x) -> (prob.f(dx,x,p); dx)
         else
           f = (x) -> prob.f(x,p)
         end
@@ -122,8 +127,11 @@ function __init__()
             if nout == 1
                 if prob.batch == 0
                     if isinplace(prob)
-                        dx = zeros(1)
+                        dx = zeros(prob.nout)
                         f = (x) -> (prob.f(dx,x,prob.p); dx[1])
+                        # dx = zeros(1)
+                        # f = (x, ) -> (prob.f(dx,x,prob.p); dx[1])
+                        # f = (x,dx) -> prob.f(dx,x,prob.p)
                     else
                         f = (x) -> prob.f(x,prob.p)[1]
                     end
@@ -141,18 +149,20 @@ function __init__()
                     else
                         if alg isa CubatureJLh
                             _val,err = Cubature.hcubature(f, prob.lb, prob.ub;
-                                                         reltol=reltol, abstol=abstol,
-                                                         maxevals=maxiters)
+                                                     reltol=reltol, abstol=abstol,
+                                                     maxevals=maxiters)
                         else
                             _val,err = Cubature.pcubature(f, prob.lb, prob.ub;
                                                          reltol=reltol, abstol=abstol,
                                                          maxevals=maxiters)
                         end
-                        if isinplace(prob)
-                            val = _val
-                        else
-                            val = prob.f(prob.lb,prob.p) isa Number ? _val : [_val]
-                        end
+
+                        # if isinplace(prob)
+                        #      val = [_val]
+                        # end
+                        val = isinplace(prob) ? [_val] : _val
+                        #     val = prob.f(prob.lb,prob.p) isa Number ? _val : [_val]
+                        # end
                      end
                 else
                     if isinplace(prob)
@@ -164,25 +174,26 @@ function __init__()
                     end
                     if prob.lb isa Number
                         if alg isa CubatureJLh
-                            val,err = Cubature.hquadrature_v(f, prob.lb, prob.ub;
+                            _val,err = Cubature.hquadrature_v(f, prob.lb, prob.ub;
                                                              reltol=reltol, abstol=abstol,
                                                              maxevals=maxiters)
                         else
-                            val,err = Cubature.pquadrature_v(f, prob.lb, prob.ub;
+                            _val,err = Cubature.pquadrature_v(f, prob.lb, prob.ub;
                                                              reltol=reltol, abstol=abstol,
                                                              maxevals=maxiters)
                         end
                     else
                         if alg isa CubatureJLh
-                            val,err = Cubature.hcubature_v(f, prob.lb, prob.ub;
+                            _val,err = Cubature.hcubature_v(f, prob.lb, prob.ub;
                                                            reltol=reltol, abstol=abstol,
                                                            maxevals=maxiters)
                         else
-                            val,err = Cubature.pcubature_v(f, prob.lb, prob.ub;
+                            _val,err = Cubature.pcubature_v(f, prob.lb, prob.ub;
                                                            reltol=reltol, abstol=abstol,
                                                            maxevals=maxiters)
                         end
                      end
+                     val = _val isa Number ? [_val] : _val
                  end
              else
                  if prob.batch == 0
@@ -326,12 +337,21 @@ function __init__()
                                maxevals = maxiters, kwargs...)
           end
 
+          # if isinplace(prob)
+          #     val = out.integral
+          # elseif prob.batch !=0
+          #   if prob.nout == 1
+          #       val = out.integral[1]
+          #   else
+          #       val = out.integral
+          #   end
           if isinplace(prob) || prob.batch != 0
-              if prob.nout == 1
-                  val = out.integral[1]
-              else
-                  val = out.integral
-              end
+              # if prob.nout == 1
+              #     val = out.integral[1]
+              # else
+              #     val = out.integral
+              # end
+              val = out.integral
           else
               if prob.nout == 1 && prob.f(prob.lb, prob.p) isa Number
                   val = out.integral[1]
