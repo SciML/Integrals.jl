@@ -336,7 +336,12 @@ function __init__()
                   if isinplace(prob)
                       f = function (x,dx)
                           #todo scale_x!
-                          prob.f(dx',scale_x!(view(_x,1:size(x,1),1:size(x,2)),ub,lb,x),p)
+                          # @show size(x)
+                          # @show size(dx)
+                          # @show size(scale_x(ub,lb,x))
+                          # prob.f(dx',scale_x!(view(_x,1:size(x,1),1:size(x,2)),ub,lb,x),p)
+                          # prob.f(dx',scale_x(ub,lb,x),p)  #broken vector iip
+                          prob.f(dx,scale_x(ub,lb,x),p)   #broken nout = 1 iip
                           dx .*= prod((y)->y[1]-y[2],zip(ub,lb))
                       end
                   else

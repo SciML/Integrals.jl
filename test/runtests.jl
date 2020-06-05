@@ -10,7 +10,7 @@ abstol=1e-3
 #
 algs = [QuadGKJL(), HCubatureJL(), CubatureJLh(), CubatureJLp(), #VEGAS(), CubaVegas(),
         CubaSUAVE(),CubaDivonne(), CubaCuhre()]
-# algs = [CubatureJLh()]
+# algs = [CubaSUAVE()]
 
 alg_req=Dict(QuadGKJL()=>     (nout=1,   allows_batch=false, min_dim=1, max_dim=1,   allows_iip = false),
              HCubatureJL()=>  (nout=Inf, allows_batch=false, min_dim=1, max_dim=Inf, allows_iip = true ),
@@ -288,14 +288,6 @@ end
         end
     end
 end
-# (lb,ub) = (1.0,3.0)
-# (dim, nout) = (1,1)
-# alg = CubaSUAVE()
-# i = 1
-# prob = QuadratureProblem(batch_f_v(integrands_v[i],nout),lb,ub,batch=10,nout = nout)
-# sol = solve(prob,alg,reltol=reltol,abstol=abstol)
-# sol.u ≈ exact_sol_v[i](dim,nout,lb,ub)
-
 
 @testset "Batched Standard Vector Integrands" begin
     nout = 1
@@ -335,13 +327,13 @@ end
     end
 end
 
-# alg = CubatureJLh()
+# alg = CubaSUAVE()
 # i = 1
 # (dim, nout) = (1,1)
 # # (lb,ub) = (1.0,3.0)
 # (lb,ub) = (ones(dim),3ones(dim))
 # batch_f_v(integrands_v[i],nout)([lb ub],1.0)
 # prob = QuadratureProblem(batch_iip_f_v(integrands_v[i],nout),lb,ub,batch=10,nout = nout)
-# # sol = solve(prob,alg,reltol=reltol,abstol=abstol)
+# sol = solve(prob,alg,reltol=reltol,abstol=abstol)
 # sol = @Juno.enter solve(prob,alg,reltol=reltol,abstol=abstol)
 # sol.u ≈ exact_sol_v[i](dim,nout,lb,ub)
