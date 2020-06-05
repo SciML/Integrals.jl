@@ -160,7 +160,12 @@ function __init__()
                         # if isinplace(prob)
                         #      val = [_val]
                         # end
-                        val = isinplace(prob) ? [_val] : _val
+                        if isinplace(prob) || !isa(prob.f(prob.lb,prob.p), Number)
+                            val = [_val]
+                        else
+                            val = _val
+                        end
+                        # val = (isinplace(prob) || !isa(prob.f(prob.lb,prob.p), Number)) ? [_val] : _val
                         #     val = prob.f(prob.lb,prob.p) isa Number ? _val : [_val]
                         # end
                      end
