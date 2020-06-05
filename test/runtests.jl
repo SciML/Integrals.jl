@@ -61,22 +61,22 @@ batch_iip_f(f) = (fevals,pts,p) -> begin
   nothing
 end
 
-# alg = CubatureJLh()
-alg = CubaSUAVE()
+alg = CubatureJLh()
+# alg = CubaSUAVE()
 # alg = HCubatureJL()
 ndim = 1
 nout = 1
-# lb,ub = ([0.0],[1.0])
-lb,ub = (1,3)
+lb,ub = ([0.0],[1.0])
+# lb,ub = (1,3)
 i = 1
-batch = 10
+batch = 0
 
 
-# f = (x,p) -> begin @show x; integrands_v[i](x,p,nout=nout); end
+f = (x,p) -> integrands_v[i](x,p,nout=nout)
 # f = (x,p) -> iip_integrands_v[i](x,p,nout=nout)
 # f = (dx,x,p) ->iip_integrands_v[i](dx,x,p,nout=nout)
-f = batch_f(integrands[i])
-x = [3.0]; dx = similar(x); f(x,1)
+# f = batch_f(integrands[i])
+# x = [3.0]; dx = similar(x); f(x,1)
 prob = QuadratureProblem(f,lb,ub, nout=1,batch=batch)
 @show v1 = solve(prob,alg,reltol=1e-4,abstol=1e-4).u
 # Juno.@enter solve(prob,alg,reltol=1e-4,abstol=1e-4)
@@ -249,7 +249,11 @@ end
                         continue
                     end
                     @info "Dimension = 1, Alg = $alg, Integrand = $i, Output Dimension = $nout"
-                    sol = solve(prob,alg,reltol=reltol,abstol=abstol)
+                    if alg isa HCubatureJL  && dim == 1 # HCubature library requires finer tol to pass test. When requiring array outputs for iip integrands
+                        sol = solve(prob,alg,reltol=1e-5,abstol=1e-5)
+                    else
+                        sol = solve(prob,alg,reltol=reltol,abstol=abstol)
+                    end
                     @test sol.u ≈ exact_sol_v[i](dim,nout,lb,ub) rtol = 1e-2
                 end
             end

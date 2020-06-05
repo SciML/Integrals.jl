@@ -203,7 +203,7 @@ function __init__()
              else
                  if prob.batch == 0
                      if isinplace(prob)
-                         dx = similar(a)
+                         # dx = similar(a)
                          f = (x,dx) -> (prob.f(dx,x,prob.p); dx)
                      else
                          f = (x,dx) -> (dx .= prob.f(x,prob.p))
