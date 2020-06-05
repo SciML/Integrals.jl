@@ -173,7 +173,11 @@ function __init__()
                     if isinplace(prob)
                         f = (x,dx) -> prob.f(dx,x,prob.p)
                     elseif prob.lb isa Number
-                        f = (x,dx) -> (dx .= prob.f(x',prob.p))
+                        if prob.f([prob.lb prob.ub], prob.p) isa Vector
+                            f = (x,dx) -> (dx .= prob.f(x',prob.p))
+                        else
+                            f = (x,dx) -> (dx .= prob.f(x',prob.p)')
+                        end
                     else
                         f = (x,dx) -> (dx .= prob.f(x,prob.p))
                     end
@@ -301,8 +305,14 @@ function __init__()
                           dx .*= prod((y)->y[1]-y[2],zip(ub,lb))
                       end
                   else
-                      f = function (x,dx)
-                          dx .= prob.f(scale_x(ub,lb,x),p)' .* prod((y)->y[1]-y[2],zip(ub,lb))
+                      if prob.f([prob.lb prob.ub], prob.p) isa Vector
+                          f = function (x,dx)
+                              dx .= prob.f(scale_x(ub,lb,x),p)' .* prod((y)->y[1]-y[2],zip(ub,lb))
+                          end
+                      else
+                          f = function (x,dx)
+                              dx .= prob.f(scale_x(ub,lb,x),p) .* prod((y)->y[1]-y[2],zip(ub,lb))
+                          end
                       end
                   end
               else
