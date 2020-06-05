@@ -176,10 +176,23 @@ function __init__()
                         if prob.f([prob.lb prob.ub], prob.p) isa Vector
                             f = (x,dx) -> (dx .= prob.f(x',prob.p))
                         else
-                            f = (x,dx) -> (dx .= prob.f(x',prob.p)')
+                            f = function (x,dx)
+                                dx[:] = prob.f(x',prob.p)
+                            end
                         end
                     else
-                        f = (x,dx) -> (dx .= prob.f(x,prob.p))
+                        # @show typeof(prob.f([prob.lb prob.ub], prob.p))
+                        if prob.f([prob.lb prob.ub], prob.p) isa Vector
+                            f = (x,dx) -> (dx .= prob.f(x,prob.p))
+                        else
+                            f = function (x,dx)
+                                # @show size(x), size(dx), size(prob.f(x,prob.p)[:])
+                                # @show x
+                                # @show dx
+                                # @show prob.f(x,prob.p)'
+                                dx .= prob.f(x,prob.p)[:]
+                            end
+                        end
                     end
                     if prob.lb isa Number
                         if alg isa CubatureJLh
