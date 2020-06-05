@@ -171,7 +171,11 @@ function __init__()
                      end
                 else
                     if isinplace(prob)
-                        f = (x,dx) -> prob.f(dx,x,prob.p)
+                        f = (x,dx) -> prob.f(dx',x,prob.p)
+                        # f = function (x,dx)
+                        #     @show size(x), size(dx)
+                        #     prob.f(dx',x,prob.p)
+                        # end
                     elseif prob.lb isa Number
                         if prob.f([prob.lb prob.ub], prob.p) isa Vector
                             f = (x,dx) -> (dx .= prob.f(x',prob.p))

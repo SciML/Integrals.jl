@@ -10,7 +10,7 @@ abstol=1e-3
 #
 algs = [QuadGKJL(), HCubatureJL(), CubatureJLh(), CubatureJLp(), #VEGAS(), CubaVegas(),
         CubaSUAVE(),CubaDivonne(), CubaCuhre()]
-# algs = [CubaSUAVE()]
+# algs = [CubatureJLh()]
 
 alg_req=Dict(QuadGKJL()=>     (nout=1,   allows_batch=false, min_dim=1, max_dim=1,   allows_iip = false),
              HCubatureJL()=>  (nout=Inf, allows_batch=false, min_dim=1, max_dim=Inf, allows_iip = true ),
@@ -71,6 +71,14 @@ batch_f_v(f, nout) = (pts,p) -> begin
      fevals[:,i] = f(x,p,nout=nout)
   end
   fevals
+end
+
+batch_iip_f_v(f,nout) = (fevals,pts,p) -> begin
+  for i = 1:size(pts, 2)
+     x = pts[:,i]
+     fevals[:,i] = f(x,p, nout=nout)
+  end
+  nothing
 end
 
 # (lb,ub) = (1.0,3.0)
@@ -308,34 +316,32 @@ end
     end
 end
 
-# alg = CubaSUAVE()
+@testset "In-Place Batched Standard Vector Integrands" begin
+    nout = 1
+    for alg in algs
+        req = req = alg_req[alg]
+        for i in 1:length(iip_integrands_v)
+            for dim = 1:max_dim_test
+                (lb,ub) = (ones(dim),3ones(dim))
+                prob = QuadratureProblem(batch_iip_f_v(integrands_v[i],nout),lb,ub,batch=10,nout = nout)
+                if dim > req.max_dim || dim < req.min_dim || !req.allows_batch || !req.allows_iip || req.nout < nout
+                    continue
+                end
+                @info "Alg = $alg, Integrand = $i, Dimension = $dim, Output Dimension = $nout"
+                sol = solve(prob,alg,reltol=reltol,abstol=abstol)
+                @test sol.u ≈ exact_sol_v[i](dim,nout,lb,ub) rtol = 1e-2
+            end
+        end
+    end
+end
+
+# alg = CubatureJLh()
 # i = 1
 # (dim, nout) = (1,1)
 # # (lb,ub) = (1.0,3.0)
 # (lb,ub) = (ones(dim),3ones(dim))
 # batch_f_v(integrands_v[i],nout)([lb ub],1.0)
-# prob = QuadratureProblem(batch_f_v(integrands_v[i],nout),lb,ub,batch=10,nout = nout)
-# sol = solve(prob,alg,reltol=reltol,abstol=abstol)
-# # sol = @Juno.enter solve(prob,alg,reltol=reltol,abstol=abstol)
+# prob = QuadratureProblem(batch_iip_f_v(integrands_v[i],nout),lb,ub,batch=10,nout = nout)
+# # sol = solve(prob,alg,reltol=reltol,abstol=abstol)
+# sol = @Juno.enter solve(prob,alg,reltol=reltol,abstol=abstol)
 # sol.u ≈ exact_sol_v[i](dim,nout,lb,ub)
-
-
-#
-# @testset "In-Place Batched Standard Vector Integrands" begin
-#     nout = 1
-#     for alg in algs
-#         req = req = alg_req[alg]
-#         for i in 1:length(iip_integrands_v)
-#             for dim = 1:5
-#                 (lb,ub) = (ones(dim),3ones(dim))
-#                 prob = QuadratureProblem(batch_iip_f(integrands_v[i]),lb,ub,batch=10,nout = nout)
-#                 if dim > req.max_dim || dim < req.min_dim || !req.allows_batch || !req.allows_iip || req.nout < nout
-#                     continue
-#                 end
-#                 @info "Dimension = 1, Alg = $alg, Integrand = $i, Output Dimension = $nout"
-#                 sol = solve(prob,alg,reltol=reltol,abstol=abstol)
-#                 @test sol.u ≈ [exact_sol_v[i](dim,nout,lb,ub)] rtol = 1e-2
-#             end
-#         end
-#     end
-# end
