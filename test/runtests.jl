@@ -7,10 +7,10 @@ max_dim_test = 2
 max_nout_test = 2
 reltol=1e-3
 abstol=1e-3
-
-# algs = [QuadGKJL(), HCubatureJL(), CubatureJLh(), CubatureJLp(), #VEGAS(), CubaVegas(),
-        # CubaSUAVE(),CubaDivonne(), CubaCuhre()]
-algs = [CubatureJLh()]
+#
+algs = [QuadGKJL(), HCubatureJL(), CubatureJLh(), CubatureJLp(), #VEGAS(), CubaVegas(),
+        CubaSUAVE(),CubaDivonne(), CubaCuhre()]
+# algs = [CubaSUAVE()]
 
 alg_req=Dict(QuadGKJL()=>     (nout=1,   allows_batch=false, min_dim=1, max_dim=1,   allows_iip = false),
              HCubatureJL()=>  (nout=Inf, allows_batch=false, min_dim=1, max_dim=Inf, allows_iip = true ),
@@ -28,7 +28,7 @@ integrands = [
              ]
 iip_integrands = [ (dx,x,p)-> (dx .= f(x,p)) for f ∈ integrands]
 
-## remove nout and make size(x)
+# remove nout and make size(x)
 integrands_v = [
                 (x,p; nout=2) -> collect(1.0:nout)
                 (x,p; nout=2) -> integrands[2](x,p)*collect(1.0:nout)
@@ -83,7 +83,7 @@ end
 # sol.u ≈ exact_sol_v[i](dim,nout,lb,ub)
 # integrands_v[i]([1],1,nout=1)
 
-##
+## adsf
 @testset "Standard Single Dimension Integrands" begin
     lb,ub = (1.0,3.0)
     nout = 1
@@ -308,18 +308,16 @@ end
     end
 end
 
-alg = CubatureJLh()
-i = 1
-(dim, nout) = (1,1)
-if dim == 1
-    (lb,ub) = (1.0,3.0)
-else
-    (lb,ub) = (ones(dim),3ones(dim))
-end
-batch_f_v(integrands_v[i],nout)([lb ub],1.0)
-prob = QuadratureProblem(batch_f_v(integrands_v[i],nout),lb,ub,batch=10,nout = nout)
-sol = solve(prob,alg,reltol=reltol,abstol=abstol)
-sol.u ≈ exact_sol_v[i](dim,nout,lb,ub)
+# alg = CubaSUAVE()
+# i = 1
+# (dim, nout) = (1,1)
+# # (lb,ub) = (1.0,3.0)
+# (lb,ub) = (ones(dim),3ones(dim))
+# batch_f_v(integrands_v[i],nout)([lb ub],1.0)
+# prob = QuadratureProblem(batch_f_v(integrands_v[i],nout),lb,ub,batch=10,nout = nout)
+# sol = solve(prob,alg,reltol=reltol,abstol=abstol)
+# # sol = @Juno.enter solve(prob,alg,reltol=reltol,abstol=abstol)
+# sol.u ≈ exact_sol_v[i](dim,nout,lb,ub)
 
 
 #

@@ -336,8 +336,19 @@ function __init__()
                           dx .*= prod((y)->y[1]-y[2],zip(ub,lb))
                       end
                   else
-                      f = function (x,dx)
-                          dx .= prob.f(scale_x(ub,lb,x),p)' .* prod((y)->y[1]-y[2],zip(ub,lb))
+                      if prob.f([prob.lb prob.ub], prob.p) isa Vector
+                          f = function (x,dx)
+                              # @show size(x)
+                              # @show size(dx)
+                              # @show size(scale_x(ub,lb,x))
+                              # @show size(prob.f(scale_x(ub,lb,x),p)')
+                              # @show size(prod((y)->y[1]-y[2],zip(ub,lb)))
+                              dx .= prob.f(scale_x(ub,lb,x),p)' .* prod((y)->y[1]-y[2],zip(ub,lb))
+                          end
+                      else
+                          f = function (x,dx)
+                              dx .= prob.f(scale_x(ub,lb,x),p) .* prod((y)->y[1]-y[2],zip(ub,lb))
+                          end
                       end
                   end
               end
