@@ -7,10 +7,9 @@ max_dim_test = 2
 max_nout_test = 2
 reltol=1e-3
 abstol=1e-3
-#
+
 algs = [QuadGKJL(), HCubatureJL(), CubatureJLh(), CubatureJLp(), #VEGAS(), CubaVegas(),
         CubaSUAVE(),CubaDivonne(), CubaCuhre()]
-# algs = [CubaSUAVE()]
 
 alg_req=Dict(QuadGKJL()=>     (nout=1,   allows_batch=false, min_dim=1, max_dim=1,   allows_iip = false),
              HCubatureJL()=>  (nout=Inf, allows_batch=false, min_dim=1, max_dim=Inf, allows_iip = true ),
@@ -28,12 +27,11 @@ integrands = [
              ]
 iip_integrands = [ (dx,x,p)-> (dx .= f(x,p)) for f ∈ integrands]
 
-# remove nout and make size(x)
 integrands_v = [
-                (x,p; nout=2) -> collect(1.0:nout)
-                (x,p; nout=2) -> integrands[2](x,p)*collect(1.0:nout)
+                (x,p,nout) -> collect(1.0:nout)
+                (x,p,nout) -> integrands[2](x,p)*collect(1.0:nout)
                 ]
-iip_integrands_v = [ (dx,x,p; nout=2)-> (dx .= f(x,p,nout=nout)) for f ∈ integrands_v]
+iip_integrands_v = [ (dx,x,p,nout)-> (dx .= f(x,p,nout)) for f ∈ integrands_v]
 
 exact_sol = [
                 (ndim, nout, lb, ub) -> prod(ub-lb),
@@ -65,10 +63,8 @@ end
 batch_f_v(f, nout) = (pts,p) -> begin
   fevals = zeros(nout, size(pts,2))
   for i = 1:size(pts, 2)
-     # @show pts
      x = pts[:,i]
-     # @show x, p, nout
-     fevals[:,i] = f(x,p,nout=nout)
+     fevals[:,i] = f(x,p,nout)
   end
   fevals
 end
@@ -76,22 +72,11 @@ end
 batch_iip_f_v(f,nout) = (fevals,pts,p) -> begin
   for i = 1:size(pts, 2)
      x = pts[:,i]
-     fevals[:,i] = f(x,p, nout=nout)
+     fevals[:,i] = f(x,p, nout)
   end
   nothing
 end
 
-# (lb,ub) = (1.0,3.0)
-# (dim, nout) = (1,1)
-# alg = CubatureJLh()
-# i = 2
-# batch_f_v(integrands_v[i],nout)([lb ub],1)
-# prob = QuadratureProblem(batch_f_v(integrands_v[i],nout),lb,ub,batch=10,nout = nout)
-# sol = solve(prob,alg,reltol=reltol,abstol=abstol)
-# sol.u ≈ exact_sol_v[i](dim,nout,lb,ub)
-# integrands_v[i]([1],1,nout=1)
-
-## adsf
 @testset "Standard Single Dimension Integrands" begin
     lb,ub = (1.0,3.0)
     nout = 1
@@ -176,15 +161,15 @@ end
             for dim = 1:max_dim_test
                 (lb,ub) = (ones(dim),3ones(dim))
                 prob = QuadratureProblem(batch_f(integrands[i]),lb,ub,batch=10)
-                    if dim > req.max_dim || dim < req.min_dim || !req.allows_batch
-                        continue
-                    end
-                    @info "Alg = $alg, Integrand = $i, Dimension = $dim, Output Dimension = $nout"
-                    sol = solve(prob,alg,reltol=reltol,abstol=abstol)
-                    @test sol.u ≈ [exact_sol[i](dim,nout,lb,ub)] rtol = 1e-2
+                if dim > req.max_dim || dim < req.min_dim || !req.allows_batch
+                    continue
                 end
+                @info "Alg = $alg, Integrand = $i, Dimension = $dim, Output Dimension = $nout"
+                sol = solve(prob,alg,reltol=reltol,abstol=abstol)
+                @test sol.u ≈ [exact_sol[i](dim,nout,lb,ub)] rtol = 1e-2
             end
         end
+    end
 end
 
 @testset "In-Place Batched Standard Integrands" begin
@@ -214,7 +199,7 @@ end
         req = alg_req[alg]
         for i in 1:length(integrands_v)
             for nout = 1:max_nout_test
-                prob = QuadratureProblem((x,p) -> integrands_v[i](x,p,nout=nout),lb,ub, nout = nout)
+                prob = QuadratureProblem((x,p) -> integrands_v[i](x,p,nout),lb,ub, nout = nout)
                 if req.min_dim > 1 || req.nout < nout
                     continue
                 end
@@ -236,7 +221,7 @@ end
                     if dim > req.max_dim || dim < req.min_dim || req.nout < nout || alg isa QuadGKJL  #QuadGKJL requires numbers, not single element arrays
                         continue
                     end
-                    prob = QuadratureProblem((x,p) -> integrands_v[i](x,p,nout=nout),lb,ub, nout = nout)
+                    prob = QuadratureProblem((x,p) -> integrands_v[i](x,p,nout),lb,ub, nout = nout)
                     @info "Alg = $alg, Integrand = $i, Dimension = $dim, Output Dimension = $nout"
                     sol = solve(prob,alg,reltol=reltol,abstol=abstol)
                     @test sol.u ≈ exact_sol_v[i](dim,nout,lb,ub) rtol = 1e-2
@@ -253,7 +238,7 @@ end
             for dim = 1:max_dim_test
                 lb, ub = (ones(dim), 3ones(dim))
                 for nout = 1:max_nout_test
-                    prob = QuadratureProblem((dx,x,p) ->iip_integrands_v[i](dx,x,p,nout=nout),lb,ub,nout = nout)
+                    prob = QuadratureProblem((dx,x,p) ->iip_integrands_v[i](dx,x,p,nout),lb,ub,nout = nout)
                     if dim > req.max_dim || dim < req.min_dim || req.nout < nout || alg isa QuadGKJL  #QuadGKJL requires numbers, not single element arrays
                         continue
                     end
@@ -282,8 +267,6 @@ end
             end
             @info "Alg = $alg, Integrand = $i, Dimension = $dim, Output Dimension = $nout"
             sol = solve(prob,alg,reltol=reltol,abstol=abstol)
-            # @show sol.u
-            # @show exact_sol_v[i](dim,nout,lb,ub)
             @test sol.u ≈ exact_sol_v[i](dim,nout,lb,ub) rtol = 1e-2
         end
     end
@@ -326,14 +309,3 @@ end
         end
     end
 end
-
-# alg = CubaSUAVE()
-# i = 1
-# (dim, nout) = (1,1)
-# # (lb,ub) = (1.0,3.0)
-# (lb,ub) = (ones(dim),3ones(dim))
-# batch_f_v(integrands_v[i],nout)([lb ub],1.0)
-# prob = QuadratureProblem(batch_iip_f_v(integrands_v[i],nout),lb,ub,batch=10,nout = nout)
-# sol = solve(prob,alg,reltol=reltol,abstol=abstol)
-# sol = @Juno.enter solve(prob,alg,reltol=reltol,abstol=abstol)
-# sol.u ≈ exact_sol_v[i](dim,nout,lb,ub)

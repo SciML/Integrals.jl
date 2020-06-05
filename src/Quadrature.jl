@@ -66,12 +66,8 @@ function DiffEqBase.solve(prob::QuadratureProblem,::HCubatureJL,args...;
     p = prob.p
 
     if isinplace(prob)
-        # dx = zeros(1)
-        # f = (x) -> (prob.f(dx,x,p); dx[1])
         dx = zeros(prob.nout)
-        # f = (x) -> (prob.f(dx,x,p); prob.nout == 1 ? dx[1] : dx)
         f = (x) -> (prob.f(dx,x,p); dx)
-
     else
         f = (x) -> prob.f(x,p)
     end
@@ -129,9 +125,6 @@ function __init__()
                     if isinplace(prob)
                         dx = zeros(prob.nout)
                         f = (x) -> (prob.f(dx,x,prob.p); dx[1])
-                        # dx = zeros(1)
-                        # f = (x, ) -> (prob.f(dx,x,prob.p); dx[1])
-                        # f = (x,dx) -> prob.f(dx,x,prob.p)
                     else
                         f = (x) -> prob.f(x,prob.p)[1]
                     end
@@ -157,25 +150,15 @@ function __init__()
                                                          maxevals=maxiters)
                         end
 
-                        # if isinplace(prob)
-                        #      val = [_val]
-                        # end
                         if isinplace(prob) || !isa(prob.f(prob.lb,prob.p), Number)
                             val = [_val]
                         else
                             val = _val
                         end
-                        # val = (isinplace(prob) || !isa(prob.f(prob.lb,prob.p), Number)) ? [_val] : _val
-                        #     val = prob.f(prob.lb,prob.p) isa Number ? _val : [_val]
-                        # end
                      end
                 else
                     if isinplace(prob)
                         f = (x,dx) -> prob.f(dx',x,prob.p)
-                        # f = function (x,dx)
-                        #     @show size(x), size(dx)
-                        #     prob.f(dx',x,prob.p)
-                        # end
                     elseif prob.lb isa Number
                         if prob.f([prob.lb prob.ub], prob.p) isa Vector
                             f = (x,dx) -> (dx .= prob.f(x',prob.p))
@@ -185,15 +168,10 @@ function __init__()
                             end
                         end
                     else
-                        # @show typeof(prob.f([prob.lb prob.ub], prob.p))
                         if prob.f([prob.lb prob.ub], prob.p) isa Vector
                             f = (x,dx) -> (dx .= prob.f(x,prob.p))
                         else
                             f = function (x,dx)
-                                # @show size(x), size(dx), size(prob.f(x,prob.p)[:])
-                                # @show x
-                                # @show dx
-                                # @show prob.f(x,prob.p)'
                                 dx .= prob.f(x,prob.p)[:]
                             end
                         end
@@ -224,7 +202,6 @@ function __init__()
              else
                  if prob.batch == 0
                      if isinplace(prob)
-                         # dx = similar(a)
                          f = (x,dx) -> (prob.f(dx,x,prob.p); dx)
                      else
                          f = (x,dx) -> (dx .= prob.f(x,prob.p))
@@ -335,23 +312,12 @@ function __init__()
               else
                   if isinplace(prob)
                       f = function (x,dx)
-                          #todo scale_x!
-                          # @show size(x)
-                          # @show size(dx)
-                          # @show size(scale_x(ub,lb,x))
-                          # prob.f(dx',scale_x!(view(_x,1:size(x,1),1:size(x,2)),ub,lb,x),p)
-                          # prob.f(dx',scale_x(ub,lb,x),p)  #broken vector iip
-                          prob.f(dx,scale_x(ub,lb,x),p)   #broken nout = 1 iip
+                          prob.f(dx,scale_x(ub,lb,x),p)
                           dx .*= prod((y)->y[1]-y[2],zip(ub,lb))
                       end
                   else
                       if prob.f([prob.lb prob.ub], prob.p) isa Vector
                           f = function (x,dx)
-                              # @show size(x)
-                              # @show size(dx)
-                              # @show size(scale_x(ub,lb,x))
-                              # @show size(prob.f(scale_x(ub,lb,x),p)')
-                              # @show size(prod((y)->y[1]-y[2],zip(ub,lb)))
                               dx .= prob.f(scale_x(ub,lb,x),p)' .* prod((y)->y[1]-y[2],zip(ub,lb))
                           end
                       else
@@ -385,20 +351,7 @@ function __init__()
                                maxevals = maxiters, kwargs...)
           end
 
-          # if isinplace(prob)
-          #     val = out.integral
-          # elseif prob.batch !=0
-          #   if prob.nout == 1
-          #       val = out.integral[1]
-          #   else
-          #       val = out.integral
-          #   end
           if isinplace(prob) || prob.batch != 0
-              # if prob.nout == 1
-              #     val = out.integral[1]
-              # else
-              #     val = out.integral
-              # end
               val = out.integral
           else
               if prob.nout == 1 && prob.f(prob.lb, prob.p) isa Number
