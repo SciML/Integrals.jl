@@ -64,14 +64,15 @@ function DiffEqBase.solve(prob::QuadratureProblem,::HCubatureJL,args...;
                           maxiters = typemax(Int),
                           kwargs...)
     p = prob.p
+
     if isinplace(prob)
-        dx = zeros(1)
-        f = (x) -> (prob.f(dx,x,p); dx[1])
+        dx = zeros(prob.nout)
+        f = (x) -> (prob.f(dx,x,p); dx)
     else
         f = (x) -> prob.f(x,p)
     end
     @assert prob.batch == 0
-    @assert prob.nout == 1
+
     if prob.lb isa Number
         val,err = hquadrature(f, prob.lb, prob.ub;
                             rtol=reltol, atol=abstol,
@@ -92,8 +93,8 @@ function DiffEqBase.solve(prob::QuadratureProblem,alg::VEGAS,args...;
     @assert prob.nout == 1
     if prob.batch == 0
         if isinplace(prob)
-          dx = zeros(1)
-          f = (x) -> (prob.f(dx,x,p); dx[1])
+          dx = zeros(prob.nout)
+          f = (x) -> (prob.f(dx,x,p); dx)
         else
           f = (x) -> prob.f(x,p)
         end
@@ -122,69 +123,88 @@ function __init__()
             if nout == 1
                 if prob.batch == 0
                     if isinplace(prob)
-                        dx = zeros(1)
+                        dx = zeros(prob.nout)
                         f = (x) -> (prob.f(dx,x,prob.p); dx[1])
                     else
-                        f = (x) -> prob.f(x,prob.p)
+                        f = (x) -> prob.f(x,prob.p)[1]
                     end
                     if prob.lb isa Number
                         if alg isa CubatureJLh
-                            val,err = Cubature.hquadrature(f, prob.lb, prob.ub;
+                            _val,err = Cubature.hquadrature(f, prob.lb, prob.ub;
                                                            reltol=reltol, abstol=abstol,
                                                            maxevals=maxiters)
                         else
-                            val,err = Cubature.pquadrature(f, prob.lb, prob.ub;
+                            _val,err = Cubature.pquadrature(f, prob.lb, prob.ub;
                                                            reltol=reltol, abstol=abstol,
                                                            maxevals=maxiters)
                         end
+                        val = prob.f(prob.lb,prob.p) isa Number ? _val : [_val]
                     else
                         if alg isa CubatureJLh
-                            val,err = Cubature.hcubature(f, prob.lb, prob.ub;
-                                                         reltol=reltol, abstol=abstol,
-                                                         maxevals=maxiters)
+                            _val,err = Cubature.hcubature(f, prob.lb, prob.ub;
+                                                     reltol=reltol, abstol=abstol,
+                                                     maxevals=maxiters)
                         else
-                            val,err = Cubature.pcubature(f, prob.lb, prob.ub;
+                            _val,err = Cubature.pcubature(f, prob.lb, prob.ub;
                                                          reltol=reltol, abstol=abstol,
                                                          maxevals=maxiters)
+                        end
+
+                        if isinplace(prob) || !isa(prob.f(prob.lb,prob.p), Number)
+                            val = [_val]
+                        else
+                            val = _val
                         end
                      end
                 else
                     if isinplace(prob)
-                        f = (x,dx) -> prob.f(dx,x,prob.p)
+                        f = (x,dx) -> prob.f(dx',x,prob.p)
                     elseif prob.lb isa Number
-                        f = (x,dx) -> (dx .= prob.f(x',prob.p))
+                        if prob.f([prob.lb prob.ub], prob.p) isa Vector
+                            f = (x,dx) -> (dx .= prob.f(x',prob.p))
+                        else
+                            f = function (x,dx)
+                                dx[:] = prob.f(x',prob.p)
+                            end
+                        end
                     else
-                        f = (x,dx) -> (dx .= prob.f(x,prob.p))
+                        if prob.f([prob.lb prob.ub], prob.p) isa Vector
+                            f = (x,dx) -> (dx .= prob.f(x,prob.p))
+                        else
+                            f = function (x,dx)
+                                dx .= prob.f(x,prob.p)[:]
+                            end
+                        end
                     end
                     if prob.lb isa Number
                         if alg isa CubatureJLh
-                            val,err = Cubature.hquadrature_v(f, prob.lb, prob.ub;
+                            _val,err = Cubature.hquadrature_v(f, prob.lb, prob.ub;
                                                              reltol=reltol, abstol=abstol,
                                                              maxevals=maxiters)
                         else
-                            val,err = Cubature.pquadrature_v(f, prob.lb, prob.ub;
+                            _val,err = Cubature.pquadrature_v(f, prob.lb, prob.ub;
                                                              reltol=reltol, abstol=abstol,
                                                              maxevals=maxiters)
                         end
                     else
                         if alg isa CubatureJLh
-                            val,err = Cubature.hcubature_v(f, prob.lb, prob.ub;
+                            _val,err = Cubature.hcubature_v(f, prob.lb, prob.ub;
                                                            reltol=reltol, abstol=abstol,
                                                            maxevals=maxiters)
                         else
-                            val,err = Cubature.pcubature_v(f, prob.lb, prob.ub;
+                            _val,err = Cubature.pcubature_v(f, prob.lb, prob.ub;
                                                            reltol=reltol, abstol=abstol,
                                                            maxevals=maxiters)
                         end
                      end
+                     val = _val isa Number ? [_val] : _val
                  end
              else
                  if prob.batch == 0
                      if isinplace(prob)
-                         dx = similar(a)
-                         f = (x,dx) -> (prob.f(dx,x,p); dx)
+                         f = (x,dx) -> (prob.f(dx,x,prob.p); dx)
                      else
-                         f = (x,dx) -> (dx .= prob.f(x,p))
+                         f = (x,dx) -> (dx .= prob.f(x,prob.p))
                      end
                      if prob.lb isa Number
                          if alg isa CubatureJLh
@@ -279,20 +299,31 @@ function __init__()
                           dx .*= prod((y)->y[1]-y[2],zip(ub,lb))
                       end
                   else
-                      f = function (x,dx)
-                          dx .= prob.f(scale_x(ub,lb,x),p)' .* prod((y)->y[1]-y[2],zip(ub,lb))
+                      if prob.f([prob.lb prob.ub], prob.p) isa Vector
+                          f = function (x,dx)
+                              dx .= prob.f(scale_x(ub,lb,x),p)' .* prod((y)->y[1]-y[2],zip(ub,lb))
+                          end
+                      else
+                          f = function (x,dx)
+                              dx .= prob.f(scale_x(ub,lb,x),p) .* prod((y)->y[1]-y[2],zip(ub,lb))
+                          end
                       end
                   end
               else
                   if isinplace(prob)
                       f = function (x,dx)
-                          #todo scale_x!
-                          prob.f(dx',scale_x!(view(_x,1:size(x,1),1:size(x,2)),ub,lb,x),p)
+                          prob.f(dx,scale_x(ub,lb,x),p)
                           dx .*= prod((y)->y[1]-y[2],zip(ub,lb))
                       end
                   else
-                      f = function (x,dx)
-                          dx .= prob.f(scale_x(ub,lb,x),p)' .* prod((y)->y[1]-y[2],zip(ub,lb))
+                      if prob.f([prob.lb prob.ub], prob.p) isa Vector
+                          f = function (x,dx)
+                              dx .= prob.f(scale_x(ub,lb,x),p)' .* prod((y)->y[1]-y[2],zip(ub,lb))
+                          end
+                      else
+                          f = function (x,dx)
+                              dx .= prob.f(scale_x(ub,lb,x),p) .* prod((y)->y[1]-y[2],zip(ub,lb))
+                          end
                       end
                   end
               end
@@ -320,10 +351,14 @@ function __init__()
                                maxevals = maxiters, kwargs...)
           end
 
-          if prob.nout == 1
-              val = out.integral[1]
-          else
+          if isinplace(prob) || prob.batch != 0
               val = out.integral
+          else
+              if prob.nout == 1 && prob.f(prob.lb, prob.p) isa Number
+                  val = out.integral[1]
+              else
+                  val = out.integral
+              end
           end
 
           DiffEqBase.build_solution(prob,alg,val,out.error,
