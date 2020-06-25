@@ -229,10 +229,15 @@ function __init__()
                       end
                  else
                      if isinplace(prob)
-                         f = (x,dx) -> prob.f(dx,x,p)
+                         f = (x,dx) -> prob.f(dx,x,prob.p)
                      else
-                         f = (x,dx) -> (dx .= prob.f(x,p))
+                         if prob.lb isa Number
+                             f = (x,dx) -> (dx .= prob.f(x',prob.p))
+                         else
+                             f = (x,dx) -> (dx .= prob.f(x,prob.p))
+                         end
                      end
+
                      if prob.lb isa Number
                          if alg isa CubatureJLh
                              val,err = Cubature.hquadrature_v(nout, f, prob.lb, prob.ub;
