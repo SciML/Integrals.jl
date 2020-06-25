@@ -273,7 +273,7 @@ end
 end
 
 @testset "Batched Standard Vector Integrands" begin
-    nout = 1
+    nout = 2
     for alg in algs
         req = alg_req[alg]
         for i in 1:length(integrands_v)
