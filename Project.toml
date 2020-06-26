@@ -27,7 +27,7 @@ Requires = "0.5, 1.0"
 ReverseDiff = "1"
 Zygote = "0.4.22"
 ZygoteRules = "0.2"
-julia = "1"
+julia = "1.4"
 
 [extras]
 Cuba = "8a292aeb-7a57-582c-b821-06e4c11590b1"
