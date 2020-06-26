@@ -2,6 +2,7 @@ module Quadrature
 
 using Requires, Reexport,  MonteCarloIntegration, QuadGK, HCubature
 @reexport using DiffEqBase
+using ZygoteRules, Zygote, ReverseDiff
 
 struct QuadGKJL <: DiffEqBase.AbstractQuadratureAlgorithm end
 struct HCubatureJL <: DiffEqBase.AbstractQuadratureAlgorithm end
@@ -22,6 +23,17 @@ abstract type AbstractCubatureJLAlgorithm <: DiffEqBase.AbstractQuadratureAlgori
 struct CubatureJLh <: AbstractCubatureJLAlgorithm end
 struct CubatureJLp <: AbstractCubatureJLAlgorithm end
 
+abstract type QuadSensitivityAlg end
+struct ReCallVJP{V}
+    vjp::V
+end
+
+abstract type QuadratureVJP end
+struct ZygoteVJP end
+struct ReverseDiffVJP
+    compile::Bool
+end
+
 function scale_x!(_x,ub,lb,x)
     _x .= (ub .- lb) .* x .+ lb
     _x
@@ -31,39 +43,45 @@ function scale_x(ub,lb,x)
     (ub .- lb) .* x .+ lb
 end
 
-function DiffEqBase.solve(prob::QuadratureProblem,::Nothing,args...;
+function DiffEqBase.solve(prob::QuadratureProblem,::Nothing,sensealg,lb,ub,p,args...;
                           reltol = 1e-8, abstol = 1e-8, kwargs...)
-    if prob.lb isa Number
-        solve(prob,QuadGKJL();reltol=reltol,abstol=abstol,kwargs...)
-    elseif length(prob.lb) > 8 && reltol < 1e-4 || abstol < 1e-4
-        solve(prob,VEGAS();reltol=reltol,abstol=abstol,kwargs...)
+    if lb isa Number
+        __solve(prob,QuadGKJL();reltol=reltol,abstol=abstol,kwargs...)
+    elseif length(lb) > 8 && reltol < 1e-4 || abstol < 1e-4
+        __solve(prob,VEGAS();reltol=reltol,abstol=abstol,kwargs...)
     else
-        solve(prob,HCubatureJL();reltol=reltol,abstol=abstol,kwargs...)
+        __solve(prob,HCubatureJL();reltol=reltol,abstol=abstol,kwargs...)
     end
 end
 
-function DiffEqBase.solve(prob::QuadratureProblem,::QuadGKJL,args...;
+function DiffEqBase.solve(prob::QuadratureProblem,
+                            alg::DiffEqBase.AbstractQuadratureAlgorithm,
+                            args...; sensealg = ReCallVJP(ZygoteVJP()), kwargs...)
+  __solvebp(prob,alg,sensealg,prob.lb,prob.ub,prob.p,args...;kwargs...)
+end
+
+function __solvebp(prob::QuadratureProblem,::QuadGKJL,sensealg,lb,ub,p,args...;
                           reltol = 1e-8, abstol = 1e-8,
                           maxiters = typemax(Int),
                           kwargs...)
-    if isinplace(prob) || prob.lb isa AbstractArray || prob.ub isa AbstractArray
+    if isinplace(prob) || lb isa AbstractArray || ub isa AbstractArray
         error("QuadGKJL only accepts one-dimensional quadrature problems.")
     end
     @assert prob.batch == 0
     @assert prob.nout == 1
-    p = prob.p
+    p = p
     f = x -> prob.f(x,p)
-    val,err = quadgk(f, prob.lb, prob.ub,
+    val,err = quadgk(f, lb, ub,
                      rtol=reltol, atol=abstol,
                      kwargs...)
     DiffEqBase.build_solution(prob,QuadGKJL(),val,err,retcode = :Success)
 end
 
-function DiffEqBase.solve(prob::QuadratureProblem,::HCubatureJL,args...;
+function __solvebp(prob::QuadratureProblem,::HCubatureJL,sensealg,lb,ub,p,args...;
                           reltol = 1e-8, abstol = 1e-8,
                           maxiters = typemax(Int),
                           kwargs...)
-    p = prob.p
+    p = p
 
     if isinplace(prob)
         dx = zeros(prob.nout)
@@ -73,23 +91,23 @@ function DiffEqBase.solve(prob::QuadratureProblem,::HCubatureJL,args...;
     end
     @assert prob.batch == 0
 
-    if prob.lb isa Number
-        val,err = hquadrature(f, prob.lb, prob.ub;
+    if lb isa Number
+        val,err = hquadrature(f, lb, ub;
                             rtol=reltol, atol=abstol,
                             maxevals=maxiters, initdiv=1)
     else
-        val,err = hcubature(f, prob.lb, prob.ub;
+        val,err = hcubature(f, lb, ub;
                             rtol=reltol, atol=abstol,
                             maxevals=maxiters, initdiv=1)
     end
     DiffEqBase.build_solution(prob,HCubatureJL(),val,err,retcode = :Success)
 end
 
-function DiffEqBase.solve(prob::QuadratureProblem,alg::VEGAS,args...;
+function __solvebp(prob::QuadratureProblem,alg::VEGAS,sensealg,lb,ub,p,args...;
                           reltol = 1e-8, abstol = 1e-8,
                           maxiters = typemax(Int),
                           kwargs...)
-    p = prob.p
+    p = p
     @assert prob.nout == 1
     if prob.batch == 0
         if isinplace(prob)
@@ -106,7 +124,7 @@ function DiffEqBase.solve(prob::QuadratureProblem,alg::VEGAS,args...;
           f = (x) -> prob.f(x',p)
         end
     end
-    val,err,chi = vegas(f, prob.lb, prob.ub, rtol=reltol, atol=abstol,
+    val,err,chi = vegas(f, lb, ub, rtol=reltol, atol=abstol,
                         maxiter = maxiters, nbins = alg.nbins,
                         ncalls = alg.ncalls, batch=prob.batch != 0, kwargs...)
     DiffEqBase.build_solution(prob,alg,val,err,chi=chi,retcode = :Success)
@@ -114,7 +132,7 @@ end
 
 function __init__()
     @require Cubature="667455a9-e2ce-5579-9412-b964f529a492" begin
-        function DiffEqBase.solve(prob::QuadratureProblem,
+        function __solvebp(prob::QuadratureProblem,
                                   alg::AbstractCubatureJLAlgorithm, args...;
                                   reltol = 1e-8, abstol = 1e-8,
                                   maxiters = typemax(Int),
@@ -124,33 +142,33 @@ function __init__()
                 if prob.batch == 0
                     if isinplace(prob)
                         dx = zeros(prob.nout)
-                        f = (x) -> (prob.f(dx,x,prob.p); dx[1])
+                        f = (x) -> (prob.f(dx,x,p); dx[1])
                     else
-                        f = (x) -> prob.f(x,prob.p)[1]
+                        f = (x) -> prob.f(x,p)[1]
                     end
-                    if prob.lb isa Number
+                    if lb isa Number
                         if alg isa CubatureJLh
-                            _val,err = Cubature.hquadrature(f, prob.lb, prob.ub;
+                            _val,err = Cubature.hquadrature(f, lb, ub;
                                                            reltol=reltol, abstol=abstol,
                                                            maxevals=maxiters)
                         else
-                            _val,err = Cubature.pquadrature(f, prob.lb, prob.ub;
+                            _val,err = Cubature.pquadrature(f, lb, ub;
                                                            reltol=reltol, abstol=abstol,
                                                            maxevals=maxiters)
                         end
-                        val = prob.f(prob.lb,prob.p) isa Number ? _val : [_val]
+                        val = prob.f(lb,p) isa Number ? _val : [_val]
                     else
                         if alg isa CubatureJLh
-                            _val,err = Cubature.hcubature(f, prob.lb, prob.ub;
+                            _val,err = Cubature.hcubature(f, lb, ub;
                                                      reltol=reltol, abstol=abstol,
                                                      maxevals=maxiters)
                         else
-                            _val,err = Cubature.pcubature(f, prob.lb, prob.ub;
+                            _val,err = Cubature.pcubature(f, lb, ub;
                                                          reltol=reltol, abstol=abstol,
                                                          maxevals=maxiters)
                         end
 
-                        if isinplace(prob) || !isa(prob.f(prob.lb,prob.p), Number)
+                        if isinplace(prob) || !isa(prob.f(lb,p), Number)
                             val = [_val]
                         else
                             val = _val
@@ -158,41 +176,41 @@ function __init__()
                      end
                 else
                     if isinplace(prob)
-                        f = (x,dx) -> prob.f(dx',x,prob.p)
-                    elseif prob.lb isa Number
-                        if prob.f([prob.lb prob.ub], prob.p) isa Vector
-                            f = (x,dx) -> (dx .= prob.f(x',prob.p))
+                        f = (x,dx) -> prob.f(dx',x,p)
+                    elseif lb isa Number
+                        if prob.f([lb ub], p) isa Vector
+                            f = (x,dx) -> (dx .= prob.f(x',p))
                         else
                             f = function (x,dx)
-                                dx[:] = prob.f(x',prob.p)
+                                dx[:] = prob.f(x',p)
                             end
                         end
                     else
-                        if prob.f([prob.lb prob.ub], prob.p) isa Vector
-                            f = (x,dx) -> (dx .= prob.f(x,prob.p))
+                        if prob.f([lb ub], p) isa Vector
+                            f = (x,dx) -> (dx .= prob.f(x,p))
                         else
                             f = function (x,dx)
-                                dx .= prob.f(x,prob.p)[:]
+                                dx .= prob.f(x,p)[:]
                             end
                         end
                     end
-                    if prob.lb isa Number
+                    if lb isa Number
                         if alg isa CubatureJLh
-                            _val,err = Cubature.hquadrature_v(f, prob.lb, prob.ub;
+                            _val,err = Cubature.hquadrature_v(f, lb, ub;
                                                              reltol=reltol, abstol=abstol,
                                                              maxevals=maxiters)
                         else
-                            _val,err = Cubature.pquadrature_v(f, prob.lb, prob.ub;
+                            _val,err = Cubature.pquadrature_v(f, lb, ub;
                                                              reltol=reltol, abstol=abstol,
                                                              maxevals=maxiters)
                         end
                     else
                         if alg isa CubatureJLh
-                            _val,err = Cubature.hcubature_v(f, prob.lb, prob.ub;
+                            _val,err = Cubature.hcubature_v(f, lb, ub;
                                                            reltol=reltol, abstol=abstol,
                                                            maxevals=maxiters)
                         else
-                            _val,err = Cubature.pcubature_v(f, prob.lb, prob.ub;
+                            _val,err = Cubature.pcubature_v(f, lb, ub;
                                                            reltol=reltol, abstol=abstol,
                                                            maxevals=maxiters)
                         end
@@ -202,59 +220,59 @@ function __init__()
              else
                  if prob.batch == 0
                      if isinplace(prob)
-                         f = (x,dx) -> (prob.f(dx,x,prob.p); dx)
+                         f = (x,dx) -> (prob.f(dx,x,p); dx)
                      else
-                         f = (x,dx) -> (dx .= prob.f(x,prob.p))
+                         f = (x,dx) -> (dx .= prob.f(x,p))
                      end
-                     if prob.lb isa Number
+                     if lb isa Number
                          if alg isa CubatureJLh
-                             val,err = Cubature.hquadrature(nout, f, prob.lb, prob.ub;
+                             val,err = Cubature.hquadrature(nout, f, lb, ub;
                                                             reltol=reltol, abstol=abstol,
                                                             maxevals=maxiters)
                          else
-                             val,err = Cubature.pquadrature(nout, f, prob.lb, prob.ub;
+                             val,err = Cubature.pquadrature(nout, f, lb, ub;
                                                             reltol=reltol, abstol=abstol,
                                                             maxevals=maxiters)
                          end
                      else
                          if alg isa CubatureJLh
-                             val,err = Cubature.hcubature(nout, f, prob.lb, prob.ub;
+                             val,err = Cubature.hcubature(nout, f, lb, ub;
                                                           reltol=reltol, abstol=abstol,
                                                           maxevals=maxiters)
                          else
-                             val,err = Cubature.pcubature(nout, f, prob.lb, prob.ub;
+                             val,err = Cubature.pcubature(nout, f, lb, ub;
                                                           reltol=reltol, abstol=abstol,
                                                           maxevals=maxiters)
                          end
                       end
                  else
                      if isinplace(prob)
-                         f = (x,dx) -> prob.f(dx,x,prob.p)
+                         f = (x,dx) -> prob.f(dx,x,p)
                      else
-                         if prob.lb isa Number
-                             f = (x,dx) -> (dx .= prob.f(x',prob.p))
+                         if lb isa Number
+                             f = (x,dx) -> (dx .= prob.f(x',p))
                          else
-                             f = (x,dx) -> (dx .= prob.f(x,prob.p))
+                             f = (x,dx) -> (dx .= prob.f(x,p))
                          end
                      end
 
-                     if prob.lb isa Number
+                     if lb isa Number
                          if alg isa CubatureJLh
-                             val,err = Cubature.hquadrature_v(nout, f, prob.lb, prob.ub;
+                             val,err = Cubature.hquadrature_v(nout, f, lb, ub;
                                                               reltol=reltol, abstol=abstol,
                                                               maxevals=maxiters)
                          else
-                             val,err = Cubature.pquadrature_v(nout, f, prob.lb, prob.ub;
+                             val,err = Cubature.pquadrature_v(nout, f, lb, ub;
                                                               reltol=reltol, abstol=abstol,
                                                               maxevals=maxiters)
                          end
                      else
                          if alg isa CubatureJLh
-                             val,err = Cubature.hcubature_v(nout, f, prob.lb, prob.ub;
+                             val,err = Cubature.hcubature_v(nout, f, lb, ub;
                                                             reltol=reltol, abstol=abstol,
                                                             maxevals=maxiters)
                          else
-                             val,err = Cubature.pcubature_v(nout, f, prob.lb, prob.ub;
+                             val,err = Cubature.pcubature_v(nout, f, lb, ub;
                                                             reltol=reltol, abstol=abstol,
                                                             maxevals=maxiters)
                          end
@@ -266,23 +284,23 @@ function __init__()
     end
 
     @require Cuba="8a292aeb-7a57-582c-b821-06e4c11590b1" begin
-        function DiffEqBase.solve(prob::QuadratureProblem,alg::AbstractCubaAlgorithm,
-                                  args...;
+        function __solvebp(prob::QuadratureProblem,alg::AbstractCubaAlgorithm,sensealg,
+                                  lb,ub,p,args...;
                                   reltol = 1e-8, abstol = 1e-8,
                                   maxiters = alg isa CubaSUAVE ? 1000000 : typemax(Int),
                                   kwargs...)
-          p = prob.p
-          if prob.lb isa Number && prob.batch == 0
-              _x = Float64[prob.lb]
-          elseif prob.lb isa Number
-              _x = zeros(length(prob.lb),prob.batch)
+          p = p
+          if lb isa Number && prob.batch == 0
+              _x = Float64[lb]
+          elseif lb isa Number
+              _x = zeros(length(lb),prob.batch)
           elseif prob.batch == 0
-              _x = zeros(length(prob.lb))
+              _x = zeros(length(lb))
           else
-              _x = zeros(length(prob.lb),prob.batch)
+              _x = zeros(length(lb),prob.batch)
           end
-          ub = prob.ub
-          lb = prob.lb
+          ub = ub
+          lb = lb
 
           if prob.batch == 0
               if isinplace(prob)
@@ -296,7 +314,7 @@ function __init__()
                   end
               end
           else
-              if prob.lb isa Number
+              if lb isa Number
                   if isinplace(prob)
                       f = function (x,dx)
                           #todo check scale_x!
@@ -304,7 +322,7 @@ function __init__()
                           dx .*= prod((y)->y[1]-y[2],zip(ub,lb))
                       end
                   else
-                      if prob.f([prob.lb prob.ub], prob.p) isa Vector
+                      if prob.f([lb ub], p) isa Vector
                           f = function (x,dx)
                               dx .= prob.f(scale_x(ub,lb,x),p)' .* prod((y)->y[1]-y[2],zip(ub,lb))
                           end
@@ -321,7 +339,7 @@ function __init__()
                           dx .*= prod((y)->y[1]-y[2],zip(ub,lb))
                       end
                   else
-                      if prob.f([prob.lb prob.ub], prob.p) isa Vector
+                      if prob.f([lb ub], p) isa Vector
                           f = function (x,dx)
                               dx .= prob.f(scale_x(ub,lb,x),p)' .* prod((y)->y[1]-y[2],zip(ub,lb))
                           end
@@ -334,7 +352,7 @@ function __init__()
               end
           end
 
-          ndim = length(prob.lb)
+          ndim = length(lb)
 
           nvec = prob.batch == 0 ? 1 : prob.batch
 
@@ -359,7 +377,7 @@ function __init__()
           if isinplace(prob) || prob.batch != 0
               val = out.integral
           else
-              if prob.nout == 1 && prob.f(prob.lb, prob.p) isa Number
+              if prob.nout == 1 && prob.f(lb, p) isa Number
                   val = out.integral[1]
               else
                   val = out.integral
@@ -370,6 +388,66 @@ function __init__()
                          chi=out.probability,retcode = :Success)
         end
     end
+end
+
+ZygoteRules.@adjoint function __solvebp(prob,alg,sensealg,lb,ub,p,args...;kwargs...)
+    out = __solvebp(prob,alg,sensealg,lb,ub,p,args...;kwargs...)
+    function quadrature_adjoint(Δ)
+        y = typeof(Δ) <: Array{<:Number,0} ? Δ[1] : Δ
+        if isinplace(prob)
+            if lb isa Number && prob.batch == 0
+                dx = Float64[lb]
+            elseif lb isa Number
+                dx = zeros(length(lb),prob.batch)
+            elseif prob.batch == 0
+                dx = zeros(length(lb))
+            else
+                dx = zeros(length(lb),prob.batch)
+            end
+            _f = (x) -> (prob.f(dx,x,p); dx)
+
+            if sensealg.vjp isa ZygoteVJP
+                dfdp = function (dx,x,p)
+                    _,back = Zygote.pullback(p) do p
+                        dx = Zygote.Buffer(x)
+                        prob.f(dx,x,p)
+                        copy(dx)
+                    end
+                    back(y)[1]
+                end
+            elseif sensealg.vjp isa ReverseDiffVJP
+                error("TODO")
+            end
+        else
+            _f = (x) -> prob.f(x,p)
+            if sensealg.vjp isa ZygoteVJP
+                dfdp = function (x,p)
+                    _,back = Zygote.pullback(p->prob.f(x,p),p)
+                    back(y)[1]
+                end
+            elseif sensealg.vjp isa ReverseDiffVJP
+                error("TODO")
+            end
+        end
+        dlb = -_f(lb)
+        dub = _f(ub)
+
+        dp_prob = QuadratureProblem(dfdp,lb,ub,p;nout=length(p),batch = prob.batch,kwargs...)
+
+        if p isa Number
+            dp = __solvebp(dp_prob,alg,sensealg,lb,ub,p,args...;kwargs...)[1]
+        else
+            dp = __solvebp(dp_prob,alg,sensealg,lb,ub,p,args...;kwargs...).u
+        end
+
+        (nothing,nothing,nothing,dlb,dub,dp,ntuple(x->nothing,length(args))...)
+    end
+    out,quadrature_adjoint
+end
+
+ZygoteRules.@adjoint function ZygoteRules.literal_getproperty(
+                        sol::DiffEqBase.QuadratureSolution,::Val{:u})
+    sol.u,Δ->(DiffEqBase.build_solution(sol.prob,sol.alg,Δ,sol.resid),)
 end
 
 export QuadGKJL, HCubatureJL, VEGAS

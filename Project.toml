@@ -6,11 +6,15 @@ version = "1.1.0"
 [deps]
 CommonSolve = "38540f10-b2f7-11e9-35d8-d573e4eb0ff2"
 DiffEqBase = "2b5f629d-d688-5b77-993f-72d75c75574e"
+ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 HCubature = "19dc6840-f33b-545b-b366-655c7e3ffd49"
 MonteCarloIntegration = "4886b29c-78c9-11e9-0a6e-41e1f4161f7b"
 QuadGK = "1fd47b50-473d-5c70-9696-f719f8f3bcdc"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 Requires = "ae029012-a4dd-5104-9daa-d747884805df"
+ReverseDiff = "37e2e3b7-166d-5795-8a7a-e32c996b4267"
+Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
+ZygoteRules = "700de1a5-db45-46bc-99cf-38207098b444"
 
 [compat]
 CommonSolve = "0.2"
@@ -25,7 +29,8 @@ julia = "1"
 [extras]
 Cuba = "8a292aeb-7a57-582c-b821-06e4c11590b1"
 Cubature = "667455a9-e2ce-5579-9412-b964f529a492"
+FiniteDiff = "6a86dc24-6348-571c-b903-95158fe2bd41"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Cuba", "Cubature", "Test"]
+test = ["Cuba", "Cubature", "FiniteDiff", "Test"]
