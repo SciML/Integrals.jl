@@ -136,7 +136,8 @@ end
 function __init__()
     @require Cubature="667455a9-e2ce-5579-9412-b964f529a492" begin
         function __solvebp_call(prob::QuadratureProblem,
-                                  alg::AbstractCubatureJLAlgorithm, args...;
+                                  alg::AbstractCubatureJLAlgorithm,
+                                  sensealg, lb, ub, p, args...;
                                   reltol = 1e-8, abstol = 1e-8,
                                   maxiters = typemax(Int),
                                   kwargs...)
