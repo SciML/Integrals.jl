@@ -38,12 +38,12 @@ sol = solve(prob,CubaCuhre(),reltol=1e-3,abstol=1e-3)
 
 function testf(lb,ub,p)
     prob = QuadratureProblem(f,lb,ub,p)
-    solve(prob,CubaCuhre(),reltol=1e-3,abstol=1e-3)[1]
+    solve(prob,CubaCuhre(),reltol=1e-6,abstol=1e-6)[1]
 end
 
 function testf2(lb,ub,p)
     prob = QuadratureProblem(f,lb,ub,p)
-    solve(prob,HCubatureJL(),reltol=1e-3,abstol=1e-3)[1]
+    solve(prob,HCubatureJL(),reltol=1e-6,abstol=1e-6)[1]
 end
 
 dlb1,dub1,dp1 = Zygote.gradient(testf,lb,ub,p)
@@ -84,12 +84,12 @@ sol = solve(prob,CubaCuhre(),reltol=1e-3,abstol=1e-3)
 
 function testf(lb,ub,p)
     prob = QuadratureProblem(f,lb,ub,p,nout=2)
-    sum(solve(prob,CubaCuhre(),reltol=1e-3,abstol=1e-3))
+    sum(solve(prob,CubaCuhre(),reltol=1e-6,abstol=1e-6))
 end
 
 function testf2(lb,ub,p)
     prob = QuadratureProblem(f,lb,ub,p,nout=2)
-    sum(solve(prob,HCubatureJL(),reltol=1e-3,abstol=1e-3))
+    sum(solve(prob,HCubatureJL(),reltol=1e-6,abstol=1e-6))
 end
 
 dlb1,dub1,dp1 = Zygote.gradient(testf,lb,ub,p)
