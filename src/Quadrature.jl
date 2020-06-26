@@ -2,7 +2,7 @@ module Quadrature
 
 using Requires, Reexport,  MonteCarloIntegration, QuadGK, HCubature
 @reexport using DiffEqBase
-using ZygoteRules, Zygote, ReverseDiff
+using ZygoteRules, Zygote, ReverseDiff, ForwardDiff
 
 struct QuadGKJL <: DiffEqBase.AbstractQuadratureAlgorithm end
 struct HCubatureJL <: DiffEqBase.AbstractQuadratureAlgorithm end
@@ -60,7 +60,10 @@ function DiffEqBase.solve(prob::QuadratureProblem,
   __solvebp(prob,alg,sensealg,prob.lb,prob.ub,prob.p,args...;kwargs...)
 end
 
-function __solvebp(prob::QuadratureProblem,::QuadGKJL,sensealg,lb,ub,p,args...;
+# Give a layer to intercept with AD
+__solvebp(args...;kwargs...) = __solvebp_call(args...;kwargs...)
+
+function __solvebp_call(prob::QuadratureProblem,::QuadGKJL,sensealg,lb,ub,p,args...;
                           reltol = 1e-8, abstol = 1e-8,
                           maxiters = typemax(Int),
                           kwargs...)
@@ -77,7 +80,7 @@ function __solvebp(prob::QuadratureProblem,::QuadGKJL,sensealg,lb,ub,p,args...;
     DiffEqBase.build_solution(prob,QuadGKJL(),val,err,retcode = :Success)
 end
 
-function __solvebp(prob::QuadratureProblem,::HCubatureJL,sensealg,lb,ub,p,args...;
+function __solvebp_call(prob::QuadratureProblem,::HCubatureJL,sensealg,lb,ub,p,args...;
                           reltol = 1e-8, abstol = 1e-8,
                           maxiters = typemax(Int),
                           kwargs...)
@@ -103,7 +106,7 @@ function __solvebp(prob::QuadratureProblem,::HCubatureJL,sensealg,lb,ub,p,args..
     DiffEqBase.build_solution(prob,HCubatureJL(),val,err,retcode = :Success)
 end
 
-function __solvebp(prob::QuadratureProblem,alg::VEGAS,sensealg,lb,ub,p,args...;
+function __solvebp_call(prob::QuadratureProblem,alg::VEGAS,sensealg,lb,ub,p,args...;
                           reltol = 1e-8, abstol = 1e-8,
                           maxiters = typemax(Int),
                           kwargs...)
@@ -132,7 +135,7 @@ end
 
 function __init__()
     @require Cubature="667455a9-e2ce-5579-9412-b964f529a492" begin
-        function __solvebp(prob::QuadratureProblem,
+        function __solvebp_call(prob::QuadratureProblem,
                                   alg::AbstractCubatureJLAlgorithm, args...;
                                   reltol = 1e-8, abstol = 1e-8,
                                   maxiters = typemax(Int),
@@ -284,7 +287,7 @@ function __init__()
     end
 
     @require Cuba="8a292aeb-7a57-582c-b821-06e4c11590b1" begin
-        function __solvebp(prob::QuadratureProblem,alg::AbstractCubaAlgorithm,sensealg,
+        function __solvebp_call(prob::QuadratureProblem,alg::AbstractCubaAlgorithm,sensealg,
                                   lb,ub,p,args...;
                                   reltol = 1e-8, abstol = 1e-8,
                                   maxiters = alg isa CubaSUAVE ? 1000000 : typemax(Int),
@@ -391,7 +394,7 @@ function __init__()
 end
 
 ZygoteRules.@adjoint function __solvebp(prob,alg,sensealg,lb,ub,p,args...;kwargs...)
-    out = __solvebp(prob,alg,sensealg,lb,ub,p,args...;kwargs...)
+    out = __solvebp_call(prob,alg,sensealg,lb,ub,p,args...;kwargs...)
     function quadrature_adjoint(Δ)
         y = typeof(Δ) <: Array{<:Number,0} ? Δ[1] : Δ
         if isinplace(prob)
@@ -429,18 +432,22 @@ ZygoteRules.@adjoint function __solvebp(prob,alg,sensealg,lb,ub,p,args...;kwargs
                 error("TODO")
             end
         end
-        dlb = -_f(lb)
-        dub = _f(ub)
 
         dp_prob = QuadratureProblem(dfdp,lb,ub,p;nout=length(p),batch = prob.batch,kwargs...)
 
         if p isa Number
-            dp = __solvebp(dp_prob,alg,sensealg,lb,ub,p,args...;kwargs...)[1]
+            dp = __solvebp_call(dp_prob,alg,sensealg,lb,ub,p,args...;kwargs...)[1]
         else
-            dp = __solvebp(dp_prob,alg,sensealg,lb,ub,p,args...;kwargs...).u
+            dp = __solvebp_call(dp_prob,alg,sensealg,lb,ub,p,args...;kwargs...).u
         end
 
-        (nothing,nothing,nothing,dlb,dub,dp,ntuple(x->nothing,length(args))...)
+        if lb isa Number
+            dlb = -_f(lb)
+            dub = _f(ub)
+            return (nothing,nothing,nothing,dlb,dub,dp,ntuple(x->nothing,length(args))...)
+        else
+            return (nothing,nothing,nothing,nothing,nothing,dp,ntuple(x->nothing,length(args))...)
+        end
     end
     out,quadrature_adjoint
 end
@@ -448,6 +455,41 @@ end
 ZygoteRules.@adjoint function ZygoteRules.literal_getproperty(
                         sol::DiffEqBase.QuadratureSolution,::Val{:u})
     sol.u,Δ->(DiffEqBase.build_solution(sol.prob,sol.alg,Δ,sol.resid),)
+end
+
+
+### Forward-Mode AD Intercepts
+
+# Direct AD on solvers with QuadGK and HCubature
+function __solvebp(prob,alg::QuadGKJL,sensealg,lb,ub,p::AbstractArray{<:ForwardDiff.Dual,N},args...;kwargs...) where N
+    __solvebp_call(prob,alg,sensealg,lb,ub,p,args...;kwargs...)
+end
+
+function __solvebp(prob,alg::HCubatureJL,sensealg,lb,ub,p::AbstractArray{<:ForwardDiff.Dual,N},args...;kwargs...) where N
+    __solvebp_call(prob,alg,sensealg,lb,ub,p,args...;kwargs...)
+end
+
+# Manually split for the pushforward
+function __solvebp(prob,alg,sensealg,lb,ub,p::AbstractArray{<:ForwardDiff.Dual,N},args...;kwargs...) where N
+    primal = __solvebp_call(prob,alg,sensealg,lb,ub,ForwardDiff.value.(p),args...;kwargs...)
+
+    if isinplace(prob)
+        dx = similar(ForwardDiff.partials(prob.f(lb,p)))
+        dfdp = function (_dx,x,p)
+            prob.f(dx,x,p)
+            _dx .= ForwardDiff.partials.(dx)
+        end
+    else
+        dfdp = function (x,p)
+            convert(Array,ForwardDiff.partials(prob.f(x,p)))
+        end
+    end
+    dualp = convert(Array,ForwardDiff.partials.(p))
+
+    dp_prob = QuadratureProblem(dfdp,lb,ub,dualp;nout=length(dualp),batch = prob.batch,kwargs...)
+    dual = __solvebp_call(dp_prob,alg,sensealg,lb,ub,dualp,args...;kwargs...)
+    res = ForwardDiff.Dual{ForwardDiff.tagtype(p[1])}.(primal.u,dual.u)
+    DiffEqBase.build_solution(prob,alg,res,primal.resid)
 end
 
 export QuadGKJL, HCubatureJL, VEGAS
