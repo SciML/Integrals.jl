@@ -43,7 +43,7 @@ end
 
 function testf2(lb,ub,p)
     prob = QuadratureProblem(f,lb,ub,p)
-    solve(prob,HCubature(),reltol=1e-3,abstol=1e-3)[1]
+    solve(prob,HCubatureJL(),reltol=1e-3,abstol=1e-3)[1]
 end
 
 dlb1,dub1,dp1 = Zygote.gradient(testf,lb,ub,p)
@@ -89,7 +89,7 @@ end
 
 function testf2(lb,ub,p)
     prob = QuadratureProblem(f,lb,ub,p,nout=2)
-    sum(solve(prob,HCubature(),reltol=1e-3,abstol=1e-3))
+    sum(solve(prob,HCubatureJL(),reltol=1e-3,abstol=1e-3))
 end
 
 dlb1,dub1,dp1 = Zygote.gradient(testf,lb,ub,p)
