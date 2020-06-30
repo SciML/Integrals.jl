@@ -462,34 +462,59 @@ end
 ### Forward-Mode AD Intercepts
 
 # Direct AD on solvers with QuadGK and HCubature
-function __solvebp(prob,alg::QuadGKJL,sensealg,lb,ub,p::AbstractArray{<:ForwardDiff.Dual,N},args...;kwargs...) where N
+function __solvebp(prob,alg::QuadGKJL,sensealg,lb,ub,p::AbstractArray{<:ForwardDiff.Dual{T,V,P},N},args...;kwargs...) where {T,V,P,N}
     __solvebp_call(prob,alg,sensealg,lb,ub,p,args...;kwargs...)
 end
 
-function __solvebp(prob,alg::HCubatureJL,sensealg,lb,ub,p::AbstractArray{<:ForwardDiff.Dual,N},args...;kwargs...) where N
+function __solvebp(prob,alg::HCubatureJL,sensealg,lb,ub,p::AbstractArray{<:ForwardDiff.Dual{T,V,P},N},args...;kwargs...) where {T,V,P,N}
     __solvebp_call(prob,alg,sensealg,lb,ub,p,args...;kwargs...)
 end
 
 # Manually split for the pushforward
-function __solvebp(prob,alg,sensealg,lb,ub,p::AbstractArray{<:ForwardDiff.Dual,N},args...;kwargs...) where N
+function __solvebp(prob,alg,sensealg,lb,ub,p::AbstractArray{<:ForwardDiff.Dual{T,V,P},N},args...;kwargs...) where {T,V,P,N}
     primal = __solvebp_call(prob,alg,sensealg,lb,ub,ForwardDiff.value.(p),args...;kwargs...)
+    nout = prob.nout*P
 
     if isinplace(prob)
-        dx = similar(ForwardDiff.partials(prob.f(lb,p)))
-        dfdp = function (_dx,x,p)
-            prob.f(dx,x,p)
-            _dx .= ForwardDiff.partials.(dx)
+        dx = similar(p, V, nout)
+        dfdp = function (out,x,p)
+            dualp = reinterpret(ForwardDiff.Dual{T,V,P}, p)
+            prob.f(dx,x,dualp)
+            ys = reinterpret(ForwardDiff.Dual{T,V,P}, dx)
+            idx = 0
+            for y in ys
+                for p in ForwardDiff.partials(y)
+                    out[idx+=1] = p
+                end
+            end
+            return out
         end
     else
         dfdp = function (x,p)
-            convert(Array,ForwardDiff.partials(prob.f(x,p)))
+            dualp = reinterpret(ForwardDiff.Dual{T,V,P}, p)
+            ys = prob.f(x,dualp)
+            out = zeros(nout)
+            idx = 0
+            for y in ys
+                for p in ForwardDiff.partials(y)
+                    out[idx+=1] = p
+                end
+            end
+            return out
         end
     end
-    dualp = convert(Array,ForwardDiff.partials.(p))
+    rawp = copy(reinterpret(V, p))
 
-    dp_prob = QuadratureProblem(dfdp,lb,ub,dualp;nout=length(dualp),batch = prob.batch,kwargs...)
-    dual = __solvebp_call(dp_prob,alg,sensealg,lb,ub,dualp,args...;kwargs...)
-    res = ForwardDiff.Dual{ForwardDiff.tagtype(p[1])}.(primal.u,dual.u)
+    dp_prob = QuadratureProblem(dfdp,lb,ub,rawp;nout=nout,batch = prob.batch,kwargs...)
+    dual = __solvebp_call(dp_prob,alg,sensealg,lb,ub,rawp,args...;kwargs...)
+    res = similar(p, prob.nout)
+    partials = reinterpret(typeof(first(res).partials), dual.u)
+    for idx in eachindex(res)
+        res[idx] = ForwardDiff.Dual{T,V,P}(primal.u[idx], partials[idx])
+    end
+    if primal.u isa Number
+        res = first(res)
+    end
     DiffEqBase.build_solution(prob,alg,res,primal.resid)
 end
 
