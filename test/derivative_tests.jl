@@ -12,7 +12,7 @@ sol = solve(prob,QuadGKJL(),reltol=1e-3,abstol=1e-3)
 
 function testf(lb,ub,p)
     prob = QuadratureProblem(f,lb,ub,p)
-    solve(prob,QuadGKJL(),reltol=1e-3,abstol=1e-3)[1]
+    sin(solve(prob,QuadGKJL(),reltol=1e-3,abstol=1e-3)[1])
 end
 dlb1,dub1,dp1 = Zygote.gradient(testf,lb,ub,p)
 dlb2 = FiniteDiff.finite_difference_derivative(lb->testf(lb,ub,p),lb)
@@ -38,12 +38,12 @@ sol = solve(prob,CubaCuhre(),reltol=1e-3,abstol=1e-3)
 
 function testf(lb,ub,p)
     prob = QuadratureProblem(f,lb,ub,p)
-    solve(prob,CubaCuhre(),reltol=1e-6,abstol=1e-6)[1]
+    sin(solve(prob,CubaCuhre(),reltol=1e-6,abstol=1e-6)[1])
 end
 
 function testf2(lb,ub,p)
     prob = QuadratureProblem(f,lb,ub,p)
-    solve(prob,HCubatureJL(),reltol=1e-6,abstol=1e-6)[1]
+    sin(solve(prob,HCubatureJL(),reltol=1e-6,abstol=1e-6)[1])
 end
 
 dlb1,dub1,dp1 = Zygote.gradient(testf,lb,ub,p)
@@ -63,7 +63,6 @@ dp3 = ForwardDiff.gradient(p->testf2(lb,ub,p),p)
 #@test dub1 ≈ dub3
 @test dp1 ≈ dp3
 
-#=
 # dlb4 = ForwardDiff.gradient(lb->testf(lb,ub,p),lb)
 # dub4 = ForwardDiff.gradient(ub->testf(lb,ub,p),ub)
 dp4 = ForwardDiff.gradient(p->testf(lb,ub,p),p)
@@ -71,7 +70,6 @@ dp4 = ForwardDiff.gradient(p->testf(lb,ub,p),p)
 #@test dlb1 ≈ dlb4
 #@test dub1 ≈ dub4
 @test dp1 ≈ dp4
-=#
 
 ### N-dimensional N-out
 
@@ -84,12 +82,12 @@ sol = solve(prob,CubaCuhre(),reltol=1e-3,abstol=1e-3)
 
 function testf(lb,ub,p)
     prob = QuadratureProblem(f,lb,ub,p,nout=2)
-    sum(solve(prob,CubaCuhre(),reltol=1e-6,abstol=1e-6))
+    sin(sum(solve(prob,CubaCuhre(),reltol=1e-6,abstol=1e-6)))
 end
 
 function testf2(lb,ub,p)
     prob = QuadratureProblem(f,lb,ub,p,nout=2)
-    sum(solve(prob,HCubatureJL(),reltol=1e-6,abstol=1e-6))
+    sin(sum(solve(prob,HCubatureJL(),reltol=1e-6,abstol=1e-6)))
 end
 
 dlb1,dub1,dp1 = Zygote.gradient(testf,lb,ub,p)
@@ -109,7 +107,6 @@ dp3 = ForwardDiff.gradient(p->testf2(lb,ub,p),p)
 #@test dub1 ≈ dub3
 @test dp1 ≈ dp3
 
-#=
 # dlb4 = ForwardDiff.gradient(lb->testf(lb,ub,p),lb)
 # dub4 = ForwardDiff.gradient(ub->testf(lb,ub,p),ub)
 dp4 = ForwardDiff.gradient(p->testf(lb,ub,p),p)
@@ -117,4 +114,3 @@ dp4 = ForwardDiff.gradient(p->testf(lb,ub,p),p)
 #@test dlb1 ≈ dlb4
 #@test dub1 ≈ dub4
 @test dp1 ≈ dp4
-=#
