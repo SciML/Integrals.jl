@@ -399,23 +399,27 @@ ZygoteRules.@adjoint function __solvebp(prob,alg,sensealg,lb,ub,p,args...;kwargs
     function quadrature_adjoint(Δ)
         y = typeof(Δ) <: Array{<:Number,0} ? Δ[1] : Δ
         if isinplace(prob)
-            if lb isa Number && prob.batch == 0
-                dx = Float64[lb]
-            elseif lb isa Number
-                dx = zeros(length(lb),prob.batch)
-            elseif prob.batch == 0
-                dx = zeros(length(lb))
-            else
-                dx = zeros(length(lb),prob.batch)
-            end
-            _f = (x) -> (prob.f(dx,x,p); dx)
+            # if lb isa Number && prob.batch == 0
+            #     dx = Float64[lb]
+            # elseif lb isa Number
+            #     dx = zeros(length(lb),prob.batch)
+            # elseif prob.batch == 0
+            #     dx = zeros(length(lb))
+            # else
+            #     # dx = zeros(length(lb),prob.batch)
+            #     dx = zeros(prob.nout, prob.batch)
+            # end
+            # _f = (x) -> (prob.f(dx,x,p); dx)
+
+            # @show size(dx)
 
             if sensealg.vjp isa ZygoteVJP
-                dfdp = function (dx,x,p)
+                # dfdp = function (dx,x,p)
+                dfdp = function (x,p)
                     _,back = Zygote.pullback(p) do p
-                        dx = Zygote.Buffer(x)
-                        prob.f(dx,x,p)
-                        copy(dx)
+                        _dx = Zygote.Buffer(x, prob.nout, size(x,2))
+                        prob.f(_dx,x,p)
+                        copy(_dx)
                     end
                     back(y)[1]
                 end
@@ -433,7 +437,7 @@ ZygoteRules.@adjoint function __solvebp(prob,alg,sensealg,lb,ub,p,args...;kwargs
                 error("TODO")
             end
         end
-
+        
         dp_prob = QuadratureProblem(dfdp,lb,ub,p;nout=length(p),batch = prob.batch,kwargs...)
 
         if p isa Number
