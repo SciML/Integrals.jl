@@ -109,7 +109,7 @@ end
 function DiffEqBase.solve(prob::QuadratureProblem,
                             alg::DiffEqBase.AbstractQuadratureAlgorithm,
                             args...; sensealg = ReCallVJP(ZygoteVJP()), kwargs...)
-   prob = transformation_if_inf(prob)                                
+   prob = transformation_if_inf(prob)
   __solvebp(prob,alg,sensealg,prob.lb,prob.ub,prob.p,args...;kwargs...)
 end
 
@@ -120,7 +120,6 @@ function __solvebp_call(prob::QuadratureProblem,::QuadGKJL,sensealg,lb,ub,p,args
                           reltol = 1e-8, abstol = 1e-8,
                           maxiters = typemax(Int),
                           kwargs...)
-    println("this")
     if isinplace(prob) || lb isa AbstractArray || ub isa AbstractArray
         error("QuadGKJL only accepts one-dimensional quadrature problems.")
     end
