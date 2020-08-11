@@ -2,7 +2,7 @@ module Quadrature
 
 using Requires, Reexport,  MonteCarloIntegration, QuadGK, HCubature
 @reexport using DiffEqBase
-using ZygoteRules, Zygote, ReverseDiff, ForwardDiff
+using ZygoteRules, Zygote, ReverseDiff, ForwardDiff , LinearAlgebra
 
 struct QuadGKJL <: DiffEqBase.AbstractQuadratureAlgorithm end
 struct HCubatureJL <: DiffEqBase.AbstractQuadratureAlgorithm end
@@ -43,6 +43,58 @@ function scale_x(ub,lb,x)
     (ub .- lb) .* x .+ lb
 end
 
+function transform_inf(t , p , f)
+  v(t) = t ./ (1 .- t.^2)
+  if t isa Number
+      j = ForwardDiff.derivative(v, t)
+  else
+      j = det(ForwardDiff.jacobian(x ->v(x), t))
+  end
+  f(v(t) , p)*(j)
+end
+
+function transform_semiinf(t , p , f , lb)
+  v(t) = lb .+ t ./ (1 .- t)
+  if t isa Number
+      j = ForwardDiff.derivative(v, t)
+  else
+      j = det(ForwardDiff.jacobian(x ->v(x), t))
+  end
+  f(v(t) , p)*(j)
+end
+
+function transformation_if_inf(prob)
+    if (!(prob.lb isa Number) && all(prob.lb .== -Inf) && all(prob.ub .== Inf)) || (prob.lb == -Inf && prob.ub == Inf)
+        if prob.lb isa Number
+            lb = -1.00
+        else
+            lb = -1.00 .* ones(size(prob.lb)[1])
+        end
+        if prob.ub isa Number
+            ub = 1.00
+        else
+            ub = ones(size(prob.ub)[1])
+        end
+        g = prob.f
+        h(t , p) = transform_inf(t , p , g)
+        prob = QuadratureProblem(h , lb ,ub, p = prob.p , nout = prob.nout , batch = prob.batch , prob.kwargs)
+    elseif  (!(prob.lb isa Number) && !all(prob.lb .== -Inf) && all(prob.ub .== Inf)) || (prob.lb != -Inf && prob.ub == Inf)
+        if prob.lb isa Number
+            lb = -1.00
+        else
+            lb =  zeros(size(prob.lb)[1])
+        end
+        if prob.ub isa Number
+            ub = 1.00
+        else
+            ub = ones(size(prob.ub)[1])
+        end
+        g = prob.f
+        i(t , p) = transform_semiinf(t , p , g , prob.lb)
+        prob = QuadratureProblem(i , lb ,ub, p = prob.p , nout = prob.nout , batch = prob.batch , prob.kwargs)
+    end
+    return prob
+end
 function DiffEqBase.solve(prob::QuadratureProblem,::Nothing,sensealg,lb,ub,p,args...;
                           reltol = 1e-8, abstol = 1e-8, kwargs...)
     if lb isa Number
@@ -57,6 +109,7 @@ end
 function DiffEqBase.solve(prob::QuadratureProblem,
                             alg::DiffEqBase.AbstractQuadratureAlgorithm,
                             args...; sensealg = ReCallVJP(ZygoteVJP()), kwargs...)
+   prob = transformation_if_inf(prob)                                
   __solvebp(prob,alg,sensealg,prob.lb,prob.ub,prob.p,args...;kwargs...)
 end
 
@@ -67,6 +120,7 @@ function __solvebp_call(prob::QuadratureProblem,::QuadGKJL,sensealg,lb,ub,p,args
                           reltol = 1e-8, abstol = 1e-8,
                           maxiters = typemax(Int),
                           kwargs...)
+    println("this")
     if isinplace(prob) || lb isa AbstractArray || ub isa AbstractArray
         error("QuadGKJL only accepts one-dimensional quadrature problems.")
     end
