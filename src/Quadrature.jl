@@ -194,6 +194,7 @@ function __init__()
                                   reltol = 1e-8, abstol = 1e-8,
                                   maxiters = typemax(Int),
                                   kwargs...)
+            prob = transformation_if_inf(prob) #intercept for infinite transformation                      
             nout = prob.nout
             if nout == 1
                 if prob.batch == 0
@@ -346,6 +347,7 @@ function __init__()
                                   reltol = 1e-8, abstol = 1e-8,
                                   maxiters = alg isa CubaSUAVE ? 1000000 : typemax(Int),
                                   kwargs...)
+          prob = transformation_if_inf(prob) #intercept for infinite transformation
           p = p
           if lb isa Number && prob.batch == 0
               _x = Float64[lb]
