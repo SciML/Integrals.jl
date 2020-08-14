@@ -54,7 +54,7 @@ function transform_inf(t , p , f)
 end
 
 function transform_semiinf(t , p , f , lb)
-  v(t) = lb .+ t ./ (1 .- t)
+  v(t) = lb .+ (t ./ (1 .- t))
   if t isa Number
       j = ForwardDiff.derivative(v, t)
   else
@@ -80,7 +80,7 @@ function transformation_if_inf(prob)
         prob = QuadratureProblem(h , lb ,ub, p = prob.p , nout = prob.nout , batch = prob.batch , prob.kwargs)
     elseif  (!(prob.lb isa Number) && !all(prob.lb .== -Inf) && all(prob.ub .== Inf)) || (prob.lb != -Inf && prob.ub == Inf)
         if prob.lb isa Number
-            lb = -1.00
+            lb = 0.00
         else
             lb =  zeros(size(prob.lb)[1])
         end
@@ -194,7 +194,7 @@ function __init__()
                                   reltol = 1e-8, abstol = 1e-8,
                                   maxiters = typemax(Int),
                                   kwargs...)
-            prob = transformation_if_inf(prob) #intercept for infinite transformation                      
+            prob = transformation_if_inf(prob) #intercept for infinite transformation
             nout = prob.nout
             if nout == 1
                 if prob.batch == 0
