@@ -20,27 +20,31 @@ alg_req=Dict(QuadGKJL()=>     (nout=1,   allows_batch=false, min_dim=1, max_dim=
              CubaDivonne()=>  (nout=Inf, allows_batch=true,  min_dim=2, max_dim=Inf, allows_iip = true ),
              CubaCuhre()=>    (nout=Inf, allows_batch=true,  min_dim=2, max_dim=Inf, allows_iip = true ))
 
-integrands = [
-              (x,p) -> 1.0,
-              (x,p) -> x isa Number ? cos(x) : prod(cos.(x))
-             ]
-iip_integrands = [ (dx,x,p)-> (dx .= f(x,p)) for f ∈ integrands]
-
-integrands_v = [
-                (x,p,nout) -> collect(1.0:nout)
-                (x,p,nout) -> integrands[2](x,p)*collect(1.0:nout)
-                ]
-iip_integrands_v = [ (dx,x,p,nout)-> (dx .= f(x,p,nout)) for f ∈ integrands_v]
-
-exact_sol = [
-                (ndim, nout, lb, ub) -> prod(ub-lb),
-                (ndim, nout, lb, ub) -> prod(sin.(ub)-sin.(lb))
-            ]
-
-exact_sol_v = [
-                (ndim, nout, lb, ub) -> prod(ub-lb) * collect(1.0:nout),
-                (ndim, nout, lb, ub) -> exact_sol[2](ndim,nout,lb,ub) * collect(1:nout)
-            ]
+             integrands = [
+                (x,p) -> 1.0
+                (x,p) -> x isa Number ? cos(x) : prod(cos.(x))
+                (x,p) -> Inf
+               ]
+  iip_integrands = [ (dx,x,p)-> (dx .= f(x,p)) for f ∈ integrands]
+  
+  integrands_v = [
+                  (x,p,nout) -> collect(1.0:nout)
+                  (x,p,nout) -> integrands[2](x,p)*collect(1.0:nout)
+                  (x,p,nout) -> fill(Inf,nout)
+                  ]
+  iip_integrands_v = [ (dx,x,p,nout)-> (dx .= f(x,p,nout)) for f ∈ integrands_v]
+  
+  exact_sol = [
+                  (ndim, nout, lb, ub) -> prod(ub-lb)
+                  (ndim, nout, lb, ub) -> prod(sin.(ub)-sin.(lb))
+                  (ndim, nout, lb, up) -> Inf
+              ]
+  
+  exact_sol_v = [
+                  (ndim, nout, lb, ub) -> prod(ub-lb) * collect(1.0:nout)
+                  (ndim, nout, lb, ub) -> exact_sol[2](ndim,nout,lb,ub) * collect(1:nout)
+                  (ndim, nout, lb, ub) -> fill(Inf,nout)
+              ]
 
 batch_f(f) = (pts,p) -> begin
   fevals = zeros(size(pts,2))
