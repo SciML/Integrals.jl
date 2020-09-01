@@ -478,10 +478,15 @@ function __solvebp(prob,alg,sensealg,lb,ub,p::AbstractArray{<:ForwardDiff.Dual{T
     nout = prob.nout*P
 
     if isinplace(prob)
-        dx = similar(p, V, prob.nout)
         dfdp = function (out,x,p)
             dualp = reinterpret(ForwardDiff.Dual{T,V,P}, p)
+            if prob.batch > 0    
+                dx = similar(dualp, prob.nout, size(x,2))
+            else
+                dx = similar(dualp, prob.nout)
+            end
             prob.f(dx,x,dualp)
+
             ys = reinterpret(ForwardDiff.Dual{T,V,P}, dx)
             for (y_idx, y) in enumerate(ys)
                 for (p_idx, p) in enumerate(ForwardDiff.partials(y))

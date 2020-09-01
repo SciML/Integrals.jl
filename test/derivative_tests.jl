@@ -155,3 +155,27 @@ dp3 = FiniteDiff.finite_difference_gradient(p->testf3(lb,ub,p),p)
 
 @test dp1 ≈ dp3 # passes
 @test_broken dp2 ≈ dp3 # Fail  [136,16,12] ≈ [9,16,12]
+
+
+## oop Batch mulit dim
+function g(dx, x,p) 
+    dx.= sum(x*p[1].+p[2]*p[3], dims=1)
+end
+
+lb =[1.0,1.0]
+ub = [3.0,3.0]
+p = [2.0, 3.0, 4.0]
+prob = QuadratureProblem(f,lb,ub,p)
+
+function testf3(lb,ub,p; f=g)
+    prob = QuadratureProblem(f,lb,ub,p, batch = 10, nout=1)
+    solve(prob, CubatureJLh(); reltol=1e-3,abstol=1e-3)[1]
+end
+
+testf3(lb,ub,p)
+
+dp1 = ForwardDiff.gradient(p->testf3(lb,ub,p),p)
+# dp2 = Zygote.gradient(p->testf3(lb,ub,p),p)[1]
+dp3 = FiniteDiff.finite_difference_gradient(p->testf3(lb,ub,p),p)
+
+@test dp1 ≈ dp3 # passes
