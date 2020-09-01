@@ -115,30 +115,43 @@ dp4 = ForwardDiff.gradient(p->testf(lb,ub,p),p)
 #@test dub1 ≈ dub4
 @test dp1 ≈ dp4
 
-### Batch
-using Cubature, ForwardDiff
+using Quadrature, Cuba, Cubature, Zygote, FiniteDiff, ForwardDiff, Test
+### Batch Single dim
+f(x,p) = x*p[1].+p[2]*p[3]
 
+lb =1.0
+ub = 3.0
+p = [2.0, 3.0, 4.0]
+prob = QuadratureProblem(f,lb,ub,p)
+
+function testf3(lb,ub,p; f=f)
+    prob = QuadratureProblem(f,lb,ub,p, batch = 10, nout=1)
+    solve(prob, CubatureJLh(); reltol=1e-3,abstol=1e-3)[1]
+end
+
+dp1 = ForwardDiff.gradient(p->testf3(lb,ub,p),p)
+dp2 = Zygote.gradient(p->testf3(lb,ub,p),p)[1]
+dp3 = FiniteDiff.finite_difference_gradient(p->testf3(lb,ub,p),p)
+
+@test dp1 ≈ dp3 #passes
+@test dp2 ≈ dp3 #passes
+
+### Batch multi dim
 f(x,p) = x[1,:]*p[1].+p[2]*p[3]
-# q(dx,x,p) = dx[1] = x[1,:]*p[1].+p[2]*p[3]
 
-
-lb = [1.0,1.0]
+lb =[1.0,1.0]
 ub = [3.0,3.0]
 p = [2.0, 3.0, 4.0]
 prob = QuadratureProblem(f,lb,ub,p)
 
 function testf3(lb,ub,p; f=f)
-    prob = QuadratureProblem(f,lb,ub,p, batch = 0, nout=1)
+    prob = QuadratureProblem(f,lb,ub,p, batch = 10, nout=1)
     solve(prob, CubatureJLh(); reltol=1e-3,abstol=1e-3)[1]
 end
 
-f(lb,p)
+dp1 = ForwardDiff.gradient(p->testf3(lb,ub,p),p)
+dp2 = Zygote.gradient(p->testf3(lb,ub,p),p)[1]
+dp3 = FiniteDiff.finite_difference_gradient(p->testf3(lb,ub,p),p)
 
-testf3(lb,ub,p)
-
-
-ForwardDiff.gradient(p->testf3(lb,ub,p),p)
-Zygote.gradient(p->testf3(lb,ub,p),p)
-
-dp2 = FiniteDiff.finite_difference_gradient(p->testf3(lb,ub,p),p)
-
+@test dp1 ≈ dp3 # passes
+@test_broken dp2 ≈ dp3 # Fail  [136,16,12] ≈ [9,16,12]
