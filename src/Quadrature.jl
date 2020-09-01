@@ -56,12 +56,11 @@ end
 function transform_inf(t , p , f , lb , ub)
 	if lb isa Number && ub isa Number
 		if lb == -Inf && ub == Inf
-			j = ForwardDiff.derivative(v_inf, t)
+			j = (1 .+ t.^2 )/(1 .- t.^2).^2
 			return f(v_inf(t) , p)*(j)
 		elseif lb != -Inf && ub == Inf
 			a = lb
-			v_semi(t) = v_semiinf(t , a)
-			j = ForwardDiff.derivative(v_semi, t)
+			j = 1 ./ ((1 .- t).^2)
 			return f(v_semiinf(t , a) , p)*(j)
 		elseif lb == -Inf && ub != Inf
 			error("Semi Infinte integrals of limits 0 to Inf are supported")
