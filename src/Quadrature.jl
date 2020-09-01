@@ -43,57 +43,85 @@ function scale_x(ub,lb,x)
     (ub .- lb) .* x .+ lb
 end
 
-function transform_inf(t , p , f)
-  v(t) = t ./ (1 .- t.^2)
-  if t isa Number
-      j = ForwardDiff.derivative(v, t)
-  else
-      j = det(ForwardDiff.jacobian(x ->v(x), t))
-  end
-  f(v(t) , p)*(j)
+function v_inf(t)
+	return t ./ (1 .- t.^2)
 end
 
-function transform_semiinf(t , p , f , lb)
-  v(t) = lb .+ (t ./ (1 .- t))
-  if t isa Number
-      j = ForwardDiff.derivative(v, t)
-  else
-      j = det(ForwardDiff.jacobian(x ->v(x), t))
-  end
-  f(v(t) , p)*(j)
+
+function v_semiinf(t , a)
+	return a .+ (t ./ (1 .- t))
+end
+
+
+function transform_inf(t , p , f , lb , ub)
+	if lb isa Number && ub isa Number
+		if lb == -Inf && ub == Inf
+			j = ForwardDiff.derivative(v_inf, t)
+			return f(v_inf(t) , p)*(j)
+		elseif lb != -Inf && ub == Inf
+			a = lb
+			v_semi(t) = v_semiinf(t , a)
+			j = ForwardDiff.derivative(v_semi, t)
+			return f(v_semiinf(t , a) , p)*(j)
+		elseif lb == -Inf && ub != Inf
+			error("Semi Infinte integrals of limits 0 to Inf are supported")
+		end
+	end
+
+	lbb = lb .== -Inf
+	ubb = ub .== Inf
+	_none = .!lbb .& .!ubb
+	_inf = lbb .& ubb
+	semiup = .!lbb .& ubb
+	semilw = lbb  .& .!ubb
+	if 1 in semilw
+		error("Semi Infinte integrals of limits 0 to Inf are supported")
+	end
+	function v(t)
+		return t.*_none + v_inf(t).*_inf + v_semiinf(t , lb).*semiup
+	end
+	j = det(ForwardDiff.jacobian(x ->v(x), t))
+	f(v(t) , p)*(j)
 end
 
 function transformation_if_inf(prob)
-    if (!(prob.lb isa Number) && all(prob.lb .== -Inf) && all(prob.ub .== Inf)) || (prob.lb == -Inf && prob.ub == Inf)
-        if prob.lb isa Number
-            lb = -1.00
-        else
-            lb = -1.00 .* ones(size(prob.lb)[1])
-        end
-        if prob.ub isa Number
-            ub = 1.00
-        else
-            ub = ones(size(prob.ub)[1])
-        end
-        g = prob.f
-        h(t , p) = transform_inf(t , p , g)
-        prob = QuadratureProblem(h , lb ,ub, p = prob.p , nout = prob.nout , batch = prob.batch , prob.kwargs)
-    elseif  (!(prob.lb isa Number) && !all(prob.lb .== -Inf) && all(prob.ub .== Inf)) || (prob.lb != -Inf && prob.ub == Inf)
-        if prob.lb isa Number
-            lb = 0.00
-        else
-            lb =  zeros(size(prob.lb)[1])
-        end
-        if prob.ub isa Number
-            ub = 1.00
-        else
-            ub = ones(size(prob.ub)[1])
-        end
-        g = prob.f
-        i(t , p) = transform_semiinf(t , p , g , prob.lb)
-        prob = QuadratureProblem(i , lb ,ub, p = prob.p , nout = prob.nout , batch = prob.batch , prob.kwargs)
-    end
-    return prob
+	if (prob.lb isa Number && prob.ub isa Number && (prob.ub == Inf || prob.lb == -Inf))
+		if prob.lb == -Inf && prob.ub == Inf
+			g = prob.f
+			h(t , p) = transform_inf(t , p , g , prob.lb , prob.ub)
+			lb = -1.00
+			ub = 1.00
+	        _prob = QuadratureProblem(h , lb ,ub, p = prob.p , nout = prob.nout , batch = prob.batch , prob.kwargs)
+			return _prob
+		elseif prob.lb != -Inf && prob.ub == Inf
+			g = prob.f
+			h_(t , p) = transform_inf(t , p , g , prob.lb , prob.ub)
+			lb = 0.00
+			ub = 1.00
+	        _prob = QuadratureProblem(h_ , lb ,ub, p = prob.p , nout = prob.nout , batch = prob.batch , prob.kwargs)
+			return _prob
+		elseif lb == -Inf && ub != Inf
+			error("Semi Infinte integrals of limits 0 to Inf are supported")
+		end
+	end
+	if -Inf in prob.lb || Inf in prob.ub
+		lbb = prob.lb .== -Inf
+		ubb = prob.ub .== Inf
+		_none = .!lbb .& .!ubb
+		_inf = lbb .& ubb
+		_semiup = .!lbb .& ubb
+		_semilw = lbb  .& .!ubb
+		if 1 in _semilw
+			error("Semi Infinte integrals of limits 0 to Inf are supported")
+		end
+		_lb = 0.00.*_semiup + -1.00.*_inf + _none.*prob.lb
+		_ub = 1.00.*_semiup + 1.00.*_inf + _none.*prob.ub
+		g = prob.f
+		hs(t , p) = transform_inf(t , p , g , prob.lb , prob.ub)
+		_prob = QuadratureProblem(hs, _lb ,_ub, p = prob.p , nout = prob.nout , batch = prob.batch , prob.kwargs)
+		return _prob
+	end
+	return prob
 end
 function DiffEqBase.solve(prob::QuadratureProblem,::Nothing,sensealg,lb,ub,p,args...;
                           reltol = 1e-8, abstol = 1e-8, kwargs...)
