@@ -114,3 +114,31 @@ dp4 = ForwardDiff.gradient(p->testf(lb,ub,p),p)
 #@test dlb1 ≈ dlb4
 #@test dub1 ≈ dub4
 @test dp1 ≈ dp4
+
+### Batch
+using Cubature, ForwardDiff
+
+f(x,p) = x[1,:]*p[1].+p[2]*p[3]
+# q(dx,x,p) = dx[1] = x[1,:]*p[1].+p[2]*p[3]
+
+
+lb = [1.0,1.0]
+ub = [3.0,3.0]
+p = [2.0, 3.0, 4.0]
+prob = QuadratureProblem(f,lb,ub,p)
+
+function testf3(lb,ub,p; f=f)
+    prob = QuadratureProblem(f,lb,ub,p, batch = 0, nout=1)
+    solve(prob, CubatureJLh(); reltol=1e-3,abstol=1e-3)[1]
+end
+
+f(lb,p)
+
+testf3(lb,ub,p)
+
+
+ForwardDiff.gradient(p->testf3(lb,ub,p),p)
+Zygote.gradient(p->testf3(lb,ub,p),p)
+
+dp2 = FiniteDiff.finite_difference_gradient(p->testf3(lb,ub,p),p)
+
