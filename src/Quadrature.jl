@@ -2,7 +2,7 @@ module Quadrature
 
 using Requires, Reexport,  MonteCarloIntegration, QuadGK, HCubature
 @reexport using DiffEqBase
-using ZygoteRules, Zygote, ReverseDiff, ForwardDiff
+using ZygoteRules, Zygote, ReverseDiff, ForwardDiff , LinearAlgebra
 
 struct QuadGKJL <: DiffEqBase.AbstractQuadratureAlgorithm end
 struct HCubatureJL <: DiffEqBase.AbstractQuadratureAlgorithm end
@@ -43,6 +43,94 @@ function scale_x(ub,lb,x)
     (ub .- lb) .* x .+ lb
 end
 
+function v_inf(t)
+	return t ./ (1 .- t.^2)
+end
+
+
+function v_semiinf(t , a , upto_inf)
+	if upto_inf == true
+		return a .+ (t ./ (1 .- t))
+	else
+		return a .+ (t ./ (1 .+ t))
+	end
+end
+function transfor_inf_number(t , p , f , lb , ub)
+	if lb == -Inf && ub == Inf
+		j = (1 .+ t.^2 )/(1 .- t.^2).^2
+		return f(v_inf(t) , p)*(j)
+	elseif lb != -Inf && ub == Inf
+		a = lb
+		j = 1 ./ ((1 .- t).^2)
+		return f(v_semiinf(t , a , 1) , p)*(j)
+	elseif lb == -Inf && ub != Inf
+		a = ub
+		j = 1 ./ ((1 .+ t ).^2)
+		return f(v_semiinf(t , a , 0) , p)*(j)
+	end
+end
+
+function transform_inf(t , p , f , lb , ub)
+	if lb isa Number && ub isa Number
+		return transfor_inf_number(t , p , f , lb , ub)
+	end
+
+	lbb = lb .== -Inf
+	ubb = ub .== Inf
+	_none = .!lbb .& .!ubb
+	_inf = lbb .& ubb
+	semiup = .!lbb .& ubb
+	semilw = lbb  .& .!ubb
+
+	function v(t)
+		return t.*_none + v_inf(t).*_inf + v_semiinf(t , lb , 1).*semiup + v_semiinf(t , ub , 0).*semilw
+	end
+	j = det(ForwardDiff.jacobian(x ->v(x), t))
+	f(v(t) , p)*(j)
+end
+
+function transformation_if_inf(prob)
+	if (prob.lb isa Number && prob.ub isa Number && (prob.ub == Inf || prob.lb == -Inf))
+		if prob.lb == -Inf && prob.ub == Inf
+			g = prob.f
+			h(t , p) = transform_inf(t , p , g , prob.lb , prob.ub)
+			lb = -1.00
+			ub = 1.00
+	        _prob = QuadratureProblem(h , lb ,ub, p = prob.p , nout = prob.nout , batch = prob.batch , prob.kwargs)
+			return _prob
+		elseif prob.lb != -Inf && prob.ub == Inf
+			g = prob.f
+			h_(t , p) = transform_inf(t , p , g , prob.lb , prob.ub)
+			lb = 0.00
+			ub = 1.00
+	        _prob = QuadratureProblem(h_ , lb ,ub, p = prob.p , nout = prob.nout , batch = prob.batch , prob.kwargs)
+			return _prob
+		elseif prob.lb == -Inf && prob.ub != Inf
+			g = prob.f
+			_h(t , p) = transform_inf(t , p , g , prob.lb , prob.ub)
+			lb = -1.00
+			ub = 0.00
+	        _prob = QuadratureProblem(_h , lb ,ub, p = prob.p , nout = prob.nout , batch = prob.batch , prob.kwargs)
+			return _prob
+		end
+	end
+	if -Inf in prob.lb || Inf in prob.ub
+		lbb = prob.lb .== -Inf
+		ubb = prob.ub .== Inf
+		_none = .!lbb .& .!ubb
+		_inf = lbb .& ubb
+		_semiup = .!lbb .& ubb
+		_semilw = lbb  .& .!ubb
+
+		_lb = 0.00.*_semiup + -1.00.*_inf + -1.00.*_semilw +  _none.*prob.lb
+		_ub = 1.00.*_semiup + 1.00.*_inf  + 0.00.*_semilw  + _none.*prob.ub
+		g = prob.f
+		hs(t , p) = transform_inf(t , p , g , prob.lb , prob.ub)
+		_prob = QuadratureProblem(hs, _lb ,_ub, p = prob.p , nout = prob.nout , batch = prob.batch , prob.kwargs)
+		return _prob
+	end
+	return prob
+end
 function DiffEqBase.solve(prob::QuadratureProblem,::Nothing,sensealg,lb,ub,p,args...;
                           reltol = 1e-8, abstol = 1e-8, kwargs...)
     if lb isa Number
@@ -57,6 +145,7 @@ end
 function DiffEqBase.solve(prob::QuadratureProblem,
                             alg::DiffEqBase.AbstractQuadratureAlgorithm,
                             args...; sensealg = ReCallVJP(ZygoteVJP()), kwargs...)
+   prob = transformation_if_inf(prob)
   __solvebp(prob,alg,sensealg,prob.lb,prob.ub,prob.p,args...;kwargs...)
 end
 
@@ -141,6 +230,7 @@ function __init__()
                                   reltol = 1e-8, abstol = 1e-8,
                                   maxiters = typemax(Int),
                                   kwargs...)
+            prob = transformation_if_inf(prob) #intercept for infinite transformation
             nout = prob.nout
             if nout == 1
                 if prob.batch == 0
@@ -293,6 +383,7 @@ function __init__()
                                   reltol = 1e-8, abstol = 1e-8,
                                   maxiters = alg isa CubaSUAVE ? 1000000 : typemax(Int),
                                   kwargs...)
+          prob = transformation_if_inf(prob) #intercept for infinite transformation
           p = p
           if lb isa Number && prob.batch == 0
               _x = Float64[lb]
