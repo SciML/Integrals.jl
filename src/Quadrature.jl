@@ -48,8 +48,8 @@ function v_inf(t)
 end
 
 
-function v_semiinf(t , a , up)
-	if up == true
+function v_semiinf(t , a , upto_inf)
+	if upto_inf == true
 		return a .+ (t ./ (1 .- t))
 	else
 		return a .+ (t ./ (1 .+ t))
@@ -64,8 +64,8 @@ function transfor_inf_number(t , p , f , lb , ub)
 		j = 1 ./ ((1 .- t).^2)
 		return f(v_semiinf(t , a , 1) , p)*(j)
 	elseif lb == -Inf && ub != Inf
-		a = lb
-		j = 1./ ((1 .+ t ).^2)
+		a = ub
+		j = 1 ./ ((1 .+ t ).^2)
 		return f(v_semiinf(t , a , 0) , p)*(j)
 	end
 end
@@ -83,7 +83,7 @@ function transform_inf(t , p , f , lb , ub)
 	semilw = lbb  .& .!ubb
 
 	function v(t)
-		return t.*_none + v_inf(t).*_inf + v_semiinf(t , lb , 1).*semiup + v_semiinf(t , lb , 1).*semilw
+		return t.*_none + v_inf(t).*_inf + v_semiinf(t , lb , 1).*semiup + v_semiinf(t , ub , 0).*semilw
 	end
 	j = det(ForwardDiff.jacobian(x ->v(x), t))
 	f(v(t) , p)*(j)
@@ -105,12 +105,12 @@ function transformation_if_inf(prob)
 			ub = 1.00
 	        _prob = QuadratureProblem(h_ , lb ,ub, p = prob.p , nout = prob.nout , batch = prob.batch , prob.kwargs)
 			return _prob
-		elseif lb == -Inf && ub != Inf
+		elseif prob.lb == -Inf && prob.ub != Inf
 			g = prob.f
-			h_(t , p) = transform_inf(t , p , g , prob.lb , prob.ub)
+			_h(t , p) = transform_inf(t , p , g , prob.lb , prob.ub)
 			lb = -1.00
 			ub = 0.00
-	        _prob = QuadratureProblem(h_ , lb ,ub, p = prob.p , nout = prob.nout , batch = prob.batch , prob.kwargs)
+	        _prob = QuadratureProblem(_h , lb ,ub, p = prob.p , nout = prob.nout , batch = prob.batch , prob.kwargs)
 			return _prob
 		end
 	end
@@ -121,11 +121,9 @@ function transformation_if_inf(prob)
 		_inf = lbb .& ubb
 		_semiup = .!lbb .& ubb
 		_semilw = lbb  .& .!ubb
-		if 1 in _semilw
-			error("Semi Infinte integrals of limits 0 to Inf are supported")
-		end
-		_lb = 0.00.*_semiup + -1.00.*_inf + _none.*prob.lb
-		_ub = 1.00.*_semiup + 1.00.*_inf + _none.*prob.ub
+
+		_lb = 0.00.*_semiup + -1.00.*_inf + -1.00.*_semilw +  _none.*prob.lb
+		_ub = 1.00.*_semiup + 1.00.*_inf  + 0.00.*_semilw  + _none.*prob.ub
 		g = prob.f
 		hs(t , p) = transform_inf(t , p , g , prob.lb , prob.ub)
 		_prob = QuadratureProblem(hs, _lb ,_ub, p = prob.p , nout = prob.nout , batch = prob.batch , prob.kwargs)
