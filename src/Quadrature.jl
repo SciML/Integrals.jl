@@ -48,23 +48,31 @@ function v_inf(t)
 end
 
 
-function v_semiinf(t , a)
-	return a .+ (t ./ (1 .- t))
+function v_semiinf(t , a , up)
+	if up == true
+		return a .+ (t ./ (1 .- t))
+	else
+		return a .+ (t ./ (1 .+ t))
+	end
 end
-
+function transfor_inf_number(t , p , f , lb , ub)
+	if lb == -Inf && ub == Inf
+		j = (1 .+ t.^2 )/(1 .- t.^2).^2
+		return f(v_inf(t) , p)*(j)
+	elseif lb != -Inf && ub == Inf
+		a = lb
+		j = 1 ./ ((1 .- t).^2)
+		return f(v_semiinf(t , a , 1) , p)*(j)
+	elseif lb == -Inf && ub != Inf
+		a = lb
+		j = 1./ ((1 .+ t ).^2)
+		return f(v_semiinf(t , a , 0) , p)*(j)
+	end
+end
 
 function transform_inf(t , p , f , lb , ub)
 	if lb isa Number && ub isa Number
-		if lb == -Inf && ub == Inf
-			j = (1 .+ t.^2 )/(1 .- t.^2).^2
-			return f(v_inf(t) , p)*(j)
-		elseif lb != -Inf && ub == Inf
-			a = lb
-			j = 1 ./ ((1 .- t).^2)
-			return f(v_semiinf(t , a) , p)*(j)
-		elseif lb == -Inf && ub != Inf
-			error("Semi Infinte integrals of limits 0 to Inf are supported")
-		end
+		return transfor_inf_number(t , p , f , lb , ub)
 	end
 
 	lbb = lb .== -Inf
@@ -73,11 +81,9 @@ function transform_inf(t , p , f , lb , ub)
 	_inf = lbb .& ubb
 	semiup = .!lbb .& ubb
 	semilw = lbb  .& .!ubb
-	if 1 in semilw
-		error("Semi Infinte integrals of limits 0 to Inf are supported")
-	end
+
 	function v(t)
-		return t.*_none + v_inf(t).*_inf + v_semiinf(t , lb).*semiup
+		return t.*_none + v_inf(t).*_inf + v_semiinf(t , lb , 1).*semiup + v_semiinf(t , lb , 1).*semilw
 	end
 	j = det(ForwardDiff.jacobian(x ->v(x), t))
 	f(v(t) , p)*(j)
@@ -100,7 +106,12 @@ function transformation_if_inf(prob)
 	        _prob = QuadratureProblem(h_ , lb ,ub, p = prob.p , nout = prob.nout , batch = prob.batch , prob.kwargs)
 			return _prob
 		elseif lb == -Inf && ub != Inf
-			error("Semi Infinte integrals of limits 0 to Inf are supported")
+			g = prob.f
+			h_(t , p) = transform_inf(t , p , g , prob.lb , prob.ub)
+			lb = -1.00
+			ub = 0.00
+	        _prob = QuadratureProblem(h_ , lb ,ub, p = prob.p , nout = prob.nout , batch = prob.batch , prob.kwargs)
+			return _prob
 		end
 	end
 	if -Inf in prob.lb || Inf in prob.ub
