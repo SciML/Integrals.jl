@@ -215,13 +215,13 @@ end
 testf3(lb,ub,p)
 
 dp1 = ForwardDiff.gradient(p->testf3(lb,ub,p),p)
-#dp2 = Zygote.gradient(p->testf3(lb,ub,p),p)[1]
+dp2 = Zygote.gradient(p->testf3(lb,ub,p),p)[1]
 dp3 = FiniteDiff.finite_difference_gradient(p->testf3(lb,ub,p),p)
 
 @test dp1 ≈ dp3 
-@test_broken dp2 ≈ dp3 # Fail  [272,32,24] ≈ [16,32,24]
+@test dp2 ≈ dp3 
 
-## iip Batch mulit dim
+## iip Batch mulit dim nout
 function g(dx, x,p) 
     dx.= x*p[1].+p[2]*p[3]
 end
@@ -237,7 +237,8 @@ function testf3(lb,ub,p; f=g)
 end
 
 dp1 = ForwardDiff.gradient(p->testf3(lb,ub,p),p)
-# dp2 = Zygote.gradient(p->testf3(lb,ub,p),p)[1]
+dp2 = Zygote.gradient(p->testf3(lb,ub,p),p)[1]
 dp3 = FiniteDiff.finite_difference_gradient(p->testf3(lb,ub,p),p)
 
 @test dp1 ≈ dp3 
+@test dp2 ≈ dp3 
