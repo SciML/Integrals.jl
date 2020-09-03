@@ -430,7 +430,6 @@ ZygoteRules.@adjoint function __solvebp(prob,alg,sensealg,lb,ub,p,args...;kwargs
                 else
                     dfdp = function (x,p)
                         _,back = Zygote.pullback(p->prob.f(x,p),p)
-                        @show back(y)
                         back(y)[1]
                     end
                 end
