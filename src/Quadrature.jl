@@ -490,23 +490,14 @@ ZygoteRules.@adjoint function __solvebp(prob,alg,sensealg,lb,ub,p,args...;kwargs
     function quadrature_adjoint(Δ)
         y = typeof(Δ) <: Array{<:Number,0} ? Δ[1] : Δ
         if isinplace(prob)
-            if lb isa Number && prob.batch == 0
-                dx = Float64[lb]
-            elseif lb isa Number
-                dx = zeros(length(lb),prob.batch)
-            elseif prob.batch == 0
-                dx = zeros(length(lb))
-            else
-                dx = zeros(length(lb),prob.batch)
-            end
-            _f = (x) -> (prob.f(dx,x,p); dx)
-
+            dx = zeros(prob.nout)  
+            _f = (x) -> prob.f(dx,x,p)
             if sensealg.vjp isa ZygoteVJP
                 dfdp = function (dx,x,p)
                     _,back = Zygote.pullback(p) do p
-                        dx = Zygote.Buffer(x)
-                        prob.f(dx,x,p)
-                        copy(dx)
+                        _dx = Zygote.Buffer(x, prob.nout, size(x,2))
+                        prob.f(_dx,x,p)
+                        copy(_dx)
                     end
                     back(y)[1]
                 end
@@ -564,15 +555,21 @@ end
 # Manually split for the pushforward
 function __solvebp(prob,alg,sensealg,lb,ub,p::AbstractArray{<:ForwardDiff.Dual{T,V,P},N},args...;kwargs...) where {T,V,P,N}
     primal = __solvebp_call(prob,alg,sensealg,lb,ub,ForwardDiff.value.(p),args...;kwargs...)
+
     nout = prob.nout*P
 
     if isinplace(prob)
-        dx = similar(p, V, nout)
         dfdp = function (out,x,p)
             dualp = reinterpret(ForwardDiff.Dual{T,V,P}, p)
+            if prob.batch > 0    
+                dx = similar(dualp, prob.nout, size(x,2))
+            else
+                dx = similar(dualp, prob.nout)
+            end
             prob.f(dx,x,dualp)
+
             ys = reinterpret(ForwardDiff.Dual{T,V,P}, dx)
-            idx = 0
+            idx=0
             for y in ys
                 for p in ForwardDiff.partials(y)
                     out[idx+=1] = p
@@ -584,13 +581,19 @@ function __solvebp(prob,alg,sensealg,lb,ub,p::AbstractArray{<:ForwardDiff.Dual{T
         dfdp = function (x,p)
             dualp = reinterpret(ForwardDiff.Dual{T,V,P}, p)
             ys = prob.f(x,dualp)
-            out = zeros(nout)
-            idx = 0
+            if prob.batch > 0
+                out = similar(p, V, nout, size(x,2))
+            else
+                out = similar(p, V, nout)
+            end
+
+            idx=0
             for y in ys
                 for p in ForwardDiff.partials(y)
                     out[idx+=1] = p
                 end
             end
+
             return out
         end
     end
