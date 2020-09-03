@@ -416,9 +416,21 @@ ZygoteRules.@adjoint function __solvebp(prob,alg,sensealg,lb,ub,p,args...;kwargs
         else
             _f = (x) -> prob.f(x,p)
             if sensealg.vjp isa ZygoteVJP
-                dfdp = function (x,p)
-                    _,back = Zygote.pullback(p->prob.f(x,p),p)
-                    back(y)[1]
+                if prob.batch > 0
+                    dfdp = function (x,p)
+                        out = zeros(length(p),size(x,2))
+                        for idx in 1:size(x,2)
+                            _,back = Zygote.pullback(p->prob.f(@view(x[:,idx]),p),p)
+                            out[:,idx] .= back(y)[1]
+                        end
+                        out
+                    end
+                else
+                    dfdp = function (x,p)
+                        _,back = Zygote.pullback(p->prob.f(x,p),p)
+                        @show back(y)
+                        back(y)[1]
+                    end
                 end
             elseif sensealg.vjp isa ReverseDiffVJP
                 error("TODO")
