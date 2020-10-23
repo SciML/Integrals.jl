@@ -36,7 +36,7 @@ sol = solve(prob,CubatureJLh(),reltol=1e-3,abstol=1e-3)
 ```
 
 If we would like to compare the results against Cuba.jl's `Cuhre` method, then
-the change is one argument change:
+the change is a one-argument change:
 
 ```julia
 using Cuba
@@ -45,7 +45,7 @@ sol = solve(prob,CubaCuhre(),reltol=1e-3,abstol=1e-3)
 
 ## Differentiability
 
-Quadrature.jl is a fully differentiable quadrature library. Thus it adds the
+Quadrature.jl is a fully differentiable quadrature library. Thus, it adds the
 ability to perform automatic differentiation over any of the libraries that it
 calls. It integrates with ForwardDiff.jl for forward-mode automatic differentiation
 and Zygote.jl for reverse-mode automatic differentiation. For example:
@@ -77,11 +77,11 @@ QuadratureProblem(f,lb,ub,p=NullParameters();
                   nout=1, batch = 0, kwargs...)
 ```
 
-- `f`: Either a function `f(x,p)` for out-of-place or `f(dx,x,p)` for in place.
-- `lb`: Either a number or vector of lower bounds
-- `ub`: Either a number or vector of upper bounds
-- `p`: The parameters associated with the problem
-- `nout`: The output size of the function `f`. Defaults to `1`, i.e. a scalar
+- `f`: Either a function `f(x,p)` for out-of-place or `f(dx,x,p)` for in-place.
+- `lb`: Either a number or vector of lower bounds.
+- `ub`: Either a number or vector of upper bounds.
+- `p`: The parameters associated with the problem.
+- `nout`: The output size of the function `f`. Defaults to `1`, i.e., a scalar
   integral output.
 - `batch`: The preferred number of points to batch. This allows user-side
   parallelization of the integrand. If `batch != 0`, then each `x[:,i]` is a
