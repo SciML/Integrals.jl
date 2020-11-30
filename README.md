@@ -1,6 +1,6 @@
 # Quadrature.jl
 
-[![Build Status](https://travis-ci.com/SciML/Quadrature.jl.svg?branch=master)](https://travis-ci.com/SciML/Quadrature.jl)
+[![Build Status](https://github.com/SciML/Quadrature.jl/workflows/CI/badge.svg)](https://github.com/SciML/Quadrature.jl/actions?query=workflow%3ACI)
 
 Quadrature.jl is an instantiation of the DiffEqBase.jl common `QuadratureProblem`
 interface for the common quadrature packages of Julia. By using Quadrature.jl,
