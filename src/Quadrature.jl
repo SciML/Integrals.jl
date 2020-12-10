@@ -185,12 +185,12 @@ function __solvebp_call(prob::QuadratureProblem,::HCubatureJL,sensealg,lb,ub,p,a
 
     if lb isa Number
         val,err = hquadrature(f, lb, ub;
-                            rtol=reltol, atol=abstol,
-                            maxevals=maxiters, initdiv=1)
+                              rtol=reltol, atol=abstol,
+                              maxevals=maxiters, kwargs...)
     else
         val,err = hcubature(f, lb, ub;
                             rtol=reltol, atol=abstol,
-                            maxevals=maxiters, initdiv=1)
+                            maxevals=maxiters, kwargs...)
     end
     DiffEqBase.build_solution(prob,HCubatureJL(),val,err,retcode = :Success)
 end
@@ -490,7 +490,7 @@ ZygoteRules.@adjoint function __solvebp(prob,alg,sensealg,lb,ub,p,args...;kwargs
     function quadrature_adjoint(Δ)
         y = typeof(Δ) <: Array{<:Number,0} ? Δ[1] : Δ
         if isinplace(prob)
-            dx = zeros(prob.nout)  
+            dx = zeros(prob.nout)
             _f = (x) -> prob.f(dx,x,p)
             if sensealg.vjp isa ZygoteVJP
                 dfdp = function (dx,x,p)
@@ -500,8 +500,8 @@ ZygoteRules.@adjoint function __solvebp(prob,alg,sensealg,lb,ub,p,args...;kwargs
                         copy(_dx)
                     end
 
-                    z = zeros(size(x,2))  
-                    for idx in 1:size(x,2)                      
+                    z = zeros(size(x,2))
+                    for idx in 1:size(x,2)
                         z[1] = 1
                         dx[:,idx] = back(z)[1]
                         z[idx]=0
@@ -516,13 +516,13 @@ ZygoteRules.@adjoint function __solvebp(prob,alg,sensealg,lb,ub,p,args...;kwargs
                 if prob.batch > 0
                     dfdp = function (x,p)
                         _,back = Zygote.pullback(p->prob.f(x,p),p)
-                        
+
                         out = zeros(length(p),size(x,2))
                         z = zeros(size(x,2))
                         for idx in 1:size(x,2)
                             z[idx] = 1
                             out[:,idx] = back(z)[1]
-                            z[idx]=0  
+                            z[idx]=0
                         end
                         out
                     end
@@ -583,7 +583,7 @@ function __solvebp(prob,alg,sensealg,lb,ub,p::AbstractArray{<:ForwardDiff.Dual{T
     if isinplace(prob)
         dfdp = function (out,x,p)
             dualp = reinterpret(ForwardDiff.Dual{T,V,P}, p)
-            if prob.batch > 0    
+            if prob.batch > 0
                 dx = similar(dualp, prob.nout, size(x,2))
             else
                 dx = similar(dualp, prob.nout)
