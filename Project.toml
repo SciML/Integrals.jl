@@ -16,6 +16,7 @@ Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 Requires = "ae029012-a4dd-5104-9daa-d747884805df"
 ReverseDiff = "37e2e3b7-166d-5795-8a7a-e32c996b4267"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
+ZygoteRules = "700de1a5-db45-46bc-99cf-38207098b444"
 
 [compat]
 CommonSolve = "0.2"
@@ -29,6 +30,7 @@ Reexport = "0.2, 1.0"
 Requires = "0.5, 1.0"
 ReverseDiff = "1"
 Zygote = "0.4.22, 0.5, 0.6"
+ZygoteRules = "0.2"
 julia = "1.4"
 
 [extras]

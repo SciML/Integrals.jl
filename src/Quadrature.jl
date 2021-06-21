@@ -6,6 +6,7 @@ using Zygote, ReverseDiff, ForwardDiff , LinearAlgebra
 
 import ChainRulesCore
 import ChainRulesCore: NoTangent
+import ZygoteRules
 
 struct QuadGKJL <: DiffEqBase.AbstractQuadratureAlgorithm end
 struct HCubatureJL <: DiffEqBase.AbstractQuadratureAlgorithm end
