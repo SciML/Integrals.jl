@@ -2,7 +2,11 @@ module Quadrature
 
 using Requires, Reexport,  MonteCarloIntegration, QuadGK, HCubature
 @reexport using DiffEqBase
-using ZygoteRules, Zygote, ReverseDiff, ForwardDiff , LinearAlgebra
+using Zygote, ReverseDiff, ForwardDiff , LinearAlgebra
+
+import ChainRulesCore
+import ChainRulesCore: NoTangent
+import ZygoteRules
 
 struct QuadGKJL <: DiffEqBase.AbstractQuadratureAlgorithm end
 struct HCubatureJL <: DiffEqBase.AbstractQuadratureAlgorithm end
@@ -485,7 +489,7 @@ function __init__()
     end
 end
 
-ZygoteRules.@adjoint function __solvebp(prob,alg,sensealg,lb,ub,p,args...;kwargs...)
+function ChainRulesCore.rrule(::typeof(__solvebp),prob,alg,sensealg,lb,ub,p,args...;kwargs...)
     out = __solvebp_call(prob,alg,sensealg,lb,ub,p,args...;kwargs...)
     function quadrature_adjoint(Δ)
         y = typeof(Δ) <: Array{<:Number,0} ? Δ[1] : Δ
@@ -549,9 +553,9 @@ ZygoteRules.@adjoint function __solvebp(prob,alg,sensealg,lb,ub,p,args...;kwargs
         if lb isa Number
             dlb = -_f(lb)
             dub = _f(ub)
-            return (nothing,nothing,nothing,dlb,dub,dp,ntuple(x->nothing,length(args))...)
+            return (NoTangent(),NoTangent(),NoTangent(),NoTangent(),dlb,dub,dp,ntuple(x->NoTangent(),length(args))...)
         else
-            return (nothing,nothing,nothing,nothing,nothing,dp,ntuple(x->nothing,length(args))...)
+            return (NoTangent(),NoTangent(),NoTangent(),NoTangent(),NoTangent(),NoTangent(),dp,ntuple(x->NoTangent(),length(args))...)
         end
     end
     out,quadrature_adjoint
