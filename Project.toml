@@ -1,7 +1,7 @@
 name = "Quadrature"
 uuid = "67601950-bd08-11e9-3c89-fd23fb4432d2"
 authors = ["Chris Rackauckas <accounts@chrisrackauckas.com>"]
-version = "1.10.0"
+version = "1.11.0"
 
 [deps]
 ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
