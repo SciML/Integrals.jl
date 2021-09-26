@@ -100,21 +100,21 @@ function transformation_if_inf(prob)
 			h(t , p) = transform_inf(t , p , g , prob.lb , prob.ub)
 			lb = -1.00
 			ub = 1.00
-	        _prob = QuadratureProblem(h , lb ,ub, prob.p , nout = prob.nout , batch = prob.batch , prob.kwargs...)
+	        _prob = QuadratureProblem(h , lb ,ub, prob.p , nout = prob.nout , batch = prob.batch)
 			return _prob
 		elseif prob.lb != -Inf && prob.ub == Inf
 			g = prob.f
 			h_(t , p) = transform_inf(t , p , g , prob.lb , prob.ub)
 			lb = 0.00
 			ub = 1.00
-	        _prob = QuadratureProblem(h_ , lb ,ub, prob.p , nout = prob.nout , batch = prob.batch , prob.kwargs...)
+	        _prob = QuadratureProblem(h_ , lb ,ub, prob.p , nout = prob.nout , batch = prob.batch)
 			return _prob
 		elseif prob.lb == -Inf && prob.ub != Inf
 			g = prob.f
 			_h(t , p) = transform_inf(t , p , g , prob.lb , prob.ub)
 			lb = -1.00
 			ub = 0.00
-	        _prob = QuadratureProblem(_h , lb ,ub, prob.p , nout = prob.nout , batch = prob.batch , prob.kwargs...)
+	        _prob = QuadratureProblem(_h , lb ,ub, prob.p , nout = prob.nout , batch = prob.batch)
 			return _prob
 		end
 	end
@@ -130,7 +130,7 @@ function transformation_if_inf(prob)
 		_ub = 1.00.*_semiup + 1.00.*_inf  + 0.00.*_semilw  + _none.*prob.ub
 		g = prob.f
 		hs(t , p) = transform_inf(t , p , g , prob.lb , prob.ub)
-		_prob = QuadratureProblem(hs, _lb ,_ub, prob.p , nout = prob.nout , batch = prob.batch , prob.kwargs...)
+		_prob = QuadratureProblem(hs, _lb ,_ub, prob.p , nout = prob.nout , batch = prob.batch)
 		return _prob
 	end
 	return prob
