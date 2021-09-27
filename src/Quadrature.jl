@@ -89,7 +89,8 @@ function transform_inf(t , p , f , lb , ub)
 	function v(t)
 		return t.*_none + v_inf(t).*_inf + v_semiinf(t , lb , 1).*semiup + v_semiinf(t , ub , 0).*semilw
 	end
-	j = det(ForwardDiff.jacobian(x ->v(x), t))
+    jac = Zygote.@ignore ForwardDiff.jacobian(x ->v(x), t)
+	j = det(jac)
 	f(v(t) , p)*(j)
 end
 
@@ -565,7 +566,6 @@ ZygoteRules.@adjoint function ZygoteRules.literal_getproperty(
                         sol::DiffEqBase.QuadratureSolution,::Val{:u})
     sol.u,Δ->(DiffEqBase.build_solution(sol.prob,sol.alg,Δ,sol.resid),)
 end
-
 
 ### Forward-Mode AD Intercepts
 
