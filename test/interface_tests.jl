@@ -1,5 +1,5 @@
 using Quadrature
-using QuadratureCuba, QuadatureCubature
+using QuadratureCuba, QuadratureCubature
 using Test
 
 max_dim_test = 2
