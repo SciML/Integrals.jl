@@ -2,6 +2,8 @@ module QuadratureCubature
 
 using Quadrature, Cubature
 
+import Quadrature: transformation_if_inf
+
 abstract type AbstractCubatureJLAlgorithm <: DiffEqBase.AbstractQuadratureAlgorithm end
 struct CubatureJLh <: AbstractCubatureJLAlgorithm end
 struct CubatureJLp <: AbstractCubatureJLAlgorithm end
