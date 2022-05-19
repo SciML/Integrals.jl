@@ -1,4 +1,5 @@
-using Quadrature, Cuba, Cubature, Zygote, FiniteDiff, ForwardDiff
+using Quadrature, Zygote, FiniteDiff, ForwardDiff
+using QuadratureCuba, QuadratureCubature
 using Test
 
 ### One Dimensional
