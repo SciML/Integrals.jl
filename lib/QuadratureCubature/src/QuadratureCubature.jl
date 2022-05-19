@@ -1,6 +1,6 @@
 module QuadratureCubature
 
-using Quadrature
+using Quadrature, Cubature
 
 abstract type AbstractCubatureJLAlgorithm <: DiffEqBase.AbstractQuadratureAlgorithm end
 struct CubatureJLh <: AbstractCubatureJLAlgorithm end

@@ -1,6 +1,6 @@
 module QuadratureCuba
 
-using Quadrature
+using Quadrature, Cuba
 
 abstract type AbstractCubaAlgorithm <: DiffEqBase.AbstractQuadratureAlgorithm end
 struct CubaVegas <: AbstractCubaAlgorithm end
