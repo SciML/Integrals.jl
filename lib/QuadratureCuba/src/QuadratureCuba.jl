@@ -1,7 +1,7 @@
 module QuadratureCuba
 
 using Quadrature, Cuba
-import Quadrature: transformation_if_inf
+import Quadrature: transformation_if_inf, scale_x, scale_x!
 
 abstract type AbstractCubaAlgorithm <: DiffEqBase.AbstractQuadratureAlgorithm end
 struct CubaVegas <: AbstractCubaAlgorithm end
