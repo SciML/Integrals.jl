@@ -39,7 +39,7 @@ If we would like to compare the results against Cuba.jl's `Cuhre` method, then
 the change is a one-argument change:
 
 ```julia
-using Cuba
+using QuadratureCuba
 sol = solve(prob,CubaCuhre(),reltol=1e-3,abstol=1e-3)
 ```
 
@@ -100,12 +100,12 @@ The following algorithms are available:
 - `QuadGKJL`: Uses QuadGK.jl. Requires `nout=1` and `batch=0`.
 - `HCubatureJL`: Uses HCubature.jl. Requires `batch=0`.
 - `VEGAS`: Uses MonteCarloIntegration.jl. Requires `nout=1`.
-- `CubatureJLh`: h-Cubature from Cubature.jl. Requires `using Cubature`.
-- `CubatureJLp`: p-Cubature from Cubature.jl. Requires `using Cubature`.
-- `CubaVegas`: Vegas from Cuba.jl. Requires `using Cuba`.
-- `CubaSUAVE`: SUAVE from Cuba.jl. Requires `using Cuba`.
-- `CubaDivonne`: Divonne from Cuba.jl. Requires `using Cuba`.
-- `CubaCuhre`: Cuhre from Cuba.jl. Requires `using Cuba`.
+- `CubatureJLh`: h-Cubature from Cubature.jl. Requires `using QuadratureCubature`.
+- `CubatureJLp`: p-Cubature from Cubature.jl. Requires `using QuadratureCubature`.
+- `CubaVegas`: Vegas from Cuba.jl. Requires `using QuadratureCuba`.
+- `CubaSUAVE`: SUAVE from Cuba.jl. Requires `using QuadratureCuba`.
+- `CubaDivonne`: Divonne from Cuba.jl. Requires `using QuadratureCuba`.
+- `CubaCuhre`: Cuhre from Cuba.jl. Requires `using QuadratureCuba`.
 
 ## Common Solve Keyword Arguments
 
