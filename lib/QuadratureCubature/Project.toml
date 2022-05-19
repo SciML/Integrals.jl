@@ -1,0 +1,17 @@
+name = "QuadratureCubature"
+uuid = "e0ec9b62-6d54-4d46-b3b0-ad6116370d23"
+authors = ["Chris Rackauckas <accounts@chrisrackauckas.com>"]
+version = "0.1.0"
+
+[deps]
+Cubature = "667455a9-e2ce-5579-9412-b964f529a492"
+Quadrature = "67601950-bd08-11e9-3c89-fd23fb4432d2"
+
+[compat]
+julia = "1.6"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
