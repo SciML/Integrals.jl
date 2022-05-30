@@ -1,4 +1,4 @@
-name = "Quadrature"
+name = "Integrals"
 uuid = "67601950-bd08-11e9-3c89-fd23fb4432d2"
 authors = ["Chris Rackauckas <accounts@chrisrackauckas.com>"]
 version = "2.0.0"
@@ -6,7 +6,6 @@ version = "2.0.0"
 [deps]
 ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
 CommonSolve = "38540f10-b2f7-11e9-35d8-d573e4eb0ff2"
-DiffEqBase = "2b5f629d-d688-5b77-993f-72d75c75574e"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 HCubature = "19dc6840-f33b-545b-b366-655c7e3ffd49"
@@ -15,13 +14,13 @@ MonteCarloIntegration = "4886b29c-78c9-11e9-0a6e-41e1f4161f7b"
 QuadGK = "1fd47b50-473d-5c70-9696-f719f8f3bcdc"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 ReverseDiff = "37e2e3b7-166d-5795-8a7a-e32c996b4267"
+SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 ZygoteRules = "700de1a5-db45-46bc-99cf-38207098b444"
 
 [compat]
 ChainRulesCore = "0.10.7, 1"
 CommonSolve = "0.2"
-DiffEqBase = "6.1"
 Distributions = "0.23, 0.24, 0.25"
 ForwardDiff = "0.10"
 HCubature = "1.4"
@@ -29,15 +28,17 @@ MonteCarloIntegration = "0.0.1, 0.0.2, 0.0.3"
 QuadGK = "2.1"
 Reexport = "0.2, 1.0"
 ReverseDiff = "1"
+SciMLBase = "1.38"
 Zygote = "0.4.22, 0.5, 0.6"
 ZygoteRules = "0.2"
 julia = "1.6"
 
 [extras]
+DiffEqSensitivity = "41bf760c-e81c-5289-8e54-58b1f1f8abe2"
 FiniteDiff = "6a86dc24-6348-571c-b903-95158fe2bd41"
 Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
 SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["FiniteDiff", "Pkg", "SafeTestsets", "Test"]
+test = ["DiffEqSensitivity", "FiniteDiff", "Pkg", "SafeTestsets", "Test"]

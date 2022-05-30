@@ -1,9 +1,9 @@
-# Quadrature.jl
+# Integrals.jl
 
-[![Build Status](https://github.com/SciML/Quadrature.jl/workflows/CI/badge.svg)](https://github.com/SciML/Quadrature.jl/actions?query=workflow%3ACI)
+[![Build Status](https://github.com/SciML/Integrals.jl/workflows/CI/badge.svg)](https://github.com/SciML/Integrals.jl/actions?query=workflow%3ACI)
 
-Quadrature.jl is an instantiation of the DiffEqBase.jl common `QuadratureProblem`
-interface for the common quadrature packages of Julia. By using Quadrature.jl,
+Integrals.jl is an instantiation of the DiffEqBase.jl common `QuadratureProblem`
+interface for the common quadrature packages of Julia. By using Integrals.jl,
 you get a single predictable interface where many of the arguments are
 standardized throughout the various integrator libraries. This can be useful
 for benchmarking or for library implementations, since libraries which internally
@@ -14,7 +14,7 @@ use a quadrature can easily accept a quadrature method as an argument.
 For basic multidimensional quadrature we can construct and solve a `QuadratureProblem`:
 
 ```julia
-using Quadrature
+using Integrals
 f(x,p) = sum(sin.(x))
 prob = QuadratureProblem(f,ones(2),3ones(2))
 sol = solve(prob,HCubatureJL(),reltol=1e-3,abstol=1e-3)
@@ -25,7 +25,7 @@ to compute multiple points at once. For example, here we do allocation-free
 multithreading with Cubature.jl:
 
 ```julia
-using Quadrature, Cubature, Base.Threads
+using Integrals, Cubature, Base.Threads
 function f(dx,x,p)
   Threads.@threads for i in 1:size(x,2)
     dx[i] = sum(sin.(@view(x[:,i])))
@@ -39,19 +39,19 @@ If we would like to compare the results against Cuba.jl's `Cuhre` method, then
 the change is a one-argument change:
 
 ```julia
-using QuadratureCuba
+using IntegralsCuba
 sol = solve(prob,CubaCuhre(),reltol=1e-3,abstol=1e-3)
 ```
 
 ## Differentiability
 
-Quadrature.jl is a fully differentiable quadrature library. Thus, it adds the
+Integrals.jl is a fully differentiable quadrature library. Thus, it adds the
 ability to perform automatic differentiation over any of the libraries that it
 calls. It integrates with ForwardDiff.jl for forward-mode automatic differentiation
 and Zygote.jl for reverse-mode automatic differentiation. For example:
 
 ```julia
-using Quadrature, ForwardDiff, FiniteDiff, Zygote, Cuba
+using Integrals, ForwardDiff, FiniteDiff, Zygote, Cuba
 f(x,p) = sum(sin.(x .* p))
 lb = ones(2)
 ub = 3ones(2)
@@ -100,12 +100,12 @@ The following algorithms are available:
 - `QuadGKJL`: Uses QuadGK.jl. Requires `nout=1` and `batch=0`.
 - `HCubatureJL`: Uses HCubature.jl. Requires `batch=0`.
 - `VEGAS`: Uses MonteCarloIntegration.jl. Requires `nout=1`.
-- `CubatureJLh`: h-Cubature from Cubature.jl. Requires `using QuadratureCubature`.
-- `CubatureJLp`: p-Cubature from Cubature.jl. Requires `using QuadratureCubature`.
-- `CubaVegas`: Vegas from Cuba.jl. Requires `using QuadratureCuba`.
-- `CubaSUAVE`: SUAVE from Cuba.jl. Requires `using QuadratureCuba`.
-- `CubaDivonne`: Divonne from Cuba.jl. Requires `using QuadratureCuba`.
-- `CubaCuhre`: Cuhre from Cuba.jl. Requires `using QuadratureCuba`.
+- `CubatureJLh`: h-Cubature from Cubature.jl. Requires `using IntegralsCubature`.
+- `CubatureJLp`: p-Cubature from Cubature.jl. Requires `using IntegralsCubature`.
+- `CubaVegas`: Vegas from Cuba.jl. Requires `using IntegralsCuba`.
+- `CubaSUAVE`: SUAVE from Cuba.jl. Requires `using IntegralsCuba`.
+- `CubaDivonne`: Divonne from Cuba.jl. Requires `using IntegralsCuba`.
+- `CubaCuhre`: Cuhre from Cuba.jl. Requires `using IntegralsCuba`.
 
 ## Common Solve Keyword Arguments
 

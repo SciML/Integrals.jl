@@ -1,5 +1,5 @@
-using Quadrature
-using QuadratureCuba, QuadratureCubature
+using Integrals
+using IntegralsCuba, IntegralsCubature
 using Test
 
 max_dim_test = 2
@@ -85,7 +85,7 @@ end
             continue
         end
         for i in 1:length(integrands)
-            prob = QuadratureProblem(integrands[i],lb,ub)
+            prob = IntegralProblem(integrands[i],lb,ub)
             @info "Alg = $alg, Integrand = $i, Dimension = $dim, Output Dimension = $nout"
             sol = solve(prob,alg,reltol=reltol,abstol=abstol)
             @test sol.u ≈ exact_sol[i](dim,nout,lb,ub) rtol = 1e-2
@@ -100,7 +100,7 @@ end
         for i in 1:length(integrands)
             for dim = 1:max_dim_test
                 lb, ub = (ones(dim), 3ones(dim))
-                prob = QuadratureProblem(integrands[i],lb,ub)
+                prob = IntegralProblem(integrands[i],lb,ub)
                 if dim > req.max_dim || dim < req.min_dim || alg isa QuadGKJL  #QuadGKJL requires numbers, not single element arrays
                     continue
                 end
@@ -119,7 +119,7 @@ end
         for i in 1:length(iip_integrands)
             for dim = 1:max_dim_test
                 lb, ub = (ones(dim), 3ones(dim))
-                prob = QuadratureProblem(iip_integrands[i],lb,ub)
+                prob = IntegralProblem(iip_integrands[i],lb,ub)
                 if dim > req.max_dim || dim < req.min_dim || alg isa QuadGKJL  #QuadGKJL requires numbers, not single element arrays
                     continue
                 end
@@ -141,7 +141,7 @@ end
     for alg in algs
         req = alg_req[alg]
         for i in 1:length(integrands)
-            prob = QuadratureProblem(batch_f(integrands[i]),lb,ub,batch=10)
+            prob = IntegralProblem(batch_f(integrands[i]),lb,ub,batch=10)
             if req.min_dim > 1 || !req.allows_batch
                 continue
             end
@@ -159,7 +159,7 @@ end
         for i in 1:length(integrands)
             for dim = 1:max_dim_test
                 (lb,ub) = (ones(dim),3ones(dim))
-                prob = QuadratureProblem(batch_f(integrands[i]),lb,ub,batch=10)
+                prob = IntegralProblem(batch_f(integrands[i]),lb,ub,batch=10)
                 if dim > req.max_dim || dim < req.min_dim || !req.allows_batch
                     continue
                 end
@@ -178,7 +178,7 @@ end
         for i in 1:length(iip_integrands)
             for dim = 1:max_dim_test
                 (lb,ub) = (ones(dim),3ones(dim))
-                prob = QuadratureProblem(batch_iip_f(integrands[i]),lb,ub,batch=10)
+                prob = IntegralProblem(batch_iip_f(integrands[i]),lb,ub,batch=10)
                 if dim > req.max_dim || dim < req.min_dim || !req.allows_batch || !req.allows_iip
                     continue
                 end
@@ -198,7 +198,7 @@ end
         req = alg_req[alg]
         for i in 1:length(integrands_v)
             for nout = 1:max_nout_test
-                prob = QuadratureProblem((x,p) -> integrands_v[i](x,p,nout),lb,ub, nout = nout)
+                prob = IntegralProblem((x,p) -> integrands_v[i](x,p,nout),lb,ub, nout = nout)
                 if req.min_dim > 1 || req.nout < nout
                     continue
                 end
@@ -220,7 +220,7 @@ end
                     if dim > req.max_dim || dim < req.min_dim || req.nout < nout || alg isa QuadGKJL  #QuadGKJL requires numbers, not single element arrays
                         continue
                     end
-                    prob = QuadratureProblem((x,p) -> integrands_v[i](x,p,nout),lb,ub, nout = nout)
+                    prob = IntegralProblem((x,p) -> integrands_v[i](x,p,nout),lb,ub, nout = nout)
                     @info "Alg = $alg, Integrand = $i, Dimension = $dim, Output Dimension = $nout"
                     sol = solve(prob,alg,reltol=reltol,abstol=abstol)
                     @test sol.u ≈ exact_sol_v[i](dim,nout,lb,ub) rtol = 1e-2
@@ -237,7 +237,7 @@ end
             for dim = 1:max_dim_test
                 lb, ub = (ones(dim), 3ones(dim))
                 for nout = 1:max_nout_test
-                    prob = QuadratureProblem((dx,x,p) ->iip_integrands_v[i](dx,x,p,nout),lb,ub,nout = nout)
+                    prob = IntegralProblem((dx,x,p) ->iip_integrands_v[i](dx,x,p,nout),lb,ub,nout = nout)
                     if dim > req.max_dim || dim < req.min_dim || req.nout < nout || alg isa QuadGKJL  #QuadGKJL requires numbers, not single element arrays
                         continue
                     end
@@ -260,7 +260,7 @@ end
     for alg in algs
         req = alg_req[alg]
         for i in 1:length(integrands_v)
-            prob = QuadratureProblem(batch_f_v(integrands_v[i],nout),lb,ub,batch=10,nout = nout)
+            prob = IntegralProblem(batch_f_v(integrands_v[i],nout),lb,ub,batch=10,nout = nout)
             if req.min_dim > 1 || !req.allows_batch || req.nout < nout
                 continue
             end
@@ -278,7 +278,7 @@ end
         for i in 1:length(integrands_v)
             for dim = 1:max_dim_test
                 (lb,ub) = (ones(dim),3ones(dim))
-                prob = QuadratureProblem(batch_f_v(integrands_v[i],nout),lb,ub,batch=10,nout = nout)
+                prob = IntegralProblem(batch_f_v(integrands_v[i],nout),lb,ub,batch=10,nout = nout)
                 if dim > req.max_dim || dim < req.min_dim || !req.allows_batch || req.nout < nout
                     continue
                 end
@@ -297,7 +297,7 @@ end
         for i in 1:length(iip_integrands_v)
             for dim = 1:max_dim_test
                 (lb,ub) = (ones(dim),3ones(dim))
-                prob = QuadratureProblem(batch_iip_f_v(integrands_v[i],nout),lb,ub,batch=10,nout = nout)
+                prob = IntegralProblem(batch_iip_f_v(integrands_v[i],nout),lb,ub,batch=10,nout = nout)
                 if dim > req.max_dim || dim < req.min_dim || !req.allows_batch || !req.allows_iip || req.nout < nout
                     continue
                 end
