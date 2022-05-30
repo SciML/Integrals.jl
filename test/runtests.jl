@@ -7,8 +7,8 @@ function dev_subpkg(subpkg)
     Pkg.develop(PackageSpec(path=subpkg_path))
 end
 
-dev_subpkg("QuadratureCuba")
-dev_subpkg("QuadratureCubature")
+dev_subpkg("IntegralsCuba")
+dev_subpkg("IntegralsCubature")
 
 @time @safetestset "Interface Tests" begin include("interface_tests.jl") end
 @time @safetestset "Derivative Tests" begin include("derivative_tests.jl") end

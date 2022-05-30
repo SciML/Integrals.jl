@@ -1,5 +1,5 @@
-using Quadrature, Zygote, FiniteDiff, ForwardDiff
-using QuadratureCuba, QuadratureCubature
+using Integrals, Zygote, FiniteDiff, ForwardDiff, DiffEqSensitivity
+using IntegralsCuba, IntegralsCubature
 using Test
 
 ### One Dimensional
@@ -8,11 +8,11 @@ f(x,p) = sum(sin.(p[1] * x))
 lb = 1.0
 ub = 3.0
 p = 2.0
-prob = QuadratureProblem(f,lb,ub,p)
+prob = IntegralProblem(f,lb,ub,p)
 sol = solve(prob,QuadGKJL(),reltol=1e-3,abstol=1e-3)
 
 function testf(lb,ub,p)
-    prob = QuadratureProblem(f,lb,ub,p)
+    prob = IntegralProblem(f,lb,ub,p)
     sin(solve(prob,QuadGKJL(),reltol=1e-3,abstol=1e-3)[1])
 end
 dlb1,dub1,dp1 = Zygote.gradient(testf,lb,ub,p)
@@ -34,16 +34,16 @@ f(x,p) = sum(sin.(x .* p))
 lb = ones(2)
 ub = 3ones(2)
 p = [1.5,2.0]
-prob = QuadratureProblem(f,lb,ub,p)
+prob = IntegralProblem(f,lb,ub,p)
 sol = solve(prob,CubaCuhre(),reltol=1e-3,abstol=1e-3)
 
 function testf(lb,ub,p)
-    prob = QuadratureProblem(f,lb,ub,p)
+    prob = IntegralProblem(f,lb,ub,p)
     sin(solve(prob,CubaCuhre(),reltol=1e-6,abstol=1e-6)[1])
 end
 
 function testf2(lb,ub,p)
-    prob = QuadratureProblem(f,lb,ub,p)
+    prob = IntegralProblem(f,lb,ub,p)
     sin(solve(prob,HCubatureJL(),reltol=1e-6,abstol=1e-6)[1])
 end
 
@@ -78,16 +78,16 @@ f(x,p) = sin.(x .* p)
 lb = ones(2)
 ub = 3ones(2)
 p = [1.5,2.0]
-prob = QuadratureProblem(f,lb,ub,p,nout=2)
+prob = IntegralProblem(f,lb,ub,p,nout=2)
 sol = solve(prob,CubaCuhre(),reltol=1e-3,abstol=1e-3)
 
 function testf(lb,ub,p)
-    prob = QuadratureProblem(f,lb,ub,p,nout=2)
+    prob = IntegralProblem(f,lb,ub,p,nout=2)
     sin(sum(solve(prob,CubaCuhre(),reltol=1e-6,abstol=1e-6)))
 end
 
 function testf2(lb,ub,p)
-    prob = QuadratureProblem(f,lb,ub,p,nout=2)
+    prob = IntegralProblem(f,lb,ub,p,nout=2)
     sin(sum(solve(prob,HCubatureJL(),reltol=1e-6,abstol=1e-6)))
 end
 
@@ -123,10 +123,10 @@ f(x,p) = x*p[1].+p[2]*p[3]
 lb =1.0
 ub = 3.0
 p = [2.0, 3.0, 4.0]
-prob = QuadratureProblem(f,lb,ub,p)
+prob = IntegralProblem(f,lb,ub,p)
 
 function testf3(lb,ub,p; f=f)
-    prob = QuadratureProblem(f,lb,ub,p, batch = 10, nout=1)
+    prob = IntegralProblem(f,lb,ub,p, batch = 10, nout=1)
     solve(prob, CubatureJLh(); reltol=1e-3,abstol=1e-3)[1]
 end
 
@@ -143,10 +143,10 @@ f(x,p) = (x*p[1].+p[2]*p[3]).*[1;2]
 lb =1.0
 ub = 3.0
 p = [2.0, 3.0, 4.0]
-prob = QuadratureProblem(f,lb,ub,p)
+prob = IntegralProblem(f,lb,ub,p)
 
 function testf3(lb,ub,p; f=f)
-    prob = QuadratureProblem(f,lb,ub,p, batch = 10, nout=2)
+    prob = IntegralProblem(f,lb,ub,p, batch = 10, nout=2)
     sum(solve(prob, CubatureJLh(); reltol=1e-3,abstol=1e-3))
 end
 
@@ -163,10 +163,10 @@ f(x,p) = x[1,:]*p[1].+p[2]*p[3]
 lb =[1.0,1.0]
 ub = [3.0,3.0]
 p = [2.0, 3.0, 4.0]
-prob = QuadratureProblem(f,lb,ub,p)
+prob = IntegralProblem(f,lb,ub,p)
 
 function testf3(lb,ub,p; f=f)
-    prob = QuadratureProblem(f,lb,ub,p, batch = 10, nout=1)
+    prob = IntegralProblem(f,lb,ub,p, batch = 10, nout=1)
     solve(prob, CubatureJLh(); reltol=1e-3,abstol=1e-3)[1]
 end
 
@@ -183,10 +183,10 @@ f(x,p) = x*p[1].+p[2]*p[3]
 lb =[1.0,1.0]
 ub = [3.0,3.0]
 p = [2.0, 3.0, 4.0]
-prob = QuadratureProblem(f,lb,ub,p)
+prob = IntegralProblem(f,lb,ub,p)
 
 function testf3(lb,ub,p; f=f)
-    prob = QuadratureProblem(f,lb,ub,p, batch = 10, nout=2)
+    prob = IntegralProblem(f,lb,ub,p, batch = 10, nout=2)
     sum(solve(prob, CubatureJLh(); reltol=1e-3,abstol=1e-3))
 end
 
@@ -206,10 +206,10 @@ end
 lb =[1.0,1.0]
 ub = [3.0,3.0]
 p = [2.0, 3.0, 4.0]
-prob = QuadratureProblem(g,lb,ub,p)
+prob = IntegralProblem(g,lb,ub,p)
 
 function testf3(lb,ub,p; f=g)
-    prob = QuadratureProblem(f,lb,ub,p, batch = 10, nout=1)
+    prob = IntegralProblem(f,lb,ub,p, batch = 10, nout=1)
     solve(prob, CubatureJLh(); reltol=1e-3,abstol=1e-3)[1]
 end
 
@@ -230,10 +230,10 @@ end
 lb =[1.0,1.0]
 ub = [3.0,3.0]
 p = [2.0, 3.0, 4.0]
-prob = QuadratureProblem(g,lb,ub,p)
+prob = IntegralProblem(g,lb,ub,p)
 
 function testf3(lb,ub,p; f=g)
-    prob = QuadratureProblem(f,lb,ub,p, batch = 10, nout=2)
+    prob = IntegralProblem(f,lb,ub,p, batch = 10, nout=2)
     sum(solve(prob, CubatureJLh(); reltol=1e-3,abstol=1e-3))
 end
 

@@ -1,15 +1,15 @@
-name = "QuadratureCuba"
+name = "IntegralsCuba"
 uuid = "1e5cbd8a-c439-4026-92c2-98742b2c817b"
 authors = ["Chris Rackauckas <accounts@chrisrackauckas.com>"]
 version = "0.1.0"
 
 [deps]
 Cuba = "8a292aeb-7a57-582c-b821-06e4c11590b1"
-Quadrature = "67601950-bd08-11e9-3c89-fd23fb4432d2"
+Integrals = "67601950-bd08-11e9-3c89-fd23fb4432d2"
 
 [compat]
 Cuba = "2"
-Quadrature = "2"
+Integrals = "2"
 julia = "1.6"
 
 [extras]
