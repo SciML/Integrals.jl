@@ -9,7 +9,7 @@ Integrals = "de52edbc-65ea-441a-8357-d3a637375a31"
 
 [compat]
 Cubature = "1"
-Integrals = "2"
+Integrals = "1"
 julia = "1.6"
 
 [extras]
