@@ -1,7 +1,7 @@
 name = "IntegralsCuba"
 uuid = "e00cd5f1-6337-4131-8b37-28b2fe4cd6cb"
 authors = ["Chris Rackauckas <accounts@chrisrackauckas.com>"]
-version = "0.1.0"
+version = "0.2.0"
 
 [deps]
 Cuba = "8a292aeb-7a57-582c-b821-06e4c11590b1"
@@ -9,7 +9,7 @@ Integrals = "de52edbc-65ea-441a-8357-d3a637375a31"
 
 [compat]
 Cuba = "2"
-Integrals = "1"
+Integrals = "3"
 julia = "1.6"
 
 [extras]

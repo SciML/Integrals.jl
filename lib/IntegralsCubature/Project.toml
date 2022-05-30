@@ -1,7 +1,7 @@
 name = "IntegralsCubature"
 uuid = "c31f79ba-6e32-46d4-a52f-182a8ac42a54"
 authors = ["Chris Rackauckas <accounts@chrisrackauckas.com>"]
-version = "0.1.0"
+version = "0.2.0"
 
 [deps]
 Cubature = "667455a9-e2ce-5579-9412-b964f529a492"
@@ -9,7 +9,7 @@ Integrals = "de52edbc-65ea-441a-8357-d3a637375a31"
 
 [compat]
 Cubature = "1"
-Integrals = "1"
+Integrals = "3"
 julia = "1.6"
 
 [extras]
