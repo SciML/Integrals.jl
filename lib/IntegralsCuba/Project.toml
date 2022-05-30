@@ -1,11 +1,11 @@
 name = "IntegralsCuba"
-uuid = "1e5cbd8a-c439-4026-92c2-98742b2c817b"
+uuid = "e00cd5f1-6337-4131-8b37-28b2fe4cd6cb"
 authors = ["Chris Rackauckas <accounts@chrisrackauckas.com>"]
 version = "0.1.0"
 
 [deps]
 Cuba = "8a292aeb-7a57-582c-b821-06e4c11590b1"
-Integrals = "67601950-bd08-11e9-3c89-fd23fb4432d2"
+Integrals = "de52edbc-65ea-441a-8357-d3a637375a31"
 
 [compat]
 Cuba = "2"
