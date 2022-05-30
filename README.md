@@ -2,7 +2,7 @@
 
 [![Build Status](https://github.com/SciML/Integrals.jl/workflows/CI/badge.svg)](https://github.com/SciML/Integrals.jl/actions?query=workflow%3ACI)
 
-Integrals.jl is an instantiation of the DiffEqBase.jl common `QuadratureProblem`
+Integrals.jl is an instantiation of the DiffEqBase.jl common `IntegralProblem`
 interface for the common quadrature packages of Julia. By using Integrals.jl,
 you get a single predictable interface where many of the arguments are
 standardized throughout the various integrator libraries. This can be useful
@@ -11,12 +11,12 @@ use a quadrature can easily accept a quadrature method as an argument.
 
 ## Examples
 
-For basic multidimensional quadrature we can construct and solve a `QuadratureProblem`:
+For basic multidimensional quadrature we can construct and solve a `IntegralProblem`:
 
 ```julia
 using Integrals
 f(x,p) = sum(sin.(x))
-prob = QuadratureProblem(f,ones(2),3ones(2))
+prob = IntegralProblem(f,ones(2),3ones(2))
 sol = solve(prob,HCubatureJL(),reltol=1e-3,abstol=1e-3)
 ```
 
@@ -31,7 +31,7 @@ function f(dx,x,p)
     dx[i] = sum(sin.(@view(x[:,i])))
   end
 end
-prob = QuadratureProblem(f,ones(2),3ones(2),batch=2)
+prob = IntegralProblem(f,ones(2),3ones(2),batch=2)
 sol = solve(prob,CubatureJLh(),reltol=1e-3,abstol=1e-3)
 ```
 
@@ -58,7 +58,7 @@ ub = 3ones(2)
 p = [1.5,2.0]
 
 function testf(p)
-    prob = QuadratureProblem(f,lb,ub,p)
+    prob = IntegralProblem(f,lb,ub,p)
     sin(solve(prob,CubaCuhre(),reltol=1e-6,abstol=1e-6)[1])
 end
 dp1 = Zygote.gradient(testf,p)
@@ -67,13 +67,13 @@ dp3 = ForwardDiff.gradient(testf,p)
 dp1[1] ≈ dp2 ≈ dp3
 ```
 
-## QuadratureProblem
+## IntegralProblem
 
-To use this package, you always construct a `QuadratureProblem`. This has a
+To use this package, you always construct a `IntegralProblem`. This has a
 constructor:
 
 ```julia
-QuadratureProblem(f,lb,ub,p=NullParameters();
+IntegralProblem(f,lb,ub,p=NullParameters();
                   nout=1, batch = 0, kwargs...)
 ```
 
@@ -90,7 +90,7 @@ QuadratureProblem(f,lb,ub,p=NullParameters();
   and it is not necessarily true that `batch` is the same as `batchsize` in all
   algorithms.
 
-Additionally, we can supply `iip` like `QuadratureProblem{iip}(...)` as true or
+Additionally, we can supply `iip` like `IntegralProblem{iip}(...)` as true or
 false to declare at compile time whether the integrator function is in-place.
 
 ## Algorithms
