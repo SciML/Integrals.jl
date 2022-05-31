@@ -2,7 +2,7 @@
 
 [![Build Status](https://github.com/SciML/Integrals.jl/workflows/CI/badge.svg)](https://github.com/SciML/Integrals.jl/actions?query=workflow%3ACI)
 
-Integrals.jl is an instantiation of the DiffEqBase.jl common `IntegralProblem`
+Integrals.jl is an instantiation of the SciML common `IntegralProblem`
 interface for the common quadrature packages of Julia. By using Integrals.jl,
 you get a single predictable interface where many of the arguments are
 standardized throughout the various integrator libraries. This can be useful
