@@ -8,6 +8,8 @@ Cubature = "667455a9-e2ce-5579-9412-b964f529a492"
 Quadrature = "67601950-bd08-11e9-3c89-fd23fb4432d2"
 
 [compat]
+Cubature = "1.5"
+Quadrature = "2.1"
 julia = "1.6"
 
 [extras]
