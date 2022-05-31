@@ -1,7 +1,7 @@
 name = "QuadratureCuba"
 uuid = "1e5cbd8a-c439-4026-92c2-98742b2c817b"
 authors = ["Chris Rackauckas <accounts@chrisrackauckas.com>"]
-version = "0.1.0"
+version = "0.1.1"
 
 [deps]
 Cuba = "8a292aeb-7a57-582c-b821-06e4c11590b1"

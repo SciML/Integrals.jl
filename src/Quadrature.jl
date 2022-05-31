@@ -1,16 +1,16 @@
 module Quadrature
 
 using Reexport,  MonteCarloIntegration, QuadGK, HCubature
-@reexport using DiffEqBase
+@reexport using SciMLBase
 using Zygote, ReverseDiff, ForwardDiff , LinearAlgebra
 
 import ChainRulesCore
 import ChainRulesCore: NoTangent
 import ZygoteRules
 
-struct QuadGKJL <: DiffEqBase.AbstractQuadratureAlgorithm end
-struct HCubatureJL <: DiffEqBase.AbstractQuadratureAlgorithm end
-struct VEGAS <: DiffEqBase.AbstractQuadratureAlgorithm
+struct QuadGKJL <: SciMLBase.AbstractIntegralAlgorithm end
+struct HCubatureJL <: SciMLBase.AbstractIntegralAlgorithm end
+struct VEGAS <: SciMLBase.AbstractIntegralAlgorithm
     nbins::Int
     ncalls::Int
 end
@@ -91,21 +91,21 @@ function transformation_if_inf(prob)
 			h(t , p) = transform_inf(t , p , g , prob.lb , prob.ub)
 			lb = -1.00
 			ub = 1.00
-	        _prob = QuadratureProblem(h , lb ,ub, prob.p , nout = prob.nout , batch = prob.batch , prob.kwargs...)
+	        _prob = IntegralProblem(h , lb ,ub, prob.p , nout = prob.nout , batch = prob.batch , prob.kwargs...)
 			return _prob
 		elseif prob.lb != -Inf && prob.ub == Inf
 			g = prob.f
 			h_(t , p) = transform_inf(t , p , g , prob.lb , prob.ub)
 			lb = 0.00
 			ub = 1.00
-	        _prob = QuadratureProblem(h_ , lb ,ub, prob.p , nout = prob.nout , batch = prob.batch , prob.kwargs...)
+	        _prob = IntegralProblem(h_ , lb ,ub, prob.p , nout = prob.nout , batch = prob.batch , prob.kwargs...)
 			return _prob
 		elseif prob.lb == -Inf && prob.ub != Inf
 			g = prob.f
 			_h(t , p) = transform_inf(t , p , g , prob.lb , prob.ub)
 			lb = -1.00
 			ub = 0.00
-	        _prob = QuadratureProblem(_h , lb ,ub, prob.p , nout = prob.nout , batch = prob.batch , prob.kwargs...)
+	        _prob = IntegralProblem(_h , lb ,ub, prob.p , nout = prob.nout , batch = prob.batch , prob.kwargs...)
 			return _prob
 		end
 	end
@@ -121,12 +121,12 @@ function transformation_if_inf(prob)
 		_ub = 1.00.*_semiup + 1.00.*_inf  + 0.00.*_semilw  + _none.*prob.ub
 		g = prob.f
 		hs(t , p) = transform_inf(t , p , g , prob.lb , prob.ub)
-		_prob = QuadratureProblem(hs, _lb ,_ub, prob.p , nout = prob.nout , batch = prob.batch , prob.kwargs...)
+		_prob = IntegralProblem(hs, _lb ,_ub, prob.p , nout = prob.nout , batch = prob.batch , prob.kwargs...)
 		return _prob
 	end
 	return prob
 end
-function DiffEqBase.solve(prob::QuadratureProblem,::Nothing,sensealg,lb,ub,p,args...;
+function SciMLBase.solve(prob::IntegralProblem,::Nothing,sensealg,lb,ub,p,args...;
                           reltol = 1e-8, abstol = 1e-8, kwargs...)
     if lb isa Number
         __solve(prob,QuadGKJL();reltol=reltol,abstol=abstol,kwargs...)
@@ -137,8 +137,8 @@ function DiffEqBase.solve(prob::QuadratureProblem,::Nothing,sensealg,lb,ub,p,arg
     end
 end
 
-function DiffEqBase.solve(prob::QuadratureProblem,
-                            alg::DiffEqBase.AbstractQuadratureAlgorithm,
+function SciMLBase.solve(prob::IntegralProblem,
+                            alg::SciMLBase.AbstractIntegralAlgorithm,
                             args...; sensealg = ReCallVJP(ZygoteVJP()), kwargs...)
    prob = transformation_if_inf(prob)
   __solvebp(prob,alg,sensealg,prob.lb,prob.ub,prob.p,args...;kwargs...)
@@ -147,7 +147,7 @@ end
 # Give a layer to intercept with AD
 __solvebp(args...;kwargs...) = __solvebp_call(args...;kwargs...)
 
-function __solvebp_call(prob::QuadratureProblem,::QuadGKJL,sensealg,lb,ub,p,args...;
+function __solvebp_call(prob::IntegralProblem,::QuadGKJL,sensealg,lb,ub,p,args...;
                           reltol = 1e-8, abstol = 1e-8,
                           maxiters = typemax(Int),
                           kwargs...)
@@ -161,10 +161,10 @@ function __solvebp_call(prob::QuadratureProblem,::QuadGKJL,sensealg,lb,ub,p,args
     val,err = quadgk(f, lb, ub,
                      rtol=reltol, atol=abstol,
                      kwargs...)
-    DiffEqBase.build_solution(prob,QuadGKJL(),val,err,retcode = :Success)
+    SciMLBase.build_solution(prob,QuadGKJL(),val,err,retcode = :Success)
 end
 
-function __solvebp_call(prob::QuadratureProblem,::HCubatureJL,sensealg,lb,ub,p,args...;
+function __solvebp_call(prob::IntegralProblem,::HCubatureJL,sensealg,lb,ub,p,args...;
                           reltol = 1e-8, abstol = 1e-8,
                           maxiters = typemax(Int),
                           kwargs...)
@@ -187,10 +187,10 @@ function __solvebp_call(prob::QuadratureProblem,::HCubatureJL,sensealg,lb,ub,p,a
                             rtol=reltol, atol=abstol,
                             maxevals=maxiters, kwargs...)
     end
-    DiffEqBase.build_solution(prob,HCubatureJL(),val,err,retcode = :Success)
+    SciMLBase.build_solution(prob,HCubatureJL(),val,err,retcode = :Success)
 end
 
-function __solvebp_call(prob::QuadratureProblem,alg::VEGAS,sensealg,lb,ub,p,args...;
+function __solvebp_call(prob::IntegralProblem,alg::VEGAS,sensealg,lb,ub,p,args...;
                           reltol = 1e-8, abstol = 1e-8,
                           maxiters = typemax(Int),
                           kwargs...)
@@ -214,7 +214,7 @@ function __solvebp_call(prob::QuadratureProblem,alg::VEGAS,sensealg,lb,ub,p,args
     val,err,chi = vegas(f, lb, ub, rtol=reltol, atol=abstol,
                         maxiter = maxiters, nbins = alg.nbins,
                         ncalls = alg.ncalls, batch=prob.batch != 0, kwargs...)
-    DiffEqBase.build_solution(prob,alg,val,err,chi=chi,retcode = :Success)
+    SciMLBase.build_solution(prob,alg,val,err,chi=chi,retcode = :Success)
 end
 
 function ChainRulesCore.rrule(::typeof(__solvebp),prob,alg,sensealg,lb,ub,p,args...;kwargs...)
@@ -270,7 +270,7 @@ function ChainRulesCore.rrule(::typeof(__solvebp),prob,alg,sensealg,lb,ub,p,args
             end
         end
 
-        dp_prob = QuadratureProblem(dfdp,lb,ub,p;nout=length(p),batch = prob.batch,kwargs...)
+        dp_prob = IntegralProblem(dfdp,lb,ub,p;nout=length(p),batch = prob.batch,kwargs...)
 
         if p isa Number
             dp = __solvebp_call(dp_prob,alg,sensealg,lb,ub,p,args...;kwargs...)[1]
@@ -290,8 +290,8 @@ function ChainRulesCore.rrule(::typeof(__solvebp),prob,alg,sensealg,lb,ub,p,args
 end
 
 ZygoteRules.@adjoint function ZygoteRules.literal_getproperty(
-                        sol::DiffEqBase.QuadratureSolution,::Val{:u})
-    sol.u,Δ->(DiffEqBase.build_solution(sol.prob,sol.alg,Δ,sol.resid),)
+                        sol::SciMLBase.IntegralSolution,::Val{:u})
+    sol.u,Δ->(SciMLBase.build_solution(sol.prob,sol.alg,Δ,sol.resid),)
 end
 
 
@@ -353,7 +353,7 @@ function __solvebp(prob,alg,sensealg,lb,ub,p::AbstractArray{<:ForwardDiff.Dual{T
     end
     rawp = copy(reinterpret(V, p))
 
-    dp_prob = QuadratureProblem(dfdp,lb,ub,rawp;nout=nout,batch = prob.batch,kwargs...)
+    dp_prob = IntegralProblem(dfdp,lb,ub,rawp;nout=nout,batch = prob.batch,kwargs...)
     dual = __solvebp_call(dp_prob,alg,sensealg,lb,ub,rawp,args...;kwargs...)
     res = similar(p, prob.nout)
     partials = reinterpret(typeof(first(res).partials), dual.u)
@@ -363,7 +363,7 @@ function __solvebp(prob,alg,sensealg,lb,ub,p::AbstractArray{<:ForwardDiff.Dual{T
     if primal.u isa Number
         res = first(res)
     end
-    DiffEqBase.build_solution(prob,alg,res,primal.resid)
+    SciMLBase.build_solution(prob,alg,res,primal.resid)
 end
 
 export QuadGKJL, HCubatureJL, VEGAS

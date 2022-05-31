@@ -4,11 +4,11 @@ using Quadrature, Cubature
 
 import Quadrature: transformation_if_inf, scale_x, scale_x!
 
-abstract type AbstractCubatureJLAlgorithm <: DiffEqBase.AbstractQuadratureAlgorithm end
+abstract type AbstractCubatureJLAlgorithm <: SciMLBase.AbstractIntegralAlgorithm end
 struct CubatureJLh <: AbstractCubatureJLAlgorithm end
 struct CubatureJLp <: AbstractCubatureJLAlgorithm end
 
-function Quadrature.__solvebp_call(prob::QuadratureProblem,
+function Quadrature.__solvebp_call(prob::IntegralProblem,
     alg::AbstractCubatureJLAlgorithm,
     sensealg, lb, ub, p, args...;
     reltol=1e-8, abstol=1e-8,
@@ -157,7 +157,7 @@ function Quadrature.__solvebp_call(prob::QuadratureProblem,
             end
         end
     end
-    DiffEqBase.build_solution(prob, alg, val, err, retcode=:Success)
+    SciMLBase.build_solution(prob, alg, val, err, retcode=:Success)
 end
 
 export CubatureJLh, CubatureJLp

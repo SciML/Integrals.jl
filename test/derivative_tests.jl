@@ -1,6 +1,7 @@
 using Quadrature, Zygote, FiniteDiff, ForwardDiff
 using QuadratureCuba, QuadratureCubature
 using Test
+using DiffEqSensitivity
 
 ### One Dimensional
 

@@ -3,13 +3,13 @@ module QuadratureCuba
 using Quadrature, Cuba
 import Quadrature: transformation_if_inf, scale_x, scale_x!
 
-abstract type AbstractCubaAlgorithm <: DiffEqBase.AbstractQuadratureAlgorithm end
+abstract type AbstractCubaAlgorithm <: SciMLBase.AbstractIntegralAlgorithm end
 struct CubaVegas <: AbstractCubaAlgorithm end
 struct CubaSUAVE <: AbstractCubaAlgorithm end
 struct CubaDivonne <: AbstractCubaAlgorithm end
 struct CubaCuhre <: AbstractCubaAlgorithm end
 
-function Quadrature.__solvebp_call(prob::QuadratureProblem, alg::AbstractCubaAlgorithm, sensealg,
+function Quadrature.__solvebp_call(prob::IntegralProblem, alg::AbstractCubaAlgorithm, sensealg,
     lb, ub, p, args...;
     reltol=1e-8, abstol=1e-8,
     maxiters=alg isa CubaSUAVE ? 1000000 : typemax(Int),
@@ -110,7 +110,7 @@ function Quadrature.__solvebp_call(prob::QuadratureProblem, alg::AbstractCubaAlg
         end
     end
 
-    DiffEqBase.build_solution(prob, alg, val, out.error,
+    SciMLBase.build_solution(prob, alg, val, out.error,
         chi=out.probability, retcode=:Success)
 end
 
