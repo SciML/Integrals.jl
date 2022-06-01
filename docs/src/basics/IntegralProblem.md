@@ -1,0 +1,5 @@
+# Integral Problems
+
+```@docs
+IntegralProblem
+```

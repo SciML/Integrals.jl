@@ -1,6 +1,8 @@
 # Integrals.jl
 
 [![Build Status](https://github.com/SciML/Integrals.jl/workflows/CI/badge.svg)](https://github.com/SciML/Integrals.jl/actions?query=workflow%3ACI)
+[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](http://integrals.sciml.ai/stable/)
+[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](http://integrals.sciml.ai/dev/)
 
 Integrals.jl is an instantiation of the SciML common `IntegralProblem`
 interface for the common quadrature packages of Julia. By using Integrals.jl,
@@ -8,6 +10,13 @@ you get a single predictable interface where many of the arguments are
 standardized throughout the various integrator libraries. This can be useful
 for benchmarking or for library implementations, since libraries which internally
 use a quadrature can easily accept a quadrature method as an argument.
+
+## Tutorials and Documentation
+
+For information on using the package,
+[see the stable documentation](https://integrals.sciml.ai/stable/). Use the
+[in-development documentation](https://integrals.sciml.ai/dev/) for the version of
+the documentation, which contains the unreleased features.
 
 ## Examples
 
@@ -42,77 +51,3 @@ the change is a one-argument change:
 using IntegralsCuba
 sol = solve(prob,CubaCuhre(),reltol=1e-3,abstol=1e-3)
 ```
-
-## Differentiability
-
-Integrals.jl is a fully differentiable quadrature library. Thus, it adds the
-ability to perform automatic differentiation over any of the libraries that it
-calls. It integrates with ForwardDiff.jl for forward-mode automatic differentiation
-and Zygote.jl for reverse-mode automatic differentiation. For example:
-
-```julia
-using Integrals, ForwardDiff, FiniteDiff, Zygote, Cuba
-f(x,p) = sum(sin.(x .* p))
-lb = ones(2)
-ub = 3ones(2)
-p = [1.5,2.0]
-
-function testf(p)
-    prob = IntegralProblem(f,lb,ub,p)
-    sin(solve(prob,CubaCuhre(),reltol=1e-6,abstol=1e-6)[1])
-end
-dp1 = Zygote.gradient(testf,p)
-dp2 = FiniteDiff.finite_difference_gradient(testf,p)
-dp3 = ForwardDiff.gradient(testf,p)
-dp1[1] ≈ dp2 ≈ dp3
-```
-
-## IntegralProblem
-
-To use this package, you always construct a `IntegralProblem`. This has a
-constructor:
-
-```julia
-IntegralProblem(f,lb,ub,p=NullParameters();
-                  nout=1, batch = 0, kwargs...)
-```
-
-- `f`: Either a function `f(x,p)` for out-of-place or `f(dx,x,p)` for in-place.
-- `lb`: Either a number or vector of lower bounds.
-- `ub`: Either a number or vector of upper bounds.
-- `p`: The parameters associated with the problem.
-- `nout`: The output size of the function `f`. Defaults to `1`, i.e., a scalar
-  integral output.
-- `batch`: The preferred number of points to batch. This allows user-side
-  parallelization of the integrand. If `batch != 0`, then each `x[:,i]` is a
-  different point of the integral to calculate, and the output should be
-  `nout x batchsize`. Note that `batch` is a suggestion for the number of points,
-  and it is not necessarily true that `batch` is the same as `batchsize` in all
-  algorithms.
-
-Additionally, we can supply `iip` like `IntegralProblem{iip}(...)` as true or
-false to declare at compile time whether the integrator function is in-place.
-
-## Algorithms
-
-The following algorithms are available:
-
-- `QuadGKJL`: Uses QuadGK.jl. Requires `nout=1` and `batch=0`.
-- `HCubatureJL`: Uses HCubature.jl. Requires `batch=0`.
-- `VEGAS`: Uses MonteCarloIntegration.jl. Requires `nout=1`.
-- `CubatureJLh`: h-Cubature from Cubature.jl. Requires `using IntegralsCubature`.
-- `CubatureJLp`: p-Cubature from Cubature.jl. Requires `using IntegralsCubature`.
-- `CubaVegas`: Vegas from Cuba.jl. Requires `using IntegralsCuba`.
-- `CubaSUAVE`: SUAVE from Cuba.jl. Requires `using IntegralsCuba`.
-- `CubaDivonne`: Divonne from Cuba.jl. Requires `using IntegralsCuba`.
-- `CubaCuhre`: Cuhre from Cuba.jl. Requires `using IntegralsCuba`.
-
-## Common Solve Keyword Arguments
-
-- `reltol`: Relative tolerance
-- `abstol`: Absolute tolerance
-- `maxiters`: The maximum number of iterations
-
-Additionally, the extra keyword arguments are splatted to the library calls, so
-see the documentation of the integrator library for all of the extra details.
-These extra keyword arguments are not guaranteed to act uniformly.
