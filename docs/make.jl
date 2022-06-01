@@ -16,11 +16,11 @@ makedocs(
         ],
         "Basics" => Any[
             "basics/IntegralProblem.md",
+            "basics/solve.md",
             "basics/FAQ.md"
         ],
         "Solvers" => Any[
-            "solvers/NonlinearSystemSolvers.md",
-            "solvers/BracketingSolvers.md"
+            "solvers/IntegralSolvers.md
         ]
     ]
 )
