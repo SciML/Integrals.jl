@@ -1,5 +1,7 @@
 using Documenter, Integrals
 
+include("pages.jl")
+
 makedocs(
     sitename="Integrals.jl",
     authors="Chris Rackauckas",
@@ -8,21 +10,7 @@ makedocs(
     format = Documenter.HTML(analytics = "UA-90474609-3",
                              assets = ["assets/favicon.ico"],
                              canonical="https://integrals.sciml.ai/stable/"),
-    pages=[
-        "Home" => "index.md",
-        "Tutorials" => Any[
-            "tutorials/numerical_integrals.md",
-            "tutorials/differentiating_integrals.md"
-        ],
-        "Basics" => Any[
-            "basics/IntegralProblem.md",
-            "basics/solve.md",
-            "basics/FAQ.md"
-        ],
-        "Solvers" => Any[
-            "solvers/IntegralSolvers.md
-        ]
-    ]
+    pages=pages
 )
 
 deploydocs(
