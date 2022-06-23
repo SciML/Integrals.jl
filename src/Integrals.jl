@@ -84,48 +84,52 @@ function transform_inf(t , p , f , lb , ub)
 	f(v(t) , p)*(j)
 end
 
-function transformation_if_inf(prob)
-	if (prob.lb isa Number && prob.ub isa Number && (prob.ub == Inf || prob.lb == -Inf))
-		if prob.lb == -Inf && prob.ub == Inf
-			g = prob.f
-			h(t , p) = transform_inf(t , p , g , prob.lb , prob.ub)
-			lb = -1.00
-			ub = 1.00
-	        _prob = IntegralProblem(h , lb ,ub, prob.p , nout = prob.nout , batch = prob.batch , prob.kwargs...)
-			return _prob
-		elseif prob.lb != -Inf && prob.ub == Inf
-			g = prob.f
-			h_(t , p) = transform_inf(t , p , g , prob.lb , prob.ub)
-			lb = 0.00
-			ub = 1.00
-	        _prob = IntegralProblem(h_ , lb ,ub, prob.p , nout = prob.nout , batch = prob.batch , prob.kwargs...)
-			return _prob
-		elseif prob.lb == -Inf && prob.ub != Inf
-			g = prob.f
-			_h(t , p) = transform_inf(t , p , g , prob.lb , prob.ub)
-			lb = -1.00
-			ub = 0.00
-	        _prob = IntegralProblem(_h , lb ,ub, prob.p , nout = prob.nout , batch = prob.batch , prob.kwargs...)
-			return _prob
-		end
-	end
-	if -Inf in prob.lb || Inf in prob.ub
-		lbb = prob.lb .== -Inf
-		ubb = prob.ub .== Inf
-		_none = .!lbb .& .!ubb
-		_inf = lbb .& ubb
-		_semiup = .!lbb .& ubb
-		_semilw = lbb  .& .!ubb
+function transformation_if_inf(prob, ::Val{true})
+    g = prob.f
+    h(t , p) = transform_inf(t , p , g , prob.lb , prob.ub)
+    if (prob.lb isa Number && prob.ub isa Number)
+        if (prob.ub == Inf || prob.lb == -Inf)
+            if prob.lb == -Inf && prob.ub == Inf
+                lb = -1.00
+                ub = 1.00
+            elseif prob.lb != -Inf && prob.ub == Inf
+                lb = 0.00
+                ub = 1.00
+            elseif prob.lb == -Inf && prob.ub != Inf
+                lb = -1.00
+                ub = 0.00
+            end
+        end
+    elseif prob.lb isa AbstractVector && prob.ub isa AbstractVector
+        if -Inf in prob.lb || Inf in prob.ub
+            lbb = prob.lb .== -Inf
+            ubb = prob.ub .== Inf
+            _none = .!lbb .& .!ubb
+            _inf = lbb .& ubb
+            _semiup = .!lbb .& ubb
+            _semilw = lbb  .& .!ubb
+    
+            lb = 0.00.*_semiup + -1.00.*_inf + -1.00.*_semilw +  _none.*prob.lb
+            ub = 1.00.*_semiup + 1.00.*_inf  + 0.00.*_semilw  + _none.*prob.ub
+        end
+    end
+    prob_ = remake(prob, f=h, lb=lb, ub=ub) 
+    return prob_
+end
 
-		_lb = 0.00.*_semiup + -1.00.*_inf + -1.00.*_semilw +  _none.*prob.lb
-		_ub = 1.00.*_semiup + 1.00.*_inf  + 0.00.*_semilw  + _none.*prob.ub
-		g = prob.f
-		hs(t , p) = transform_inf(t , p , g , prob.lb , prob.ub)
-		_prob = IntegralProblem(hs, _lb ,_ub, prob.p , nout = prob.nout , batch = prob.batch , prob.kwargs...)
-		return _prob
-	end
+function transformation_if_inf(prob, ::Nothing)
+    if (prob.lb isa Number && prob.ub isa Number && (prob.ub == Inf || prob.lb == -Inf)) || -Inf in prob.lb || Inf in prob.ub 
+        return transformation_if_inf(prob, Val(true))
+    end
 	return prob
 end
+
+function transformation_if_inf(prob, ::Val{false})
+	return prob
+end
+
+transformation_if_inf(prob, do_inf_transformation=nothing) = transformation_if_inf(prob, do_inf_transformation)
+
 function SciMLBase.solve(prob::IntegralProblem,::Nothing,sensealg,lb,ub,p,args...;
                           reltol = 1e-8, abstol = 1e-8, kwargs...)
     if lb isa Number
@@ -139,9 +143,9 @@ end
 
 function SciMLBase.solve(prob::IntegralProblem,
                             alg::SciMLBase.AbstractIntegralAlgorithm,
-                            args...; sensealg = ReCallVJP(ZygoteVJP()), kwargs...)
-   prob = transformation_if_inf(prob)
-  __solvebp(prob,alg,sensealg,prob.lb,prob.ub,prob.p,args...;kwargs...)
+                            args...; sensealg = ReCallVJP(ZygoteVJP()), do_inf_transformation=nothing, kwargs...)
+    prob = transformation_if_inf(prob, do_inf_transformation) 
+    __solvebp(prob,alg,sensealg,prob.lb,prob.ub,prob.p,args...;kwargs...)
 end
 
 # Give a layer to intercept with AD
@@ -270,7 +274,7 @@ function ChainRulesCore.rrule(::typeof(__solvebp),prob,alg,sensealg,lb,ub,p,args
             end
         end
 
-        dp_prob = IntegralProblem(dfdp,lb,ub,p;nout=length(p),batch = prob.batch,kwargs...)
+        dp_prob = remake(prob, f=dfdp, lb=lb, ub=ub, p=p, nout=length(p))
 
         if p isa Number
             dp = __solvebp_call(dp_prob,alg,sensealg,lb,ub,p,args...;kwargs...)[1]
