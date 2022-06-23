@@ -86,7 +86,7 @@ end
 
 function transformation_if_inf(prob, ::Val{true})
     g = prob.f
-    h(t , p) = transform_inf(t , p , g , prob.lb , prob.ub)
+    h(t, p) = transform_inf(t, p, g, prob.lb, prob.ub)
     if (prob.lb isa Number && prob.ub isa Number)
         if (prob.ub == Inf || prob.lb == -Inf)
             if prob.lb == -Inf && prob.ub == Inf
@@ -107,31 +107,34 @@ function transformation_if_inf(prob, ::Val{true})
             _none = .!lbb .& .!ubb
             _inf = lbb .& ubb
             _semiup = .!lbb .& ubb
-            _semilw = lbb  .& .!ubb
-    
-            lb = 0.00.*_semiup + -1.00.*_inf + -1.00.*_semilw +  _none.*prob.lb
-            ub = 1.00.*_semiup + 1.00.*_inf  + 0.00.*_semilw  + _none.*prob.ub
+            _semilw = lbb .& .!ubb
+
+            lb = 0.00 .* _semiup + -1.00 .* _inf + -1.00 .* _semilw + _none .* prob.lb
+            ub = 1.00 .* _semiup + 1.00 .* _inf + 0.00 .* _semilw + _none .* prob.ub
         end
     end
-    prob_ = remake(prob, f=h, lb=lb, ub=ub) 
+    prob_ = remake(prob, f = h, lb = lb, ub = ub)
     return prob_
 end
 
 function transformation_if_inf(prob, ::Nothing)
-    if (prob.lb isa Number && prob.ub isa Number && (prob.ub == Inf || prob.lb == -Inf)) || -Inf in prob.lb || Inf in prob.ub 
+    if (prob.lb isa Number && prob.ub isa Number && (prob.ub == Inf || prob.lb == -Inf)) ||
+       -Inf in prob.lb || Inf in prob.ub
         return transformation_if_inf(prob, Val(true))
     end
-	return prob
+    return prob
 end
 
 function transformation_if_inf(prob, ::Val{false})
-	return prob
+    return prob
 end
 
-transformation_if_inf(prob, do_inf_transformation=nothing) = transformation_if_inf(prob, do_inf_transformation)
+function transformation_if_inf(prob, do_inf_transformation = nothing)
+    transformation_if_inf(prob, do_inf_transformation)
+end
 
-function SciMLBase.solve(prob::IntegralProblem,::Nothing,sensealg,lb,ub,p,args...;
-                          reltol = 1e-8, abstol = 1e-8, kwargs...)
+function SciMLBase.solve(prob::IntegralProblem, ::Nothing, sensealg, lb, ub, p, args...;
+                         reltol = 1e-8, abstol = 1e-8, kwargs...)
     if lb isa Number
         __solve(prob, QuadGKJL(); reltol = reltol, abstol = abstol, kwargs...)
     elseif length(lb) > 8 && reltol < 1e-4 || abstol < 1e-4
@@ -143,7 +146,8 @@ end
 
 function SciMLBase.solve(prob::IntegralProblem,
                          alg::SciMLBase.AbstractIntegralAlgorithm,
-                         args...; sensealg = ReCallVJP(ZygoteVJP()), do_inf_transformation=nothing, kwargs...)
+                         args...; sensealg = ReCallVJP(ZygoteVJP()),
+                         do_inf_transformation = nothing, kwargs...)
     prob = transformation_if_inf(prob, do_inf_transformation)
     __solvebp(prob, alg, sensealg, prob.lb, prob.ub, prob.p, args...; kwargs...)
 end
@@ -275,7 +279,7 @@ function ChainRulesCore.rrule(::typeof(__solvebp), prob, alg, sensealg, lb, ub, 
             end
         end
 
-        dp_prob = remake(prob, f=dfdp, lb=lb, ub=ub, p=p, nout=length(p))
+        dp_prob = remake(prob, f = dfdp, lb = lb, ub = ub, p = p, nout = length(p))
 
         if p isa Number
             dp = __solvebp_call(dp_prob, alg, sensealg, lb, ub, p, args...; kwargs...)[1]

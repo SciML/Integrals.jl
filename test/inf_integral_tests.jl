@@ -24,17 +24,14 @@ sol = solve(prob, HCubatureJL(), reltol = 1e-3, abstol = 1e-3)
 @test (1.00 - sol.u)^2 < 1e-6
 @test_nowarn @inferred Integrals.transformation_if_inf(prob, Val(true))
 
-
 f(x, p) = pdf(Normal(0.00, 1.00), x)
 prob = IntegralProblem(f, -Inf, 0.00)
 sol = solve(prob, HCubatureJL(), reltol = 1e-3, abstol = 1e-3)
 @test (0.50 - sol.u)^2 < 1e-6
 @test_nowarn @inferred Integrals.transformation_if_inf(prob, Val(true))
 
-
 f(x, p) = (1 / (x^2 + 1))
 prob = IntegralProblem(f, 0, Inf)
 sol = solve(prob, HCubatureJL(), reltol = 1e-3, abstol = 1e-3)
 @test (pi / 2 - sol.u)^2 < 1e-6
 @test_nowarn @inferred Integrals.transformation_if_inf(prob, Val(true))
-  
