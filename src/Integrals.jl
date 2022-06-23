@@ -41,7 +41,6 @@ function v_inf(t)
     return t ./ (1 .- t .^ 2)
 end
 
-
 function v_semiinf(t, a, upto_inf)
     if upto_inf == true
         return a .+ (t ./ (1 .- t))
@@ -94,45 +93,39 @@ function transformation_if_inf(prob)
             h(t, p) = transform_inf(t, p, g, prob.lb, prob.ub)
             lb = -1.00
             ub = 1.00
-            _prob = IntegralProblem(
-                h,
-                lb,
-                ub,
-                prob.p,
-                nout = prob.nout,
-                batch = prob.batch,
-                prob.kwargs...,
-            )
+            _prob = IntegralProblem(h,
+                                    lb,
+                                    ub,
+                                    prob.p,
+                                    nout = prob.nout,
+                                    batch = prob.batch,
+                                    prob.kwargs...)
             return _prob
         elseif prob.lb != -Inf && prob.ub == Inf
             g = prob.f
             h_(t, p) = transform_inf(t, p, g, prob.lb, prob.ub)
             lb = 0.00
             ub = 1.00
-            _prob = IntegralProblem(
-                h_,
-                lb,
-                ub,
-                prob.p,
-                nout = prob.nout,
-                batch = prob.batch,
-                prob.kwargs...,
-            )
+            _prob = IntegralProblem(h_,
+                                    lb,
+                                    ub,
+                                    prob.p,
+                                    nout = prob.nout,
+                                    batch = prob.batch,
+                                    prob.kwargs...)
             return _prob
         elseif prob.lb == -Inf && prob.ub != Inf
             g = prob.f
             _h(t, p) = transform_inf(t, p, g, prob.lb, prob.ub)
             lb = -1.00
             ub = 0.00
-            _prob = IntegralProblem(
-                _h,
-                lb,
-                ub,
-                prob.p,
-                nout = prob.nout,
-                batch = prob.batch,
-                prob.kwargs...,
-            )
+            _prob = IntegralProblem(_h,
+                                    lb,
+                                    ub,
+                                    prob.p,
+                                    nout = prob.nout,
+                                    batch = prob.batch,
+                                    prob.kwargs...)
             return _prob
         end
     end
@@ -148,31 +141,27 @@ function transformation_if_inf(prob)
         _ub = 1.00 .* _semiup + 1.00 .* _inf + 0.00 .* _semilw + _none .* prob.ub
         g = prob.f
         hs(t, p) = transform_inf(t, p, g, prob.lb, prob.ub)
-        _prob = IntegralProblem(
-            hs,
-            _lb,
-            _ub,
-            prob.p,
-            nout = prob.nout,
-            batch = prob.batch,
-            prob.kwargs...,
-        )
+        _prob = IntegralProblem(hs,
+                                _lb,
+                                _ub,
+                                prob.p,
+                                nout = prob.nout,
+                                batch = prob.batch,
+                                prob.kwargs...)
         return _prob
     end
     return prob
 end
-function SciMLBase.solve(
-    prob::IntegralProblem,
-    ::Nothing,
-    sensealg,
-    lb,
-    ub,
-    p,
-    args...;
-    reltol = 1e-8,
-    abstol = 1e-8,
-    kwargs...,
-)
+function SciMLBase.solve(prob::IntegralProblem,
+                         ::Nothing,
+                         sensealg,
+                         lb,
+                         ub,
+                         p,
+                         args...;
+                         reltol = 1e-8,
+                         abstol = 1e-8,
+                         kwargs...)
     if lb isa Number
         __solve(prob, QuadGKJL(); reltol = reltol, abstol = abstol, kwargs...)
     elseif length(lb) > 8 && reltol < 1e-4 || abstol < 1e-4
@@ -182,13 +171,11 @@ function SciMLBase.solve(
     end
 end
 
-function SciMLBase.solve(
-    prob::IntegralProblem,
-    alg::SciMLBase.AbstractIntegralAlgorithm,
-    args...;
-    sensealg = ReCallVJP(ZygoteVJP()),
-    kwargs...,
-)
+function SciMLBase.solve(prob::IntegralProblem,
+                         alg::SciMLBase.AbstractIntegralAlgorithm,
+                         args...;
+                         sensealg = ReCallVJP(ZygoteVJP()),
+                         kwargs...)
     prob = transformation_if_inf(prob)
     __solvebp(prob, alg, sensealg, prob.lb, prob.ub, prob.p, args...; kwargs...)
 end
@@ -196,19 +183,17 @@ end
 # Give a layer to intercept with AD
 __solvebp(args...; kwargs...) = __solvebp_call(args...; kwargs...)
 
-function __solvebp_call(
-    prob::IntegralProblem,
-    ::QuadGKJL,
-    sensealg,
-    lb,
-    ub,
-    p,
-    args...;
-    reltol = 1e-8,
-    abstol = 1e-8,
-    maxiters = typemax(Int),
-    kwargs...,
-)
+function __solvebp_call(prob::IntegralProblem,
+                        ::QuadGKJL,
+                        sensealg,
+                        lb,
+                        ub,
+                        p,
+                        args...;
+                        reltol = 1e-8,
+                        abstol = 1e-8,
+                        maxiters = typemax(Int),
+                        kwargs...)
     if isinplace(prob) || lb isa AbstractArray || ub isa AbstractArray
         error("QuadGKJL only accepts one-dimensional quadrature problems.")
     end
@@ -220,19 +205,17 @@ function __solvebp_call(
     SciMLBase.build_solution(prob, QuadGKJL(), val, err, retcode = :Success)
 end
 
-function __solvebp_call(
-    prob::IntegralProblem,
-    ::HCubatureJL,
-    sensealg,
-    lb,
-    ub,
-    p,
-    args...;
-    reltol = 1e-8,
-    abstol = 1e-8,
-    maxiters = typemax(Int),
-    kwargs...,
-)
+function __solvebp_call(prob::IntegralProblem,
+                        ::HCubatureJL,
+                        sensealg,
+                        lb,
+                        ub,
+                        p,
+                        args...;
+                        reltol = 1e-8,
+                        abstol = 1e-8,
+                        maxiters = typemax(Int),
+                        kwargs...)
     p = p
 
     if isinplace(prob)
@@ -244,42 +227,36 @@ function __solvebp_call(
     @assert prob.batch == 0
 
     if lb isa Number
-        val, err = hquadrature(
-            f,
-            lb,
-            ub;
-            rtol = reltol,
-            atol = abstol,
-            maxevals = maxiters,
-            kwargs...,
-        )
+        val, err = hquadrature(f,
+                               lb,
+                               ub;
+                               rtol = reltol,
+                               atol = abstol,
+                               maxevals = maxiters,
+                               kwargs...)
     else
-        val, err = hcubature(
-            f,
-            lb,
-            ub;
-            rtol = reltol,
-            atol = abstol,
-            maxevals = maxiters,
-            kwargs...,
-        )
+        val, err = hcubature(f,
+                             lb,
+                             ub;
+                             rtol = reltol,
+                             atol = abstol,
+                             maxevals = maxiters,
+                             kwargs...)
     end
     SciMLBase.build_solution(prob, HCubatureJL(), val, err, retcode = :Success)
 end
 
-function __solvebp_call(
-    prob::IntegralProblem,
-    alg::VEGAS,
-    sensealg,
-    lb,
-    ub,
-    p,
-    args...;
-    reltol = 1e-8,
-    abstol = 1e-8,
-    maxiters = typemax(Int),
-    kwargs...,
-)
+function __solvebp_call(prob::IntegralProblem,
+                        alg::VEGAS,
+                        sensealg,
+                        lb,
+                        ub,
+                        p,
+                        args...;
+                        reltol = 1e-8,
+                        abstol = 1e-8,
+                        maxiters = typemax(Int),
+                        kwargs...)
     p = p
     @assert prob.nout == 1
     if prob.batch == 0
@@ -297,35 +274,31 @@ function __solvebp_call(
             f = (x) -> prob.f(x', p)
         end
     end
-    val, err, chi = vegas(
-        f,
-        lb,
-        ub,
-        rtol = reltol,
-        atol = abstol,
-        maxiter = maxiters,
-        nbins = alg.nbins,
-        ncalls = alg.ncalls,
-        batch = prob.batch != 0,
-        kwargs...,
-    )
+    val, err, chi = vegas(f,
+                          lb,
+                          ub,
+                          rtol = reltol,
+                          atol = abstol,
+                          maxiter = maxiters,
+                          nbins = alg.nbins,
+                          ncalls = alg.ncalls,
+                          batch = prob.batch != 0,
+                          kwargs...)
     SciMLBase.build_solution(prob, alg, val, err, chi = chi, retcode = :Success)
 end
 
-function ChainRulesCore.rrule(
-    ::typeof(__solvebp),
-    prob,
-    alg,
-    sensealg,
-    lb,
-    ub,
-    p,
-    args...;
-    kwargs...,
-)
+function ChainRulesCore.rrule(::typeof(__solvebp),
+                              prob,
+                              alg,
+                              sensealg,
+                              lb,
+                              ub,
+                              p,
+                              args...;
+                              kwargs...)
     out = __solvebp_call(prob, alg, sensealg, lb, ub, p, args...; kwargs...)
     function quadrature_adjoint(Δ)
-        y = typeof(Δ) <: Array{<:Number,0} ? Δ[1] : Δ
+        y = typeof(Δ) <: Array{<:Number, 0} ? Δ[1] : Δ
         if isinplace(prob)
             dx = zeros(prob.nout)
             _f = (x) -> prob.f(dx, x, p)
@@ -338,7 +311,7 @@ function ChainRulesCore.rrule(
                     end
 
                     z = zeros(size(x, 2))
-                    for idx = 1:size(x, 2)
+                    for idx in 1:size(x, 2)
                         z[1] = 1
                         dx[:, idx] = back(z)[1]
                         z[idx] = 0
@@ -356,7 +329,7 @@ function ChainRulesCore.rrule(
 
                         out = zeros(length(p), size(x, 2))
                         z = zeros(size(x, 2))
-                        for idx = 1:size(x, 2)
+                        for idx in 1:size(x, 2)
                             z[idx] = 1
                             out[:, idx] = back(z)[1]
                             z[idx] = 0
@@ -375,15 +348,13 @@ function ChainRulesCore.rrule(
             end
         end
 
-        dp_prob = IntegralProblem(
-            dfdp,
-            lb,
-            ub,
-            p;
-            nout = length(p),
-            batch = prob.batch,
-            kwargs...,
-        )
+        dp_prob = IntegralProblem(dfdp,
+                                  lb,
+                                  ub,
+                                  p;
+                                  nout = length(p),
+                                  batch = prob.batch,
+                                  kwargs...)
 
         if p isa Number
             dp = __solvebp_call(dp_prob, alg, sensealg, lb, ub, p, args...; kwargs...)[1]
@@ -394,96 +365,81 @@ function ChainRulesCore.rrule(
         if lb isa Number
             dlb = -_f(lb)
             dub = _f(ub)
-            return (
-                NoTangent(),
-                NoTangent(),
-                NoTangent(),
-                NoTangent(),
-                dlb,
-                dub,
-                dp,
-                ntuple(x -> NoTangent(), length(args))...,
-            )
+            return (NoTangent(),
+                    NoTangent(),
+                    NoTangent(),
+                    NoTangent(),
+                    dlb,
+                    dub,
+                    dp,
+                    ntuple(x -> NoTangent(), length(args))...)
         else
-            return (
-                NoTangent(),
-                NoTangent(),
-                NoTangent(),
-                NoTangent(),
-                NoTangent(),
-                NoTangent(),
-                dp,
-                ntuple(x -> NoTangent(), length(args))...,
-            )
+            return (NoTangent(),
+                    NoTangent(),
+                    NoTangent(),
+                    NoTangent(),
+                    NoTangent(),
+                    NoTangent(),
+                    dp,
+                    ntuple(x -> NoTangent(), length(args))...)
         end
     end
     out, quadrature_adjoint
 end
 
-ZygoteRules.@adjoint function ZygoteRules.literal_getproperty(
-    sol::SciMLBase.IntegralSolution,
-    ::Val{:u},
-)
+ZygoteRules.@adjoint function ZygoteRules.literal_getproperty(sol::SciMLBase.IntegralSolution,
+                                                              ::Val{:u})
     sol.u, Δ -> (SciMLBase.build_solution(sol.prob, sol.alg, Δ, sol.resid),)
 end
-
 
 ### Forward-Mode AD Intercepts
 
 # Direct AD on solvers with QuadGK and HCubature
-function __solvebp(
-    prob,
-    alg::QuadGKJL,
-    sensealg,
-    lb,
-    ub,
-    p::AbstractArray{<:ForwardDiff.Dual{T,V,P},N},
-    args...;
-    kwargs...,
-) where {T,V,P,N}
+function __solvebp(prob,
+                   alg::QuadGKJL,
+                   sensealg,
+                   lb,
+                   ub,
+                   p::AbstractArray{<:ForwardDiff.Dual{T, V, P}, N},
+                   args...;
+                   kwargs...) where {T, V, P, N}
     __solvebp_call(prob, alg, sensealg, lb, ub, p, args...; kwargs...)
 end
 
-function __solvebp(
-    prob,
-    alg::HCubatureJL,
-    sensealg,
-    lb,
-    ub,
-    p::AbstractArray{<:ForwardDiff.Dual{T,V,P},N},
-    args...;
-    kwargs...,
-) where {T,V,P,N}
+function __solvebp(prob,
+                   alg::HCubatureJL,
+                   sensealg,
+                   lb,
+                   ub,
+                   p::AbstractArray{<:ForwardDiff.Dual{T, V, P}, N},
+                   args...;
+                   kwargs...) where {T, V, P, N}
     __solvebp_call(prob, alg, sensealg, lb, ub, p, args...; kwargs...)
 end
 
 # Manually split for the pushforward
-function __solvebp(
-    prob,
-    alg,
-    sensealg,
-    lb,
-    ub,
-    p::AbstractArray{<:ForwardDiff.Dual{T,V,P},N},
-    args...;
-    kwargs...,
-) where {T,V,P,N}
-    primal = __solvebp_call(
-        prob,
-        alg,
-        sensealg,
-        lb,
-        ub,
-        ForwardDiff.value.(p),
-        args...;
-        kwargs...,
-    )
+function __solvebp(prob,
+                   alg,
+                   sensealg,
+                   lb,
+                   ub,
+                   p::AbstractArray{<:ForwardDiff.Dual{T, V, P}, N},
+                   args...;
+                   kwargs...) where {T, V, P, N}
+    primal = __solvebp_call(prob,
+                            alg,
+                            sensealg,
+                            lb,
+                            ub,
+                            ForwardDiff.value.(p),
+                            args...;
+                            kwargs...)
 
     nout = prob.nout * P
 
     if isinplace(prob)
         dfdp = function (out, x, p)
-            dualp = reinterpret(ForwardDiff.Dual{T,V,P}, p)
+            dualp = reinterpret(ForwardDiff.Dual{T, V, P}, p)
             if prob.batch > 0
                 dx = similar(dualp, prob.nout, size(x, 2))
             else
@@ -491,18 +447,18 @@ function __solvebp(
             end
             prob.f(dx, x, dualp)
 
-            ys = reinterpret(ForwardDiff.Dual{T,V,P}, dx)
+            ys = reinterpret(ForwardDiff.Dual{T, V, P}, dx)
             idx = 0
             for y in ys
                 for p in ForwardDiff.partials(y)
-                    out[idx+=1] = p
+                    out[idx += 1] = p
                 end
             end
             return out
         end
     else
         dfdp = function (x, p)
-            dualp = reinterpret(ForwardDiff.Dual{T,V,P}, p)
+            dualp = reinterpret(ForwardDiff.Dual{T, V, P}, p)
             ys = prob.f(x, dualp)
             if prob.batch > 0
                 out = similar(p, V, nout, size(x, 2))
@@ -513,7 +469,7 @@ function __solvebp(
             idx = 0
             for y in ys
                 for p in ForwardDiff.partials(y)
-                    out[idx+=1] = p
+                    out[idx += 1] = p
                 end
             end
 
@@ -522,13 +478,13 @@ function __solvebp(
     end
     rawp = copy(reinterpret(V, p))
 
-    dp_prob =
-        IntegralProblem(dfdp, lb, ub, rawp; nout = nout, batch = prob.batch, kwargs...)
+    dp_prob = IntegralProblem(dfdp, lb, ub, rawp; nout = nout, batch = prob.batch,
+                              kwargs...)
     dual = __solvebp_call(dp_prob, alg, sensealg, lb, ub, rawp, args...; kwargs...)
     res = similar(p, prob.nout)
     partials = reinterpret(typeof(first(res).partials), dual.u)
     for idx in eachindex(res)
-        res[idx] = ForwardDiff.Dual{T,V,P}(primal.u[idx], partials[idx])
+        res[idx] = ForwardDiff.Dual{T, V, P}(primal.u[idx], partials[idx])
     end
     if primal.u isa Number
         res = first(res)

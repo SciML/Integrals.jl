@@ -116,7 +116,6 @@ dp4 = ForwardDiff.gradient(p -> testf(lb, ub, p), p)
 #@test dub1 ≈ dub4
 @test dp1 ≈ dp4
 
-
 ### Batch Single dim
 f(x, p) = x * p[1] .+ p[2] * p[3]
 
@@ -196,7 +195,6 @@ dp3 = FiniteDiff.finite_difference_gradient(p -> testf3(lb, ub, p), p)
 
 @test dp1 ≈ dp3
 # @test dp2 ≈ dp3 
-
 
 ## iip Batch mulit dim
 function g(dx, x, p)

@@ -8,19 +8,17 @@ abstract type AbstractCubatureJLAlgorithm <: SciMLBase.AbstractIntegralAlgorithm
 struct CubatureJLh <: AbstractCubatureJLAlgorithm end
 struct CubatureJLp <: AbstractCubatureJLAlgorithm end
 
-function Integrals.__solvebp_call(
-    prob::IntegralProblem,
-    alg::AbstractCubatureJLAlgorithm,
-    sensealg,
-    lb,
-    ub,
-    p,
-    args...;
-    reltol = 1e-8,
-    abstol = 1e-8,
-    maxiters = typemax(Int),
-    kwargs...,
-)
+function Integrals.__solvebp_call(prob::IntegralProblem,
+                                  alg::AbstractCubatureJLAlgorithm,
+                                  sensealg,
+                                  lb,
+                                  ub,
+                                  p,
+                                  args...;
+                                  reltol = 1e-8,
+                                  abstol = 1e-8,
+                                  maxiters = typemax(Int),
+                                  kwargs...)
     prob = transformation_if_inf(prob) #intercept for infinite transformation
     nout = prob.nout
     if nout == 1
@@ -33,44 +31,36 @@ function Integrals.__solvebp_call(
             end
             if lb isa Number
                 if alg isa CubatureJLh
-                    _val, err = Cubature.hquadrature(
-                        f,
-                        lb,
-                        ub;
-                        reltol = reltol,
-                        abstol = abstol,
-                        maxevals = maxiters,
-                    )
+                    _val, err = Cubature.hquadrature(f,
+                                                     lb,
+                                                     ub;
+                                                     reltol = reltol,
+                                                     abstol = abstol,
+                                                     maxevals = maxiters)
                 else
-                    _val, err = Cubature.pquadrature(
-                        f,
-                        lb,
-                        ub;
-                        reltol = reltol,
-                        abstol = abstol,
-                        maxevals = maxiters,
-                    )
+                    _val, err = Cubature.pquadrature(f,
+                                                     lb,
+                                                     ub;
+                                                     reltol = reltol,
+                                                     abstol = abstol,
+                                                     maxevals = maxiters)
                 end
                 val = prob.f(lb, p) isa Number ? _val : [_val]
             else
                 if alg isa CubatureJLh
-                    _val, err = Cubature.hcubature(
-                        f,
-                        lb,
-                        ub;
-                        reltol = reltol,
-                        abstol = abstol,
-                        maxevals = maxiters,
-                    )
+                    _val, err = Cubature.hcubature(f,
+                                                   lb,
+                                                   ub;
+                                                   reltol = reltol,
+                                                   abstol = abstol,
+                                                   maxevals = maxiters)
                 else
-                    _val, err = Cubature.pcubature(
-                        f,
-                        lb,
-                        ub;
-                        reltol = reltol,
-                        abstol = abstol,
-                        maxevals = maxiters,
-                    )
+                    _val, err = Cubature.pcubature(f,
+                                                   lb,
+                                                   ub;
+                                                   reltol = reltol,
+                                                   abstol = abstol,
+                                                   maxevals = maxiters)
                 end
 
                 if isinplace(prob) || !isa(prob.f(lb, p), Number)
@@ -101,43 +91,35 @@ function Integrals.__solvebp_call(
             end
             if lb isa Number
                 if alg isa CubatureJLh
-                    _val, err = Cubature.hquadrature_v(
-                        f,
-                        lb,
-                        ub;
-                        reltol = reltol,
-                        abstol = abstol,
-                        maxevals = maxiters,
-                    )
+                    _val, err = Cubature.hquadrature_v(f,
+                                                       lb,
+                                                       ub;
+                                                       reltol = reltol,
+                                                       abstol = abstol,
+                                                       maxevals = maxiters)
                 else
-                    _val, err = Cubature.pquadrature_v(
-                        f,
-                        lb,
-                        ub;
-                        reltol = reltol,
-                        abstol = abstol,
-                        maxevals = maxiters,
-                    )
+                    _val, err = Cubature.pquadrature_v(f,
+                                                       lb,
+                                                       ub;
+                                                       reltol = reltol,
+                                                       abstol = abstol,
+                                                       maxevals = maxiters)
                 end
             else
                 if alg isa CubatureJLh
-                    _val, err = Cubature.hcubature_v(
-                        f,
-                        lb,
-                        ub;
-                        reltol = reltol,
-                        abstol = abstol,
-                        maxevals = maxiters,
-                    )
+                    _val, err = Cubature.hcubature_v(f,
+                                                     lb,
+                                                     ub;
+                                                     reltol = reltol,
+                                                     abstol = abstol,
+                                                     maxevals = maxiters)
                 else
-                    _val, err = Cubature.pcubature_v(
-                        f,
-                        lb,
-                        ub;
-                        reltol = reltol,
-                        abstol = abstol,
-                        maxevals = maxiters,
-                    )
+                    _val, err = Cubature.pcubature_v(f,
+                                                     lb,
+                                                     ub;
+                                                     reltol = reltol,
+                                                     abstol = abstol,
+                                                     maxevals = maxiters)
                 end
             end
             val = _val isa Number ? [_val] : _val
@@ -151,47 +133,39 @@ function Integrals.__solvebp_call(
             end
             if lb isa Number
                 if alg isa CubatureJLh
-                    val, err = Cubature.hquadrature(
-                        nout,
-                        f,
-                        lb,
-                        ub;
-                        reltol = reltol,
-                        abstol = abstol,
-                        maxevals = maxiters,
-                    )
+                    val, err = Cubature.hquadrature(nout,
+                                                    f,
+                                                    lb,
+                                                    ub;
+                                                    reltol = reltol,
+                                                    abstol = abstol,
+                                                    maxevals = maxiters)
                 else
-                    val, err = Cubature.pquadrature(
-                        nout,
-                        f,
-                        lb,
-                        ub;
-                        reltol = reltol,
-                        abstol = abstol,
-                        maxevals = maxiters,
-                    )
+                    val, err = Cubature.pquadrature(nout,
+                                                    f,
+                                                    lb,
+                                                    ub;
+                                                    reltol = reltol,
+                                                    abstol = abstol,
+                                                    maxevals = maxiters)
                 end
             else
                 if alg isa CubatureJLh
-                    val, err = Cubature.hcubature(
-                        nout,
-                        f,
-                        lb,
-                        ub;
-                        reltol = reltol,
-                        abstol = abstol,
-                        maxevals = maxiters,
-                    )
+                    val, err = Cubature.hcubature(nout,
+                                                  f,
+                                                  lb,
+                                                  ub;
+                                                  reltol = reltol,
+                                                  abstol = abstol,
+                                                  maxevals = maxiters)
                 else
-                    val, err = Cubature.pcubature(
-                        nout,
-                        f,
-                        lb,
-                        ub;
-                        reltol = reltol,
-                        abstol = abstol,
-                        maxevals = maxiters,
-                    )
+                    val, err = Cubature.pcubature(nout,
+                                                  f,
+                                                  lb,
+                                                  ub;
+                                                  reltol = reltol,
+                                                  abstol = abstol,
+                                                  maxevals = maxiters)
                 end
             end
         else
@@ -207,47 +181,39 @@ function Integrals.__solvebp_call(
 
             if lb isa Number
                 if alg isa CubatureJLh
-                    val, err = Cubature.hquadrature_v(
-                        nout,
-                        f,
-                        lb,
-                        ub;
-                        reltol = reltol,
-                        abstol = abstol,
-                        maxevals = maxiters,
-                    )
+                    val, err = Cubature.hquadrature_v(nout,
+                                                      f,
+                                                      lb,
+                                                      ub;
+                                                      reltol = reltol,
+                                                      abstol = abstol,
+                                                      maxevals = maxiters)
                 else
-                    val, err = Cubature.pquadrature_v(
-                        nout,
-                        f,
-                        lb,
-                        ub;
-                        reltol = reltol,
-                        abstol = abstol,
-                        maxevals = maxiters,
-                    )
+                    val, err = Cubature.pquadrature_v(nout,
+                                                      f,
+                                                      lb,
+                                                      ub;
+                                                      reltol = reltol,
+                                                      abstol = abstol,
+                                                      maxevals = maxiters)
                 end
             else
                 if alg isa CubatureJLh
-                    val, err = Cubature.hcubature_v(
-                        nout,
-                        f,
-                        lb,
-                        ub;
-                        reltol = reltol,
-                        abstol = abstol,
-                        maxevals = maxiters,
-                    )
+                    val, err = Cubature.hcubature_v(nout,
+                                                    f,
+                                                    lb,
+                                                    ub;
+                                                    reltol = reltol,
+                                                    abstol = abstol,
+                                                    maxevals = maxiters)
                 else
-                    val, err = Cubature.pcubature_v(
-                        nout,
-                        f,
-                        lb,
-                        ub;
-                        reltol = reltol,
-                        abstol = abstol,
-                        maxevals = maxiters,
-                    )
+                    val, err = Cubature.pcubature_v(nout,
+                                                    f,
+                                                    lb,
+                                                    ub;
+                                                    reltol = reltol,
+                                                    abstol = abstol,
+                                                    maxevals = maxiters)
                 end
             end
         end

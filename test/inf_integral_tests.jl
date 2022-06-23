@@ -21,7 +21,6 @@ prob = IntegralProblem(f, -Inf, Inf)
 sol = solve(prob, HCubatureJL(), reltol = 1e-3, abstol = 1e-3)
 @test (1.00 - sol.u)^2 < 1e-6
 
-
 f(x, p) = pdf(Normal(0.00, 1.00), x)
 prob = IntegralProblem(f, -Inf, 0.00)
 sol = solve(prob, HCubatureJL(), reltol = 1e-3, abstol = 1e-3)

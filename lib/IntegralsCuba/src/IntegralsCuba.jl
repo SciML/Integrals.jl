@@ -9,19 +9,17 @@ struct CubaSUAVE <: AbstractCubaAlgorithm end
 struct CubaDivonne <: AbstractCubaAlgorithm end
 struct CubaCuhre <: AbstractCubaAlgorithm end
 
-function Integrals.__solvebp_call(
-    prob::IntegralProblem,
-    alg::AbstractCubaAlgorithm,
-    sensealg,
-    lb,
-    ub,
-    p,
-    args...;
-    reltol = 1e-8,
-    abstol = 1e-8,
-    maxiters = alg isa CubaSUAVE ? 1000000 : typemax(Int),
-    kwargs...,
-)
+function Integrals.__solvebp_call(prob::IntegralProblem,
+                                  alg::AbstractCubaAlgorithm,
+                                  sensealg,
+                                  lb,
+                                  ub,
+                                  p,
+                                  args...;
+                                  reltol = 1e-8,
+                                  abstol = 1e-8,
+                                  maxiters = alg isa CubaSUAVE ? 1000000 : typemax(Int),
+                                  kwargs...)
     prob = transformation_if_inf(prob) #intercept for infinite transformation
     p = p
     if lb isa Number && prob.batch == 0
@@ -44,9 +42,8 @@ function Integrals.__solvebp_call(
             end
         else
             f = function (x, dx)
-                dx .=
-                    prob.f(scale_x!(_x, ub, lb, x), p) .*
-                    prod((y) -> y[1] - y[2], zip(ub, lb))
+                dx .= prob.f(scale_x!(_x, ub, lb, x), p) .*
+                      prod((y) -> y[1] - y[2], zip(ub, lb))
             end
         end
     else
@@ -60,15 +57,13 @@ function Integrals.__solvebp_call(
             else
                 if prob.f([lb ub], p) isa Vector
                     f = function (x, dx)
-                        dx .=
-                            prob.f(scale_x(ub, lb, x), p)' .*
-                            prod((y) -> y[1] - y[2], zip(ub, lb))
+                        dx .= prob.f(scale_x(ub, lb, x), p)' .*
+                              prod((y) -> y[1] - y[2], zip(ub, lb))
                     end
                 else
                     f = function (x, dx)
-                        dx .=
-                            prob.f(scale_x(ub, lb, x), p) .*
-                            prod((y) -> y[1] - y[2], zip(ub, lb))
+                        dx .= prob.f(scale_x(ub, lb, x), p) .*
+                              prod((y) -> y[1] - y[2], zip(ub, lb))
                     end
                 end
             end
@@ -81,15 +76,13 @@ function Integrals.__solvebp_call(
             else
                 if prob.f([lb ub], p) isa Vector
                     f = function (x, dx)
-                        dx .=
-                            prob.f(scale_x(ub, lb, x), p)' .*
-                            prod((y) -> y[1] - y[2], zip(ub, lb))
+                        dx .= prob.f(scale_x(ub, lb, x), p)' .*
+                              prod((y) -> y[1] - y[2], zip(ub, lb))
                     end
                 else
                     f = function (x, dx)
-                        dx .=
-                            prob.f(scale_x(ub, lb, x), p) .*
-                            prod((y) -> y[1] - y[2], zip(ub, lb))
+                        dx .= prob.f(scale_x(ub, lb, x), p) .*
+                              prod((y) -> y[1] - y[2], zip(ub, lb))
                     end
                 end
             end
@@ -101,49 +94,41 @@ function Integrals.__solvebp_call(
     nvec = prob.batch == 0 ? 1 : prob.batch
 
     if alg isa CubaVegas
-        out = Cuba.vegas(
-            f,
-            ndim,
-            prob.nout;
-            rtol = reltol,
-            atol = abstol,
-            nvec = nvec,
-            maxevals = maxiters,
-            kwargs...,
-        )
+        out = Cuba.vegas(f,
+                         ndim,
+                         prob.nout;
+                         rtol = reltol,
+                         atol = abstol,
+                         nvec = nvec,
+                         maxevals = maxiters,
+                         kwargs...)
     elseif alg isa CubaSUAVE
-        out = Cuba.suave(
-            f,
-            ndim,
-            prob.nout;
-            rtol = reltol,
-            atol = abstol,
-            nvec = nvec,
-            maxevals = maxiters,
-            kwargs...,
-        )
+        out = Cuba.suave(f,
+                         ndim,
+                         prob.nout;
+                         rtol = reltol,
+                         atol = abstol,
+                         nvec = nvec,
+                         maxevals = maxiters,
+                         kwargs...)
     elseif alg isa CubaDivonne
-        out = Cuba.divonne(
-            f,
-            ndim,
-            prob.nout;
-            rtol = reltol,
-            atol = abstol,
-            nvec = nvec,
-            maxevals = maxiters,
-            kwargs...,
-        )
+        out = Cuba.divonne(f,
+                           ndim,
+                           prob.nout;
+                           rtol = reltol,
+                           atol = abstol,
+                           nvec = nvec,
+                           maxevals = maxiters,
+                           kwargs...)
     elseif alg isa CubaCuhre
-        out = Cuba.cuhre(
-            f,
-            ndim,
-            prob.nout;
-            rtol = reltol,
-            atol = abstol,
-            nvec = nvec,
-            maxevals = maxiters,
-            kwargs...,
-        )
+        out = Cuba.cuhre(f,
+                         ndim,
+                         prob.nout;
+                         rtol = reltol,
+                         atol = abstol,
+                         nvec = nvec,
+                         maxevals = maxiters,
+                         kwargs...)
     end
 
     if isinplace(prob) || prob.batch != 0
@@ -156,14 +141,12 @@ function Integrals.__solvebp_call(
         end
     end
 
-    SciMLBase.build_solution(
-        prob,
-        alg,
-        val,
-        out.error,
-        chi = out.probability,
-        retcode = :Success,
-    )
+    SciMLBase.build_solution(prob,
+                             alg,
+                             val,
+                             out.error,
+                             chi = out.probability,
+                             retcode = :Success)
 end
 
 export CubaVegas, CubaSUAVE, CubaDivonne, CubaCuhre
