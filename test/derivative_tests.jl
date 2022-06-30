@@ -1,4 +1,4 @@
-using Integrals, Zygote, FiniteDiff, ForwardDiff, DiffEqSensitivity
+using Integrals, Zygote, FiniteDiff, ForwardDiff, SciMLSensitivity
 using IntegralsCuba, IntegralsCubature
 using Test
 
