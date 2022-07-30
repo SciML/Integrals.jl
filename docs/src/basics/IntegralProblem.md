@@ -1,5 +1,5 @@
 # Integral Problems
 
 ```@docs
-IntegralProblem
+SciMLBase.IntegralProblem
 ```
