@@ -5,11 +5,13 @@
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](http://integrals.sciml.ai/dev/)
 
 Integrals.jl is an instantiation of the SciML common `IntegralProblem`
-interface for the common quadrature packages of Julia. By using Integrals.jl,
-you get a single predictable interface where many of the arguments are
-standardized throughout the various integrator libraries. This can be useful
-for benchmarking or for library implementations, since libraries which internally
-use a quadrature can easily accept a quadrature method as an argument.
+interface for the common numerical integration packages of Julia, including
+both those based upon quadrature as well as Monte-Carlo approaches. By using
+Integrals.jl, you get a single predictable interface where many of the
+arguments are standardized throughout the various integrator libraries. This
+can be useful for benchmarking or for library implementations, since libraries
+which internally use a quadrature can easily accept a integration method as an
+argument.
 
 ## Tutorials and Documentation
 
