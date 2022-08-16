@@ -1,5 +1,4 @@
-pages = [
-    "Home" => "index.md",
+pages = ["index.md",
     "Tutorials" => Any["tutorials/numerical_integrals.md",
                        "tutorials/differentiating_integrals.md"],
     "Basics" => Any["basics/IntegralProblem.md",
