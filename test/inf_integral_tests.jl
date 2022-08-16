@@ -1,4 +1,4 @@
-using Integrals, Distributions, Test
+using Integrals, Distributions, Test, StaticArrays
 
 μ = [0.00, 0.00]
 Σ = [0.4 0.0; 0.00 0.4]
@@ -35,3 +35,19 @@ prob = IntegralProblem(f, 0, Inf)
 sol = solve(prob, HCubatureJL(), reltol = 1e-3, abstol = 1e-3)
 @test (pi / 2 - sol.u)^2 < 1e-6
 @test_nowarn @inferred Integrals.transformation_if_inf(prob, Val(true))
+
+# Type stability
+μ = [0.00, 0.00]
+Σ = [0.4 0.0; 0.00 0.4]
+d = MvNormal(μ, Σ)
+m2 = let d = d
+    (x, p) -> pdf(d, x)
+end
+
+prob = IntegralProblem(m2, SVector(-Inf, -Inf), SVector(Inf, Inf))
+@test_nowarn @inferred solve(prob, HCubatureJL(); do_inf_transformation = Val(true))
+
+prob = @test_nowarn @inferred Integrals.transformation_if_inf(prob, Val(true))
+@test_nowarn @inferred Integrals.__solvebp_call(prob, HCubatureJL(),
+                                                Integrals.ReCallVJP(Integrals.ZygoteVJP()),
+                                                prob.lb, prob.ub, prob.p)

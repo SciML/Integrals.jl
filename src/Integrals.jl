@@ -38,7 +38,7 @@ function scale_x(ub, lb, x)
 end
 
 function v_inf(t)
-    return t ./ (1 .- t .^ 2)
+    return map(t -> t / (1 - t^2), t)
 end
 
 function v_semiinf(t, a, upto_inf)
@@ -76,10 +76,13 @@ function transform_inf(t, p, f, lb, ub)
     semilw = lbb .& .!ubb
 
     function v(t)
-        return t .* _none + v_inf(t) .* _inf + v_semiinf(t, lb, 1) .* semiup +
-               v_semiinf(t, ub, 0) .* semilw
+        t .* _none + v_inf(t) .* _inf + v_semiinf(t, lb, 1) .* semiup +
+        v_semiinf(t, ub, 0) .* semilw
     end
-    jac = Zygote.@ignore ForwardDiff.jacobian(x -> v(x), t)
+    jac = ChainRulesCore.@ignore_derivatives ForwardDiff.jacobian(x -> v(x),
+                                                                  t |> Vector)::Matrix{
+                                                                                       eltype(t)
+                                                                                       }
     j = det(jac)
     f(v(t), p) * (j)
 end
@@ -180,9 +183,9 @@ function __solvebp_call(prob::IntegralProblem, ::HCubatureJL, sensealg, lb, ub, 
 
     if isinplace(prob)
         dx = zeros(prob.nout)
-        f = (x) -> (prob.f(dx, x, p); dx)
+        f = x -> (prob.f(dx, x, prob.p); dx)
     else
-        f = (x) -> prob.f(x, p)
+        f = x -> prob.f(x, prob.p)
     end
     @assert prob.batch == 0
 
@@ -207,16 +210,16 @@ function __solvebp_call(prob::IntegralProblem, alg::VEGAS, sensealg, lb, ub, p, 
     if prob.batch == 0
         if isinplace(prob)
             dx = zeros(prob.nout)
-            f = (x) -> (prob.f(dx, x, p); dx)
+            f = x -> (f(dx, x, p); dx)
         else
-            f = (x) -> prob.f(x, p)
+            f = x -> prob.f(x, prob.p)
         end
     else
         if isinplace(prob)
             dx = zeros(prob.batch)
-            f = (x) -> (prob.f(dx, x', p); dx)
+            f = x -> (f(dx, x', p); dx)
         else
-            f = (x) -> prob.f(x', p)
+            f = x -> f(x', p)
         end
     end
     val, err, chi = vegas(f, lb, ub, rtol = reltol, atol = abstol,
@@ -232,7 +235,7 @@ function ChainRulesCore.rrule(::typeof(__solvebp), prob, alg, sensealg, lb, ub, 
         y = typeof(Δ) <: Array{<:Number, 0} ? Δ[1] : Δ
         if isinplace(prob)
             dx = zeros(prob.nout)
-            _f = (x) -> prob.f(dx, x, p)
+            _f = x -> prob.f(dx, x, p)
             if sensealg.vjp isa ZygoteVJP
                 dfdp = function (dx, x, p)
                     _, back = Zygote.pullback(p) do p
@@ -252,7 +255,7 @@ function ChainRulesCore.rrule(::typeof(__solvebp), prob, alg, sensealg, lb, ub, 
                 error("TODO")
             end
         else
-            _f = (x) -> prob.f(x, p)
+            _f = x -> prob.f(x, p)
             if sensealg.vjp isa ZygoteVJP
                 if prob.batch > 0
                     dfdp = function (x, p)
