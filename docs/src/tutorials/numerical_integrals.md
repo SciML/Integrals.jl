@@ -4,9 +4,9 @@ For basic multidimensional quadrature we can construct and solve a `IntegralProb
 
 ``` @example integrate1
 using Integrals
-f(x,p) = sum(sin.(x))
-prob = IntegralProblem(f,ones(2),3ones(2))
-sol = solve(prob,HCubatureJL(),reltol=1e-3,abstol=1e-3)
+f(x,p) = sum(sin.(x))   # The function to be integrated needs to take 2 parameters as per the common solve interface.
+prob = IntegralProblem(f,ones(2),3ones(2))   # Arguments : function to be integrated, lower bound(s), upper bound(s)
+sol = solve(prob,HCubatureJL(),reltol=1e-3,abstol=1e-3)   # Arguments : problem, algorithm, optionally tolerances
 sol.u
 ```
 
