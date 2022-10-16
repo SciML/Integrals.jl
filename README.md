@@ -1,8 +1,7 @@
 # Integrals.jl
 
 [![Join the chat at https://julialang.zulipchat.com #sciml-bridged](https://img.shields.io/static/v1?label=Zulip&message=chat&color=9558b2&labelColor=389826)](https://julialang.zulipchat.com/#narrow/stream/279055-sciml-bridged)
-[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](http://integrals.sciml.ai/stable/)
-[![Global Docs](https://img.shields.io/badge/docs-SciML-blue.svg)](https://docs.sciml.ai/dev/modules/Integrals/)
+[![Global Docs](https://img.shields.io/badge/docs-SciML-blue.svg)](https://docs.sciml.ai/Integrals/stable/)
 
 [![codecov](https://codecov.io/gh/SciML/Integrals.jl/branch/master/graph/badge.svg)](https://app.codecov.io/gh/SciML/Integrals.jl)
 [![Build Status](https://github.com/SciML/Integrals.jl/workflows/CI/badge.svg)](https://github.com/SciML/Integrals.jl/actions?query=workflow%3ACI)
@@ -22,8 +21,8 @@ argument.
 ## Tutorials and Documentation
 
 For information on using the package,
-[see the stable documentation](https://integrals.sciml.ai/stable/). Use the
-[in-development documentation](https://integrals.sciml.ai/dev/) for the version of
+[see the stable documentation](https://docs.sciml.ai/Integrals/stable/). Use the
+[in-development documentation](https://docs.sciml.ai/Integrals/dev/) for the version of
 the documentation, which contains the unreleased features.
 
 ## Examples
