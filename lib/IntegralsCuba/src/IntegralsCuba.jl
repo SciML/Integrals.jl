@@ -117,7 +117,7 @@ function Integrals.__solvebp_call(prob::IntegralProblem, alg::AbstractCubaAlgori
     end
 
     SciMLBase.build_solution(prob, alg, val, out.error,
-                             chi = out.probability, retcode = :Success)
+                             chi = out.probability, retcode = ReturnCode.Success)
 end
 
 export CubaVegas, CubaSUAVE, CubaDivonne, CubaCuhre

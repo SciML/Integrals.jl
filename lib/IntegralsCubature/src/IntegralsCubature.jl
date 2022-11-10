@@ -157,7 +157,7 @@ function Integrals.__solvebp_call(prob::IntegralProblem,
             end
         end
     end
-    SciMLBase.build_solution(prob, alg, val, err, retcode = :Success)
+    SciMLBase.build_solution(prob, alg, val, err, retcode = ReturnCode.Success)
 end
 
 export CubatureJLh, CubatureJLp

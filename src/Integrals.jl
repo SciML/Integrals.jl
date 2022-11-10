@@ -172,7 +172,7 @@ function __solvebp_call(prob::IntegralProblem, ::QuadGKJL, sensealg, lb, ub, p, 
     val, err = quadgk(f, lb, ub,
                       rtol = reltol, atol = abstol,
                       kwargs...)
-    SciMLBase.build_solution(prob, QuadGKJL(), val, err, retcode = :Success)
+    SciMLBase.build_solution(prob, QuadGKJL(), val, err, retcode = ReturnCode.Success)
 end
 
 function __solvebp_call(prob::IntegralProblem, ::HCubatureJL, sensealg, lb, ub, p, args...;
@@ -198,7 +198,7 @@ function __solvebp_call(prob::IntegralProblem, ::HCubatureJL, sensealg, lb, ub, 
                              rtol = reltol, atol = abstol,
                              maxevals = maxiters, kwargs...)
     end
-    SciMLBase.build_solution(prob, HCubatureJL(), val, err, retcode = :Success)
+    SciMLBase.build_solution(prob, HCubatureJL(), val, err, retcode = ReturnCode.Success)
 end
 
 function __solvebp_call(prob::IntegralProblem, alg::VEGAS, sensealg, lb, ub, p, args...;
@@ -225,7 +225,7 @@ function __solvebp_call(prob::IntegralProblem, alg::VEGAS, sensealg, lb, ub, p, 
     val, err, chi = vegas(f, lb, ub, rtol = reltol, atol = abstol,
                           maxiter = maxiters, nbins = alg.nbins,
                           ncalls = alg.ncalls, batch = prob.batch != 0, kwargs...)
-    SciMLBase.build_solution(prob, alg, val, err, chi = chi, retcode = :Success)
+    SciMLBase.build_solution(prob, alg, val, err, chi = chi, retcode = ReturnCode.Success)
 end
 
 function ChainRulesCore.rrule(::typeof(__solvebp), prob, alg, sensealg, lb, ub, p, args...;
