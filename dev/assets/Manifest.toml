@@ -2,7 +2,7 @@
 
 julia_version = "1.8.2"
 manifest_format = "2.0"
-project_hash = "d2576c484628fa7011ad0d0fe4c798cb61b09b24"
+project_hash = "fae60da01b22f551d021e15bea4f601ade7ce027"
 
 [[deps.ANSIColoredPrinters]]
 git-tree-sha1 = "574baf8110975760d391c710b6341da1afa48d8c"
@@ -548,9 +548,9 @@ version = "0.7.0"
 
 [[deps.SciMLBase]]
 deps = ["ArrayInterfaceCore", "CommonSolve", "ConstructionBase", "Distributed", "DocStringExtensions", "EnumX", "FunctionWrappersWrappers", "IteratorInterfaceExtensions", "LinearAlgebra", "Logging", "Markdown", "Preferences", "RecipesBase", "RecursiveArrayTools", "RuntimeGeneratedFunctions", "StaticArraysCore", "Statistics", "Tables"]
-git-tree-sha1 = "5686a5c9660c5fb571e3a8be63ff1848de82bdbd"
+git-tree-sha1 = "e1b587ea5933850d1ca2f52db31bd6bcbf50d4c1"
 uuid = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
-version = "1.71.0"
+version = "1.72.0"
 
 [[deps.Serialization]]
 uuid = "9e88b42a-f829-5b0c-bbe9-9e923198166b"
