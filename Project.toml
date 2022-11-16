@@ -1,7 +1,7 @@
 name = "Integrals"
 uuid = "de52edbc-65ea-441a-8357-d3a637375a31"
 authors = ["Chris Rackauckas <accounts@chrisrackauckas.com>"]
-version = "3.2.0"
+version = "3.3.0"
 
 [deps]
 ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
