@@ -1,0 +1,17 @@
+[deps]
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+FiniteDiff = "6a86dc24-6348-571c-b903-95158fe2bd41"
+ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+Integrals = "de52edbc-65ea-441a-8357-d3a637375a31"
+IntegralsCuba = "e00cd5f1-6337-4131-8b37-28b2fe4cd6cb"
+IntegralsCubature = "c31f79ba-6e32-46d4-a52f-182a8ac42a54"
+Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
+
+[compat]
+Documenter = "0.27"
+FiniteDiff = "2"
+ForwardDiff = "0.10"
+Integrals = "3"
+IntegralsCuba = "0.2"
+IntegralsCubature = "0.2"
+Zygote = "0.6"
