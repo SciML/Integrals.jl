@@ -6,19 +6,19 @@
 </script><script data-outdated-warner src="assets/warner.js"></script><link rel="canonical" href="https://docs.sciml.ai/Integrals/stable/"/><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.045/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.24/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="assets/documenter.js"></script><script src="siteinfo.js"></script><script src="../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="assets/themeswap.js"></script><link href="assets/favicon.ico" rel="icon" type="image/x-icon"/></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href><img src="assets/logo.png" alt="Integrals.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href>Integrals.jl</a></span></div><form class="docs-search" action="search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li class="is-active"><a class="tocitem" href>Integrals.jl: Unified Integral Approximation Interface</a><ul class="internal"><li><a class="tocitem" href="#Installation"><span>Installation</span></a></li><li><a class="tocitem" href="#Contributing"><span>Contributing</span></a></li><li><a class="tocitem" href="#Reproducibility"><span>Reproducibility</span></a></li></ul></li><li><span class="tocitem">Tutorials</span><ul><li><a class="tocitem" href="tutorials/numerical_integrals/">Numerically Solving Integrals</a></li><li><a class="tocitem" href="tutorials/differentiating_integrals/">Differentiating Integrals</a></li></ul></li><li><span class="tocitem">Basics</span><ul><li><a class="tocitem" href="basics/IntegralProblem/">Integral Problems</a></li><li><a class="tocitem" href="basics/solve/">Common Solver Options (Solve Keyword Arguments)</a></li><li><a class="tocitem" href="basics/FAQ/">Frequently Asked Questions</a></li></ul></li><li><span class="tocitem">Solvers</span><ul><li><a class="tocitem" href="solvers/IntegralSolvers/">Integral Solver Algorithms</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Integrals.jl: Unified Integral Approximation Interface</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Integrals.jl: Unified Integral Approximation Interface</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/SciML/Integrals.jl/blob/master/docs/src/index.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Integrals.jl:-Unified-Integral-Approximation-Interface"><a class="docs-heading-anchor" href="#Integrals.jl:-Unified-Integral-Approximation-Interface">Integrals.jl: Unified Integral Approximation Interface</a><a id="Integrals.jl:-Unified-Integral-Approximation-Interface-1"></a><a class="docs-heading-anchor-permalink" href="#Integrals.jl:-Unified-Integral-Approximation-Interface" title="Permalink"></a></h1><p>Integrals.jl is a unified interface for the numerical approximation of integrals (quadrature) in Julia. It interfaces with other packages of the Julia ecosystem to make it easy to test alternative solver packages and pass small types to control algorithm swapping.</p><h2 id="Installation"><a class="docs-heading-anchor" href="#Installation">Installation</a><a id="Installation-1"></a><a class="docs-heading-anchor-permalink" href="#Installation" title="Permalink"></a></h2><p>To install Integrals.jl, use the Julia package manager:</p><pre><code class="language-julia hljs">using Pkg
 Pkg.add(&quot;Integrals&quot;)</code></pre><h2 id="Contributing"><a class="docs-heading-anchor" href="#Contributing">Contributing</a><a id="Contributing-1"></a><a class="docs-heading-anchor-permalink" href="#Contributing" title="Permalink"></a></h2><ul><li>Please refer to the <a href="https://github.com/SciML/ColPrac/blob/master/README.md">SciML ColPrac: Contributor&#39;s Guide on Collaborative Practices for Community Packages</a> for guidance on PRs, issues, and other matters relating to contributing to SciML.</li><li>See the <a href="https://github.com/SciML/SciMLStyle">SciML Style Guide</a> for common coding practices and other style decisions.</li><li>There are a few community forums:<ul><li>The #diffeq-bridged and #sciml-bridged channels in the <a href="https://julialang.org/slack/">Julia Slack</a></li><li>The #diffeq-bridged and #sciml-bridged channels in the <a href="https://julialang.zulipchat.com/#narrow/stream/279055-sciml-bridged">Julia Zulip</a></li><li>On the <a href="https://discourse.julialang.org">Julia Discourse forums</a></li><li>See also <a href="https://sciml.ai/community/">SciML Community page</a></li></ul></li></ul><h2 id="Reproducibility"><a class="docs-heading-anchor" href="#Reproducibility">Reproducibility</a><a id="Reproducibility-1"></a><a class="docs-heading-anchor-permalink" href="#Reproducibility" title="Permalink"></a></h2><details><summary>The documentation of this SciML package was built using these direct dependencies,</summary><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Status `~/work/Integrals.jl/Integrals.jl/docs/Project.toml`
   [e30172f5] Documenter v0.27.23
-  [6a86dc24] FiniteDiff v2.16.0
+  [6a86dc24] FiniteDiff v2.17.0
   [f6369f11] ForwardDiff v0.10.33
   [de52edbc] Integrals v3.3.0 `~/work/Integrals.jl/Integrals.jl`
-  [e00cd5f1] IntegralsCuba v0.2.1
-  [c31f79ba] IntegralsCubature v0.2.1
-  [e88e6eb3] Zygote v0.6.49</code></pre></details><details><summary>and using this machine and Julia version.</summary><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Julia Version 1.8.2
-Commit 36034abf260 (2022-09-29 15:21 UTC)
+  [e00cd5f1] IntegralsCuba v0.2.2
+  [c31f79ba] IntegralsCubature v0.2.2
+  [e88e6eb3] Zygote v0.6.49</code></pre></details><details><summary>and using this machine and Julia version.</summary><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Julia Version 1.8.3
+Commit 0434deb161e (2022-11-14 20:14 UTC)
 Platform Info:
   OS: Linux (x86_64-linux-gnu)
-  CPU: 2 × Intel(R) Xeon(R) CPU E5-2673 v3 @ 2.40GHz
+  CPU: 2 × Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz
   WORD_SIZE: 64
   LIBM: libopenlibm
-  LLVM: libLLVM-13.0.1 (ORCJIT, haswell)
+  LLVM: libLLVM-13.0.1 (ORCJIT, icelake-server)
   Threads: 1 on 2 virtual cores</code></pre></details><details><summary>A more complete overview of all dependencies and their versions is also provided.</summary><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Status `~/work/Integrals.jl/Integrals.jl/docs/Manifest.toml`
   [a4c015fc] ANSIColoredPrinters v0.0.1
   [621f4979] AbstractFFTs v1.2.1
@@ -33,7 +33,7 @@ Platform Info:
   [861a8166] Combinatorics v1.0.2
   [38540f10] CommonSolve v0.2.3
   [bbf7d656] CommonSubexpressions v0.3.0
-  [34da2185] Compat v4.3.0
+  [34da2185] Compat v4.4.0
   [187b0558] ConstructionBase v1.4.1
   [8a292aeb] Cuba v2.3.0
   [667455a9] Cubature v1.5.1
@@ -43,36 +43,36 @@ Platform Info:
   [b429d917] DensityInterface v0.4.0
   [163ba53b] DiffResults v1.1.0
   [b552c78f] DiffRules v1.12.2
-  [31c24e10] Distributions v0.25.77
+  [31c24e10] Distributions v0.25.79
   [ffbed154] DocStringExtensions v0.9.2
   [e30172f5] Documenter v0.27.23
   [fa6b7ba4] DualNumbers v0.6.8
   [4e289a0a] EnumX v1.0.3
   [e2ba6199] ExprTools v0.1.8
   [1a297f60] FillArrays v0.13.5
-  [6a86dc24] FiniteDiff v2.16.0
+  [6a86dc24] FiniteDiff v2.17.0
   [f6369f11] ForwardDiff v0.10.33
   [069b7b12] FunctionWrappers v1.1.3
   [77dc65aa] FunctionWrappersWrappers v0.1.1
   [0c68f7d7] GPUArrays v8.5.0
   [46192b85] GPUArraysCore v0.1.2
-  [19dc6840] HCubature v1.5.0
+  [19dc6840] HCubature v1.5.1
   [34004b35] HypergeometricFunctions v0.3.11
   [b5f81e59] IOCapture v0.2.2
   [7869d1d1] IRTools v0.4.7
   [de52edbc] Integrals v3.3.0 `~/work/Integrals.jl/Integrals.jl`
-  [e00cd5f1] IntegralsCuba v0.2.1
-  [c31f79ba] IntegralsCubature v0.2.1
+  [e00cd5f1] IntegralsCuba v0.2.2
+  [c31f79ba] IntegralsCubature v0.2.2
   [3587e190] InverseFunctions v0.1.8
   [92d709cd] IrrationalConstants v0.1.1
   [82899510] IteratorInterfaceExtensions v1.0.0
   [692b3bcd] JLLWrappers v1.4.1
   [682c06a0] JSON v0.21.3
   [929cbde3] LLVM v4.14.0
-  [2ab3a3ac] LogExpFunctions v0.3.18
+  [2ab3a3ac] LogExpFunctions v0.3.19
   [1914dd2f] MacroTools v0.5.10
   [e1d29d7a] Missings v1.0.2
-⌃ [4886b29c] MonteCarloIntegration v0.0.3
+⌅ [4886b29c] MonteCarloIntegration v0.0.3
   [77ba4419] NaNMath v1.0.1
   [bac558e1] OrderedCollections v1.4.1
   [90014a1f] PDMats v0.11.16
@@ -81,18 +81,18 @@ Platform Info:
   [1fd47b50] QuadGK v2.6.0
   [c1ae055f] RealDot v0.1.0
   [3cdcf5f2] RecipesBase v1.3.1
-  [731186ca] RecursiveArrayTools v2.32.1
+  [731186ca] RecursiveArrayTools v2.32.2
   [189a3867] Reexport v1.2.2
   [ae029012] Requires v1.3.0
   [37e2e3b7] ReverseDiff v1.14.4
   [79098fc4] Rmath v0.7.0
   [7e49a35a] RuntimeGeneratedFunctions v0.5.5
-  [0bca4576] SciMLBase v1.72.0
+  [0bca4576] SciMLBase v1.74.1
   [efcf1570] Setfield v1.1.1
   [66db9d55] SnoopPrecompile v1.0.1
   [a2af1166] SortingAlgorithms v1.1.0
   [276daf66] SpecialFunctions v2.1.7
-  [90137ffa] StaticArrays v1.5.9
+  [90137ffa] StaticArrays v1.5.10
   [1e83bf80] StaticArraysCore v1.4.0
   [82ae8749] StatsAPI v1.5.0
   [2913bbd2] StatsBase v0.33.21
@@ -151,6 +151,6 @@ Platform Info:
   [8e850b90] libblastrampoline_jll v5.1.1+0
   [8e850ede] nghttp2_jll v1.48.0+0
   [3f19e933] p7zip_jll v17.4.0+0
-Info Packages marked with ⌃ have new versions available and may be upgradable.</code></pre></details>You can also download the 
+Info Packages marked with ⌅ have new versions available but compatibility constraints restrict them from upgrading. To see why use `status --outdated -m`</code></pre></details>You can also download the 
 <a href="https://github.com/SciML/Integrals.jl/tree/gh-pages/v3.3.0/assets/Manifest.toml">manifest</a> file and the
-<a href="https://github.com/SciML/Integrals.jl/tree/gh-pages/v3.3.0/assets/Project.toml">project</a> file.</article><nav class="docs-footer"><a class="docs-footer-nextpage" href="tutorials/numerical_integrals/">Numerically Solving Integrals »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.23 on <span class="colophon-date" title="Wednesday 16 November 2022 09:27">Wednesday 16 November 2022</span>. Using Julia version 1.8.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+<a href="https://github.com/SciML/Integrals.jl/tree/gh-pages/v3.3.0/assets/Project.toml">project</a> file.</article><nav class="docs-footer"><a class="docs-footer-nextpage" href="tutorials/numerical_integrals/">Numerically Solving Integrals »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.23 on <span class="colophon-date" title="Saturday 26 November 2022 14:25">Saturday 26 November 2022</span>. Using Julia version 1.8.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
