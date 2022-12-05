@@ -292,11 +292,6 @@ function ChainRulesCore.rrule(::typeof(__solvebp), prob, alg, sensealg, lb, ub, 
     out, quadrature_adjoint
 end
 
-ZygoteRules.@adjoint function ZygoteRules.literal_getproperty(sol::SciMLBase.IntegralSolution,
-                                                              ::Val{:u})
-    sol.u, Δ -> (SciMLBase.build_solution(sol.prob, sol.alg, Δ, sol.resid),)
-end
-
 ### Forward-Mode AD Intercepts
 
 # Direct AD on solvers with QuadGK and HCubature
