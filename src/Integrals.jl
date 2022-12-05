@@ -210,7 +210,7 @@ function __solvebp_call(prob::IntegralProblem, alg::VEGAS, sensealg, lb, ub, p, 
     if prob.batch == 0
         if isinplace(prob)
             dx = zeros(prob.nout)
-            f = x -> (prob.f(dx, x, p); dx)
+            f = x -> (prob.f(dx, x, p); dx[1])
         else
             f = x -> prob.f(x, prob.p)
         end
