@@ -136,17 +136,6 @@ function transformation_if_inf(prob, do_inf_transformation = nothing)
     transformation_if_inf(prob, do_inf_transformation)
 end
 
-function SciMLBase.solve(prob::IntegralProblem, ::Nothing, sensealg, lb, ub, p, args...;
-                         reltol = 1e-8, abstol = 1e-8, kwargs...)
-    if lb isa Number
-        __solve(prob, QuadGKJL(); reltol = reltol, abstol = abstol, kwargs...)
-    elseif length(lb) > 8 && reltol < 1e-4 || abstol < 1e-4
-        __solve(prob, VEGAS(); reltol = reltol, abstol = abstol, kwargs...)
-    else
-        __solve(prob, HCubatureJL(); reltol = reltol, abstol = abstol, kwargs...)
-    end
-end
-
 function SciMLBase.solve(prob::IntegralProblem,
                          alg::SciMLBase.AbstractIntegralAlgorithm,
                          args...; sensealg = ReCallVJP(ZygoteVJP()),
