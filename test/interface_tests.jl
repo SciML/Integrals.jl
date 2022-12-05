@@ -7,14 +7,14 @@ max_nout_test = 2
 reltol = 1e-3
 abstol = 1e-3
 
-algs = [QuadGKJL(), HCubatureJL(), CubatureJLh(), CubatureJLp(), #VEGAS(), CubaVegas(),
+algs = [QuadGKJL(), HCubatureJL(), CubatureJLh(), CubatureJLp(), VEGAS(), #CubaVegas(),
     CubaSUAVE(), CubaDivonne(), CubaCuhre()]
 
 alg_req = Dict(QuadGKJL() => (nout = 1, allows_batch = false, min_dim = 1, max_dim = 1,
                               allows_iip = false),
                HCubatureJL() => (nout = Inf, allows_batch = false, min_dim = 1,
                                  max_dim = Inf, allows_iip = true),
-               VEGAS() => (nout = 1, allows_batch = true, min_dim = 1, max_dim = Inf,
+               VEGAS() => (nout = 1, allows_batch = true, min_dim = 2, max_dim = Inf,
                            allows_iip = true),
                CubatureJLh() => (nout = Inf, allows_batch = true, min_dim = 1,
                                  max_dim = Inf, allows_iip = true),
@@ -136,7 +136,11 @@ end
                 else
                     sol = solve(prob, alg, reltol = reltol, abstol = abstol)
                 end
-                @test sol.u≈[exact_sol[i](dim, nout, lb, ub)] rtol=1e-2
+                if sol.u isa Number
+                    @test sol.u≈exact_sol[i](dim, nout, lb, ub) rtol=1e-2
+                else
+                    @test sol.u≈[exact_sol[i](dim, nout, lb, ub)] rtol=1e-2
+                end
             end
         end
     end
@@ -172,7 +176,11 @@ end
                 end
                 @info "Alg = $alg, Integrand = $i, Dimension = $dim, Output Dimension = $nout"
                 sol = solve(prob, alg, reltol = reltol, abstol = abstol)
-                @test sol.u≈[exact_sol[i](dim, nout, lb, ub)] rtol=1e-2
+                if sol.u isa Number
+                    @test sol.u≈exact_sol[i](dim, nout, lb, ub) rtol=1e-2
+                else
+                    @test sol.u≈[exact_sol[i](dim, nout, lb, ub)] rtol=1e-2
+                end
             end
         end
     end
@@ -192,7 +200,11 @@ end
                 end
                 @info "Alg = $alg, Integrand = $i, Dimension = $dim, Output Dimension = $nout"
                 sol = solve(prob, alg, reltol = reltol, abstol = abstol)
-                @test sol.u≈[exact_sol[i](dim, nout, lb, ub)] rtol=1e-2
+                if sol.u isa Number
+                    @test sol.u≈exact_sol[i](dim, nout, lb, ub) rtol=1e-2
+                else
+                    @test sol.u≈[exact_sol[i](dim, nout, lb, ub)] rtol=1e-2
+                end
             end
         end
     end
@@ -233,7 +245,11 @@ end
                                        nout = nout)
                 @info "Alg = $alg, Integrand = $i, Dimension = $dim, Output Dimension = $nout"
                 sol = solve(prob, alg, reltol = reltol, abstol = abstol)
-                @test sol.u≈exact_sol_v[i](dim, nout, lb, ub) rtol=1e-2
+                if sol.u isa Number
+                    @test sol.u≈exact_sol_v[i](dim, nout, lb, ub)[1] rtol=1e-2
+                else
+                    @test sol.u≈exact_sol_v[i](dim, nout, lb, ub) rtol=1e-2
+                end
             end
         end
     end
@@ -257,7 +273,11 @@ end end
                 else
                     sol = solve(prob, alg, reltol = reltol, abstol = abstol)
                 end
-                @test sol.u≈exact_sol_v[i](dim, nout, lb, ub) rtol=1e-2
+                if sol.u isa Number
+                    @test sol.u≈exact_sol_v[i](dim, nout, lb, ub)[1] rtol=1e-2
+                else
+                    @test sol.u≈exact_sol_v[i](dim, nout, lb, ub) rtol=1e-2
+                end
             end
         end
     end
