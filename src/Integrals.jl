@@ -18,13 +18,13 @@ end
 VEGAS(; nbins = 100, ncalls = 1000) = VEGAS(nbins, ncalls)
 
 abstract type QuadSensitivityAlg end
-struct ReCallVJP{V}
+abstract type IntegralVJP end
+struct ReCallVJP{V} <: SciMLBase.AbstractIntegralAlgorithm where V <: IntegralVJP
     vjp::V
 end
 
-abstract type IntegralVJP end
-struct ZygoteVJP end
-struct ReverseDiffVJP
+struct ZygoteVJP <: IntegralVJP end
+struct ReverseDiffVJP <: IntegralVJP
     compile::Bool
 end
 
