@@ -210,21 +210,22 @@ function __solvebp_call(prob::IntegralProblem, alg::VEGAS, sensealg, lb, ub, p, 
     if prob.batch == 0
         if isinplace(prob)
             dx = zeros(prob.nout)
-            f = x -> (f(dx, x, p); dx)
+            f = x -> (prob.f(dx, x, p); dx)
         else
             f = x -> prob.f(x, prob.p)
         end
     else
         if isinplace(prob)
             dx = zeros(prob.batch)
-            f = x -> (f(dx, x', p); dx)
+            f = x -> (prob.f(dx, x', p); dx)
         else
-            f = x -> f(x', p)
+            f = x -> prob.f(x', p)
         end
     end
+    ncalls = prob.batch == 0 ? alg.ncalls : prob.batch
     val, err, chi = vegas(f, lb, ub, rtol = reltol, atol = abstol,
                           maxiter = maxiters, nbins = alg.nbins,
-                          ncalls = alg.ncalls, batch = prob.batch != 0, kwargs...)
+                          ncalls = ncalls, batch = prob.batch != 0, kwargs...)
     SciMLBase.build_solution(prob, alg, val, err, chi = chi, retcode = ReturnCode.Success)
 end
 
