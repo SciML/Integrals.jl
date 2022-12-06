@@ -36,7 +36,7 @@ sol.u
 ```
 
 Integrals.jl also has specific solvers for integrals in a single dimension, such as `QuadGKLJ`.
-For example we can create our own sinus function by integrating the cosine function from 0 to x.
+For example we can create our own sine function by integrating the cosine function from 0 to x.
 
 ``` @example integrate3
 using Integrals
