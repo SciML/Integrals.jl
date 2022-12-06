@@ -34,3 +34,13 @@ using IntegralsCuba
 sol = solve(prob,CubaCuhre(),reltol=1e-3,abstol=1e-3)
 sol.u
 ```
+
+Integrals.jl also has specific solvers for integrals in a single dimension, such as `QuadGKLJ`.
+For example we can create our own sine function by integrating the cosine function from 0 to x.
+
+``` @example integrate3
+using Integrals
+my_sin(x) = solve(IntegralProblem((x,p)->cos(x), 0.0, x), QuadGKJL()).u
+x = 0:0.1:2*pi
+@. my_sin(x) ≈ sin(x)
+```
