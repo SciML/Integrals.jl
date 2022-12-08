@@ -15,6 +15,7 @@ function Integrals.__solvebp_call(prob::IntegralProblem, alg::AbstractCubaAlgori
                                   reltol = 1e-8, abstol = 1e-8,
                                   maxiters = alg isa CubaSUAVE ? 1000000 : typemax(Int),
                                   kwargs...)
+    @assert maxiters>=1000 "maxiters for $alg should be larger than 1000"
     prob = transformation_if_inf(prob) #intercept for infinite transformation
     p = p
     if lb isa Number && prob.batch == 0
