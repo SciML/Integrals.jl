@@ -1,44 +1,104 @@
 # Numerically Solving Integrals
 
-For basic multidimensional quadrature we can construct and solve a `IntegralProblem`:
-
+For basic multidimensional quadrature we can construct and solve a `IntegralProblem`.
+The integral we want to evaluate is:
+```math
+\int_1^3\int_1^3\int_1^3 \sum_1^3 \sin(u_i) du_1du_2du_3.
+```
+We can numerically approximate this integral:
 ``` @example integrate1
 using Integrals
-f(x,p) = sum(sin.(x))
-prob = IntegralProblem(f,ones(2),3ones(2))
-sol = solve(prob,HCubatureJL(),reltol=1e-3,abstol=1e-3)
+f(u,p) = sum(sin.(u))
+prob = IntegralProblem(f,ones(3),3ones(3))
+sol = solve(prob,HCubatureJL();reltol=1e-3,abstol=1e-3)
 sol.u
 ```
+where the first argument of `IntegralProblem` is the integrand,
+the second argument is the lower bound, and the third argument is the upper bound.
+`p` are the parameters of the integrand. In this case there are no parameters,
+but still `f` must be defined as `f(x,p)` and **not** `f(x)`.
+For an example with parameters, see the next tutorial.
+The first argument of `solve` is the problem we are solving,
+the second is an algorithm to solve the problem with.
+Then there are keywords which provides details how the algorithm should work,
+in this case tolerances how precise the numerical approximation should be.
 
-If we would like to parallelize the computation, we can use the batch interface
-to compute multiple points at once. For example, here we do allocation-free
-multithreading with Cubature.jl:
-
+We can also evaluate multiple integrals at once.
+We could create two `IntegralProblem`s for this,
+but that is wasteful if the integrands share alot of computation.
+We also want to evaluate:
+```math
+\int_1^3\int_1^3\int_1^3 \sum_1^3 \cos(u_i) du_1du_2du_3.
+```
 ``` @example integrate2
+using Integrals
+f(u,p) = [sum(sin.(u)), sum(cos.(u))]
+prob = IntegralProblem(f,ones(3),3ones(3);nout=2)
+sol = solve(prob,HCubatureJL();reltol=1e-3,abstol=1e-3)
+sol.u
+```
+The keyword `nout` now has to be specified equal to the number of integrals ware are calculating, 2.
+Another way to think about this is that the integrand is now a vector valued function.
+The default value for the keyword `nout` is 1,
+thus is does not need to be specified for scalar valued functions.
+In the above example the integrand was defined out-of-position.
+This means that a new output vector is created every time the function `f` is called.
+If we do not  want these allocations we can also define `f` in-position.
+``` @example integrate3
+using Integrals, IntegralsCubature
+function f(y,u,p)
+  y[1] = sum(sin.(u))
+  y[2] = sum(cos.(u))
+end
+prob = IntegralProblem(f,ones(3),3ones(3);nout=2)
+sol = solve(prob,CubatureJLh();reltol=1e-3,abstol=1e-3)
+sol.u
+```
+where `y` is a cache to store the evaluation of the integrand.
+We needed to change the algorithm to `CubatureJLh()`
+because `HCubatureJL()` does not support in-position.
+`f` evaluates the integrand at a certain point,
+but most adaptive quadrature algorithms need to evaluate the integrand at multiple points
+in each step of the algorithm.
+We would thus often like to parallelize the computation.
+The batch interface allows us to compute multiple points at once.
+For example, here we do allocation-free multithreading with Cubature.jl:
+``` @example integrate4
 using Integrals, IntegralsCubature, Base.Threads
-function f(dx,x,p)
-  Threads.@threads for i in 1:size(x,2)
-    dx[i] = sum(sin.(@view(x[:,i])))
+function f(y,u,p)
+  Threads.@threads for i in 1:size(u,2)
+    y[1,i] = sum(sin.(@view(u[:,i])))
+    y[2,i] = sum(cos.(@view(u[:,i])))
   end
 end
-prob = IntegralProblem(f,ones(2),3ones(2),batch=2)
-sol = solve(prob,CubatureJLh(),reltol=1e-3,abstol=1e-3)
+prob = IntegralProblem(f,ones(3),3ones(3);nout=2, batch=2)
+sol = solve(prob,CubatureJLh();reltol=1e-3,abstol=1e-3)
 sol.u
 ```
+Both `u` and `y` changed from vectors to matrices,
+where each column is respectively a point the integrand is evaluated at or
+the evaluation of the integrand at the corresponding point.
+Try to create yourself an out-of-position version of the above problem.
+For the full details of the batching interface, see the [problem page](@ref prob)
 
 If we would like to compare the results against Cuba.jl's `Cuhre` method, then
 the change is a one-argument change:
 
-``` @example integrate2
+``` @example integrate5
+using Integrals
 using IntegralsCuba
-sol = solve(prob,CubaCuhre(),reltol=1e-3,abstol=1e-3)
+f(u,p) = sum(sin.(u))
+prob = IntegralProblem(f,ones(3),3ones(3))
+sol = solve(prob,CubaCuhre();reltol=1e-3,abstol=1e-3)
 sol.u
 ```
+However, `Cuhre` does not support vector valued integrands.
+The [solvers page](@ref solvers) gives an overview which arguments each algorithm can handle.
 
 Integrals.jl also has specific solvers for integrals in a single dimension, such as `QuadGKLJ`.
 For example we can create our own sine function by integrating the cosine function from 0 to x.
 
-``` @example integrate3
+``` @example integrate6
 using Integrals
 my_sin(x) = solve(IntegralProblem((x,p)->cos(x), 0.0, x), QuadGKJL()).u
 x = 0:0.1:2*pi
