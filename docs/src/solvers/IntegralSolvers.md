@@ -1,4 +1,4 @@
-# Integral Solver Algorithms
+# [Integral Solver Algorithms](@id solvers)
 
 The following algorithms are available:
 
