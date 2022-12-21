@@ -170,7 +170,7 @@ end
         for i in 1:length(integrands)
             for dim in 1:max_dim_test
                 (lb, ub) = (ones(dim), 3ones(dim))
-                prob = IntegralProblem(batch_f(integrands[i]), lb, ub, batch = 10)
+                prob = IntegralProblem(batch_f(integrands[i]), lb, ub, batch = 1000)
                 if dim > req.max_dim || dim < req.min_dim || !req.allows_batch
                     continue
                 end
@@ -193,7 +193,7 @@ end
         for i in 1:length(iip_integrands)
             for dim in 1:max_dim_test
                 (lb, ub) = (ones(dim), 3ones(dim))
-                prob = IntegralProblem(batch_iip_f(integrands[i]), lb, ub, batch = 10)
+                prob = IntegralProblem(batch_iip_f(integrands[i]), lb, ub, batch = 1000)
                 if dim > req.max_dim || dim < req.min_dim || !req.allows_batch ||
                    !req.allows_iip
                     continue
@@ -238,7 +238,8 @@ end
             lb, ub = (ones(dim), 3ones(dim))
             for nout in 1:max_nout_test
                 if dim > req.max_dim || dim < req.min_dim || req.nout < nout ||
-                   alg isa QuadGKJL  #QuadGKJL requires numbers, not single element arrays
+                   alg isa QuadGKJL || alg isa VEGAS
+                    #QuadGKJL and VEGAS require numbers, not single element arrays
                     continue
                 end
                 prob = IntegralProblem((x, p) -> integrands_v[i](x, p, nout), lb, ub,
