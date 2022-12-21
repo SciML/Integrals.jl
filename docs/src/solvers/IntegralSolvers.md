@@ -11,3 +11,9 @@ The following algorithms are available:
 - `CubaSUAVE`: SUAVE from Cuba.jl. Requires `using IntegralsCuba`.
 - `CubaDivonne`: Divonne from Cuba.jl. Requires `using IntegralsCuba`.
 - `CubaCuhre`: Cuhre from Cuba.jl. Requires `using IntegralsCuba`.
+
+```@docs
+QuadGKJL
+HCubatureJL
+VEGAS
+```
