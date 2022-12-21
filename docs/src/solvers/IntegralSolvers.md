@@ -1,9 +1,5 @@
 # [Integral Solver Algorithms](@id solvers)
 
-```@docs
-solve(prob::IntegralProblem, alg::SciMLBase.AbstractIntegralAlgorithm)
-```
-
 The following algorithms are available:
 
 - `QuadGKJL`: Uses QuadGK.jl. Requires `nout=1` and `batch=0`.
@@ -15,3 +11,9 @@ The following algorithms are available:
 - `CubaSUAVE`: SUAVE from Cuba.jl. Requires `using IntegralsCuba`.
 - `CubaDivonne`: Divonne from Cuba.jl. Requires `using IntegralsCuba`.
 - `CubaCuhre`: Cuhre from Cuba.jl. Requires `using IntegralsCuba`.
+
+```@docs
+QuadGKJL
+HCubatureJL
+VEGAS
+```
