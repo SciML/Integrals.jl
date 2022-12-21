@@ -1,5 +1,9 @@
 # [Integral Solver Algorithms](@id solvers)
 
+```@docs
+solve(prob::IntegralProblem, alg::SciMLBase.AbstractIntegralAlgorithm)
+```
+
 The following algorithms are available:
 
 - `QuadGKJL`: Uses QuadGK.jl. Requires `nout=1` and `batch=0`.
