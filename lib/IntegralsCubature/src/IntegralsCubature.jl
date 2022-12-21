@@ -5,7 +5,31 @@ using Integrals, Cubature
 import Integrals: transformation_if_inf, scale_x, scale_x!
 
 abstract type AbstractCubatureJLAlgorithm <: SciMLBase.AbstractIntegralAlgorithm end
+"""
+    CubatureJLh()
+
+Multidimensional h-adaptive integration from Cubature.jl.
+## References
+@article{genz1980remarks,
+  title={Remarks on algorithm 006: An adaptive algorithm for numerical integration over an N-dimensional rectangular region},
+  author={Genz, Alan C and Malik, Aftab Ahmad},
+  journal={Journal of Computational and Applied mathematics},
+  volume={6},
+  number={4},
+  pages={295--302},
+  year={1980},
+  publisher={Elsevier}
+}
+"""
 struct CubatureJLh <: AbstractCubatureJLAlgorithm end
+"""
+    CubatureJLp()
+
+Multidimensional p-adaptive integration from Cubature.jl.
+This method is based on repeatedly doubling the degree of the cubature rules,
+until convergence is achieved.
+The used cubature rule is a tensor product of Clenshaw–Curtis quadrature rules.
+"""
 struct CubatureJLp <: AbstractCubatureJLAlgorithm end
 
 function Integrals.__solvebp_call(prob::IntegralProblem,
