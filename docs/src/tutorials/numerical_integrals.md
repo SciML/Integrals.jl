@@ -95,6 +95,8 @@ sol.u
 However, `Cuhre` does not support vector valued integrands.
 The [solvers page](@ref solvers) gives an overview which arguments each algorithm can handle.
 
+## One-dimensional integrals
+
 Integrals.jl also has specific solvers for integrals in a single dimension, such as `QuadGKLJ`.
 For example we can create our own sine function by integrating the cosine function from 0 to x.
 
@@ -103,4 +105,34 @@ using Integrals
 my_sin(x) = solve(IntegralProblem((x,p)->cos(x), 0.0, x), QuadGKJL()).u
 x = 0:0.1:2*pi
 @. my_sin(x) ≈ sin(x)
+```
+
+## Infinity handeling
+
+Integrals.jl can also handle infinite integration bounds.
+For infinite upper bounds $u$ is substituted with $a+\frac{t}{1-t}$,
+and the integral is thus transformed to:
+```math
+\int_a^\infty f(u)du = \int_0^1 f\left(a+\frac{t}{1-t}\right)\frac{1}{(1-t)^2}dt
+```
+Integrals with an infinite lower bound are handled in the same way.
+If both upper and lower bound are infinite $u$ is substituted with $\frac{t}{1-t^2}$,
+```math
+\int_{-\infty}^\infty f(u)du = \int_{-1}^1 f\left(\frac{t}{1-t^2}\right)\frac{1+t^2}{(1-t^2)^2}dt
+```
+For multidimensional integrals, each variable with infinite bounds is substituted the same way.
+The details of the math behind these transforms can be found
+[here.](https://en.wikipedia.org/wiki/Integration_by_substitution#Substitution_for_multiple_variables).
+
+As an example, let us integrate the standard bivariate normal probability distribution
+over the area above the horizontal axis, which should be equal to $0.5$.
+
+``` @example integrate6
+using Distributions
+using Integrals
+dist = MvNormal(ones(2))
+f = (x,p)->pdf(dist,x)
+(lb, ub) = ([-Inf,0.0], [Inf,Inf])
+prob = IntegralProblem(f, lb, ub)
+solve(prob,HCubatureJL(), reltol = 1e-3, abstol = 1e-3)
 ```
