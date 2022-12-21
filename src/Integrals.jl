@@ -237,7 +237,8 @@ function __solvebp_call(prob::IntegralProblem, alg::QuadGKJL, sensealg, lb, ub, 
     SciMLBase.build_solution(prob, QuadGKJL(), val, err, retcode = ReturnCode.Success)
 end
 
-function __solvebp_call(prob::IntegralProblem, alg::HCubatureJL, sensealg, lb, ub, p, args...;
+function __solvebp_call(prob::IntegralProblem, alg::HCubatureJL, sensealg, lb, ub, p,
+                        args...;
                         reltol = 1e-8, abstol = 1e-8,
                         maxiters = typemax(Int),
                         kwargs...)
