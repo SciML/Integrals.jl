@@ -286,7 +286,7 @@ version = "0.4.7"
 deps = ["ChainRulesCore", "CommonSolve", "Distributions", "ForwardDiff", "HCubature", "LinearAlgebra", "MonteCarloIntegration", "QuadGK", "Reexport", "ReverseDiff", "SciMLBase", "Zygote", "ZygoteRules"]
 path = "/home/runner/work/Integrals.jl/Integrals.jl"
 uuid = "de52edbc-65ea-441a-8357-d3a637375a31"
-version = "3.3.1"
+version = "3.4.0"
 
 [[deps.IntegralsCuba]]
 deps = ["Cuba", "Integrals"]
