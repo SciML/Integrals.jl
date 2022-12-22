@@ -9,6 +9,7 @@ IntegralsCubature = "c31f79ba-6e32-46d4-a52f-182a8ac42a54"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [compat]
+Distributions = "0.25"
 Documenter = "0.27"
 FiniteDiff = "2"
 ForwardDiff = "0.10"
