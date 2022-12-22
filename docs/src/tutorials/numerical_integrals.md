@@ -107,7 +107,7 @@ x = 0:0.1:2*pi
 @. my_sin(x) ≈ sin(x)
 ```
 
-## Infinity handeling
+## Infinity handling
 
 Integrals.jl can also handle infinite integration bounds.
 For infinite upper bounds $u$ is substituted with $a+\frac{t}{1-t}$,
