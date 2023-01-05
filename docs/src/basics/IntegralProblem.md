@@ -21,4 +21,4 @@ depends on whether batching is used.
 | **vector valued `f`** | `u` is a vector, `y` is a matrix | `u` is a matrix, `y` is a matrix |
 
 The last dimension is always used as the batching dimension,
-e.g. if `u` is a matrix, then `u[:,i]` is the `i`th point where the integrand will be evaluated.
+e.g., if `u` is a matrix, then `u[:,i]` is the `i`th point where the integrand will be evaluated.
