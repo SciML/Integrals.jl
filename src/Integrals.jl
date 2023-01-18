@@ -198,6 +198,31 @@ function transformation_if_inf(prob, do_inf_transformation = nothing)
     transformation_if_inf(prob, do_inf_transformation)
 end
 
+const allowedkeywords = (:maxiters, :abstol, :reltol)
+const KWARGERROR_MESSAGE = """
+                           Unrecognized keyword arguments found.
+                           The only allowed keyword arguments to `solve` are:
+                           $allowedkeywords
+                           See https://docs.sciml.ai/Integrals/stable/basics/solve/ for more details.
+                           """
+struct CommonKwargError <: Exception
+    kwargs::Any
+end
+function Base.showerror(io::IO, e::CommonKwargError)
+    println(io, KWARGERROR_MESSAGE)
+    notin = collect(map(x -> x.first ∉ allowedkeywords, e.kwargs))
+    unrecognized = collect(map(x -> x.first, e.kwargs))[notin]
+    print(io, "Unrecognized keyword arguments: ")
+    printstyled(io, unrecognized; bold = true, color = :red)
+    print(io, "\n\n")
+end
+function checkkwargs(kwargs...)
+    if any(x -> x.first ∉ allowedkeywords, kwargs)
+        throw(CommonKwargError(kwargs))
+    end
+    return nothing
+end
+ChainRulesCore.@non_differentiable checkkwargs(kwargs...)
 function SciMLBase.solve(prob::IntegralProblem; sensealg = ReCallVJP(ZygoteVJP()),
                          do_inf_transformation = nothing, kwargs...)
     if prob.batch != 0
@@ -241,6 +266,7 @@ function SciMLBase.solve(prob::IntegralProblem,
                          alg::SciMLBase.AbstractIntegralAlgorithm;
                          sensealg = ReCallVJP(ZygoteVJP()),
                          do_inf_transformation = nothing, kwargs...)
+    checkkwargs(kwargs...)
     prob = transformation_if_inf(prob, do_inf_transformation)
     __solvebp(prob, alg, sensealg, prob.lb, prob.ub, prob.p; kwargs...)
 end
