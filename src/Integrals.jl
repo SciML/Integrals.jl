@@ -210,17 +210,17 @@ These common arguments are:
 - `reltol` (relative tolerance  in changes of the objective value)
 """
 function SciMLBase.solve(prob::IntegralProblem,
-                         alg::SciMLBase.AbstractIntegralAlgorithm,
-                         args...; sensealg = ReCallVJP(ZygoteVJP()),
+                         alg::SciMLBase.AbstractIntegralAlgorithm;
+                         sensealg = ReCallVJP(ZygoteVJP()),
                          do_inf_transformation = nothing, kwargs...)
     prob = transformation_if_inf(prob, do_inf_transformation)
-    __solvebp(prob, alg, sensealg, prob.lb, prob.ub, prob.p, args...; kwargs...)
+    __solvebp(prob, alg, sensealg, prob.lb, prob.ub, prob.p; kwargs...)
 end
 
 # Give a layer to intercept with AD
 __solvebp(args...; kwargs...) = __solvebp_call(args...; kwargs...)
 
-function __solvebp_call(prob::IntegralProblem, alg::QuadGKJL, sensealg, lb, ub, p, args...;
+function __solvebp_call(prob::IntegralProblem, alg::QuadGKJL, sensealg, lb, ub, p;
                         reltol = 1e-8, abstol = 1e-8,
                         maxiters = typemax(Int),
                         kwargs...)
@@ -237,8 +237,7 @@ function __solvebp_call(prob::IntegralProblem, alg::QuadGKJL, sensealg, lb, ub, 
     SciMLBase.build_solution(prob, QuadGKJL(), val, err, retcode = ReturnCode.Success)
 end
 
-function __solvebp_call(prob::IntegralProblem, alg::HCubatureJL, sensealg, lb, ub, p,
-                        args...;
+function __solvebp_call(prob::IntegralProblem, alg::HCubatureJL, sensealg, lb, ub, p;
                         reltol = 1e-8, abstol = 1e-8,
                         maxiters = typemax(Int),
                         kwargs...)
@@ -264,7 +263,7 @@ function __solvebp_call(prob::IntegralProblem, alg::HCubatureJL, sensealg, lb, u
     SciMLBase.build_solution(prob, HCubatureJL(), val, err, retcode = ReturnCode.Success)
 end
 
-function __solvebp_call(prob::IntegralProblem, alg::VEGAS, sensealg, lb, ub, p, args...;
+function __solvebp_call(prob::IntegralProblem, alg::VEGAS, sensealg, lb, ub, p;
                         reltol = 1e-8, abstol = 1e-8,
                         maxiters = typemax(Int),
                         kwargs...)
@@ -292,9 +291,9 @@ function __solvebp_call(prob::IntegralProblem, alg::VEGAS, sensealg, lb, ub, p, 
     SciMLBase.build_solution(prob, alg, val, err, chi = chi, retcode = ReturnCode.Success)
 end
 
-function ChainRulesCore.rrule(::typeof(__solvebp), prob, alg, sensealg, lb, ub, p, args...;
+function ChainRulesCore.rrule(::typeof(__solvebp), prob, alg, sensealg, lb, ub, p;
                               kwargs...)
-    out = __solvebp_call(prob, alg, sensealg, lb, ub, p, args...; kwargs...)
+    out = __solvebp_call(prob, alg, sensealg, lb, ub, p; kwargs...)
     function quadrature_adjoint(Δ)
         y = typeof(Δ) <: Array{<:Number, 0} ? Δ[1] : Δ
         if isinplace(prob)
@@ -349,19 +348,18 @@ function ChainRulesCore.rrule(::typeof(__solvebp), prob, alg, sensealg, lb, ub, 
         dp_prob = remake(prob, f = dfdp, lb = lb, ub = ub, p = p, nout = length(p))
 
         if p isa Number
-            dp = __solvebp_call(dp_prob, alg, sensealg, lb, ub, p, args...; kwargs...)[1]
+            dp = __solvebp_call(dp_prob, alg, sensealg, lb, ub, p; kwargs...)[1]
         else
-            dp = __solvebp_call(dp_prob, alg, sensealg, lb, ub, p, args...; kwargs...).u
+            dp = __solvebp_call(dp_prob, alg, sensealg, lb, ub, p; kwargs...).u
         end
 
         if lb isa Number
             dlb = -_f(lb)
             dub = _f(ub)
-            return (NoTangent(), NoTangent(), NoTangent(), NoTangent(), dlb, dub, dp,
-                    ntuple(x -> NoTangent(), length(args))...)
+            return (NoTangent(), NoTangent(), NoTangent(), NoTangent(), dlb, dub, dp)
         else
             return (NoTangent(), NoTangent(), NoTangent(), NoTangent(), NoTangent(),
-                    NoTangent(), dp, ntuple(x -> NoTangent(), length(args))...)
+                    NoTangent(), dp)
         end
     end
     out, quadrature_adjoint
@@ -376,22 +374,22 @@ end
 
 # Direct AD on solvers with QuadGK and HCubature
 function __solvebp(prob, alg::QuadGKJL, sensealg, lb, ub,
-                   p::AbstractArray{<:ForwardDiff.Dual{T, V, P}, N}, args...;
+                   p::AbstractArray{<:ForwardDiff.Dual{T, V, P}, N};
                    kwargs...) where {T, V, P, N}
-    __solvebp_call(prob, alg, sensealg, lb, ub, p, args...; kwargs...)
+    __solvebp_call(prob, alg, sensealg, lb, ub, p; kwargs...)
 end
 
 function __solvebp(prob, alg::HCubatureJL, sensealg, lb, ub,
-                   p::AbstractArray{<:ForwardDiff.Dual{T, V, P}, N}, args...;
+                   p::AbstractArray{<:ForwardDiff.Dual{T, V, P}, N};
                    kwargs...) where {T, V, P, N}
-    __solvebp_call(prob, alg, sensealg, lb, ub, p, args...; kwargs...)
+    __solvebp_call(prob, alg, sensealg, lb, ub, p; kwargs...)
 end
 
 # Manually split for the pushforward
 function __solvebp(prob, alg, sensealg, lb, ub,
-                   p::AbstractArray{<:ForwardDiff.Dual{T, V, P}, N}, args...;
+                   p::AbstractArray{<:ForwardDiff.Dual{T, V, P}, N};
                    kwargs...) where {T, V, P, N}
-    primal = __solvebp_call(prob, alg, sensealg, lb, ub, ForwardDiff.value.(p), args...;
+    primal = __solvebp_call(prob, alg, sensealg, lb, ub, ForwardDiff.value.(p);
                             kwargs...)
 
     nout = prob.nout * P
@@ -439,7 +437,7 @@ function __solvebp(prob, alg, sensealg, lb, ub,
 
     dp_prob = IntegralProblem(dfdp, lb, ub, rawp; nout = nout, batch = prob.batch,
                               kwargs...)
-    dual = __solvebp_call(dp_prob, alg, sensealg, lb, ub, rawp, args...; kwargs...)
+    dual = __solvebp_call(dp_prob, alg, sensealg, lb, ub, rawp; kwargs...)
     res = similar(p, prob.nout)
     partials = reinterpret(typeof(first(res).partials), dual.u)
     for idx in eachindex(res)

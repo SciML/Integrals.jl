@@ -79,7 +79,7 @@ struct CubaCuhre <: AbstractCubaAlgorithm end
 
 function Integrals.__solvebp_call(prob::IntegralProblem, alg::AbstractCubaAlgorithm,
                                   sensealg,
-                                  lb, ub, p, args...;
+                                  lb, ub, p;
                                   reltol = 1e-8, abstol = 1e-8,
                                   maxiters = alg isa CubaSUAVE ? 1000000 : typemax(Int),
                                   kwargs...)

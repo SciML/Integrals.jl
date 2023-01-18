@@ -34,7 +34,7 @@ struct CubatureJLp <: AbstractCubatureJLAlgorithm end
 
 function Integrals.__solvebp_call(prob::IntegralProblem,
                                   alg::AbstractCubatureJLAlgorithm,
-                                  sensealg, lb, ub, p, args...;
+                                  sensealg, lb, ub, p;
                                   reltol = 1e-8, abstol = 1e-8,
                                   maxiters = typemax(Int),
                                   kwargs...)
