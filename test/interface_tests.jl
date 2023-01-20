@@ -347,7 +347,8 @@ end
 @testset "Allowed keyword test" begin
     f(u, p) = sum(sin.(u))
     prob = IntegralProblem(f, ones(3), 3ones(3))
-    @test_throws "Unrecognized keyword arguments found." solve(prob, HCubatureJL();
-                                                               relztol = 1e-3,
-                                                               abstol = 1e-3)
+    @test_throws Integrals.CommonKwargError((:relztol => 1e-3, :abstol => 1e-3)) solve(prob,
+                                                                                       HCubatureJL();
+                                                                                       relztol = 1e-3,
+                                                                                       abstol = 1e-3)
 end
