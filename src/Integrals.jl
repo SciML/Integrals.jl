@@ -198,6 +198,34 @@ function transformation_if_inf(prob, do_inf_transformation = nothing)
     transformation_if_inf(prob, do_inf_transformation)
 end
 
+function SciMLBase.solve(prob::IntegralProblem; sensealg = ReCallVJP(ZygoteVJP()),
+                         do_inf_transformation = nothing, kwargs...)
+    if prob.batch != 0
+        if prob.nout > 1
+            error("Currently no default algorithm for the combination batch > 0 and nout > 1,
+                    try the methods in IntegralsCuba or IntegralsCubature")
+        end
+        return solve(prob, VEGAS(); sensealg = sensealg,
+                     do_inf_transformation = do_inf_transformation, kwargs...)
+    end
+
+    if prob.nout > 1
+        return solve(prob, HCubatureJL(); sensealg = sensealg,
+                     do_inf_transformation = do_inf_transformation, kwargs...)
+    end
+
+    if prob.lb isa Number
+        return solve(prob, QuadGKJL(); sensealg = sensealg,
+                     do_inf_transformation = do_inf_transformation, kwargs...)
+    elseif length(prob.lb) > 8
+        return solve(prob, VEGAS(); sensealg = sensealg,
+                     do_inf_transformation = do_inf_transformation, kwargs...)
+    else
+        return solve(prob, HCubatureJL(); sensealg = sensealg,
+                     do_inf_transformation = do_inf_transformation, kwargs...)
+    end
+end
+
 """
 ```julia
 solve(prob::IntegralProblem, alg::SciMLBase.AbstractIntegralAlgorithm; kwargs...)
