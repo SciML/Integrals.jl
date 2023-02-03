@@ -21,7 +21,14 @@ Importance sampling is used to reduce variance.
   publisher={Elsevier}
 }
 """
-struct CubaVegas <: AbstractCubaAlgorithm end
+struct CubaVegas <: AbstractCubaAlgorithm
+    flags::Int
+    seed::Int
+    minevals::Int
+    nstart::Int
+    nincrease::Int
+    gridno::Int
+end
 """
     CubaSUAVE()
 
@@ -40,7 +47,14 @@ Importance sampling and subdivision are thus used to reduce variance.
   publisher={Elsevier}
 }
 """
-struct CubaSUAVE <: AbstractCubaAlgorithm end
+struct CubaSUAVE{R} <: AbstractCubaAlgorithm where {R <: Real}
+    flags::Int
+    seed::Int
+    minevals::Int
+    nnew::Int
+    nmin::Int
+    flatness::R
+end
 """
     CubaDivonne()
 
@@ -58,7 +72,19 @@ Stratified sampling is used to reduce variance.
   publisher={ACM New York, NY, USA}
 }
 """
-struct CubaDivonne <: AbstractCubaAlgorithm end
+struct CubaDivonne{R1, R2, R3} <:
+       AbstractCubaAlgorithm where {R1 <: Real, R2 <: Real, R3 <: Real}
+    flags::Int
+    seed::Int
+    minevals::Int
+    key1::Int
+    key2::Int
+    key3::Int
+    maxpass::Int
+    border::R1
+    maxchisq::R2
+    mindeviation::R3
+end
 """
     CubaCuhre()
 
@@ -75,14 +101,33 @@ Multidimensional h-adaptive integration from Cuba.jl.
   publisher={ACM New York, NY, USA}
 }
 """
-struct CubaCuhre <: AbstractCubaAlgorithm end
+struct CubaCuhre <: AbstractCubaAlgorithm
+    flags::Int
+    minevals::Int
+    key::Int
+end
+
+function CubaVegas(; flags = 0, seed = 0, minevals = 0, nstart = 1000, nincrease = 500,
+                   gridno = 0)
+    CubaVegas(flags, seed, minevals, nstart, nincrease, gridno)
+end
+function CubaSUAVE(; flags = 0, seed = 0, minevals = 0, nnew = 1000, nmin = 2,
+                   flatness = 25.0)
+    CubaSUAVE(flags, seed, minevals, nnew, nmin, flatness)
+end
+function CubaDivonne(; flags = 0, seed = 0, minevals = 0,
+                     key1 = 47, key2 = 1, key3 = 1, maxpass = 5, border = 0.0,
+                     maxchisq = 10.0, mindeviation = 0.25)
+    CubaDivonne(flags, seed, minevals, key1, key2, key3, maxpass, border, maxchisq,
+                mindeviation)
+end
+CubaCuhre(; flags = 0, minevals = 0, key = 0) = CubaCuhre(flags, minevals, key)
 
 function Integrals.__solvebp_call(prob::IntegralProblem, alg::AbstractCubaAlgorithm,
                                   sensealg,
                                   lb, ub, p;
                                   reltol = 1e-8, abstol = 1e-8,
-                                  maxiters = alg isa CubaSUAVE ? 1000000 : typemax(Int),
-                                  kwargs...)
+                                  maxiters = alg isa CubaSUAVE ? 1000000 : typemax(Int))
     @assert maxiters>=1000 "maxiters for $alg should be larger than 1000"
     prob = transformation_if_inf(prob) #intercept for infinite transformation
     p = p
@@ -160,19 +205,29 @@ function Integrals.__solvebp_call(prob::IntegralProblem, alg::AbstractCubaAlgori
     if alg isa CubaVegas
         out = Cuba.vegas(f, ndim, prob.nout; rtol = reltol,
                          atol = abstol, nvec = nvec,
-                         maxevals = maxiters, kwargs...)
+                         maxevals = maxiters,
+                         flags = alg.flags, seed = alg.seed, minevals = alg.minevals,
+                         nstart = alg.nstart, nincrease = alg.nincrease,
+                         gridno = alg.gridno)
     elseif alg isa CubaSUAVE
         out = Cuba.suave(f, ndim, prob.nout; rtol = reltol,
                          atol = abstol, nvec = nvec,
-                         maxevals = maxiters, kwargs...)
+                         maxevals = maxiters,
+                         flags = alg.flags, seed = alg.seed, minevals = alg.minevals,
+                         nnew = alg.nnew, nmin = alg.nmin, flatness = alg.flatness)
     elseif alg isa CubaDivonne
         out = Cuba.divonne(f, ndim, prob.nout; rtol = reltol,
                            atol = abstol, nvec = nvec,
-                           maxevals = maxiters, kwargs...)
+                           maxevals = maxiters,
+                           flags = alg.flags, seed = alg.seed, minevals = alg.minevals,
+                           key1 = alg.key1, key2 = alg.key2, key3 = alg.key3,
+                           maxpass = alg.maxpass, border = alg.border,
+                           maxchisq = alg.maxchisq, mindeviation = alg.mindeviation)
     elseif alg isa CubaCuhre
         out = Cuba.cuhre(f, ndim, prob.nout; rtol = reltol,
                          atol = abstol, nvec = nvec,
-                         maxevals = maxiters, kwargs...)
+                         maxevals = maxiters,
+                         flags = alg.flags, minevals = alg.minevals, key = alg.key)
     end
 
     if isinplace(prob) || prob.batch != 0

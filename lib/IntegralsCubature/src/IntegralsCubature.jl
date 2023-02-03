@@ -9,6 +9,9 @@ abstract type AbstractCubatureJLAlgorithm <: SciMLBase.AbstractIntegralAlgorithm
     CubatureJLh()
 
 Multidimensional h-adaptive integration from Cubature.jl.
+`error_norm` specifies the convergence criterion  for vector valued integrands.
+Defaults to `Cubature.INDIVIDUAL`, other options are
+`Cubature.PAIRED`, `Cubature.L1`, `Cubature.L2`, or `Cubature.LINF`.
 ## References
 @article{genz1980remarks,
   title={Remarks on algorithm 006: An adaptive algorithm for numerical integration over an N-dimensional rectangular region},
@@ -21,7 +24,11 @@ Multidimensional h-adaptive integration from Cubature.jl.
   publisher={Elsevier}
 }
 """
-struct CubatureJLh <: AbstractCubatureJLAlgorithm end
+struct CubatureJLh <: AbstractCubatureJLAlgorithm
+    error_norm::Int32
+end
+CubatureJLh() = CubatureJLh(Cubature.INDIVIDUAL)
+
 """
     CubatureJLp()
 
@@ -29,15 +36,20 @@ Multidimensional p-adaptive integration from Cubature.jl.
 This method is based on repeatedly doubling the degree of the cubature rules,
 until convergence is achieved.
 The used cubature rule is a tensor product of Clenshaw–Curtis quadrature rules.
+`error_norm` specifies the convergence criterion  for vector valued integrands.
+Defaults to `Cubature.INDIVIDUAL`, other options are
+`Cubature.PAIRED`, `Cubature.L1`, `Cubature.L2`, or `Cubature.LINF`.
 """
-struct CubatureJLp <: AbstractCubatureJLAlgorithm end
+struct CubatureJLp <: AbstractCubatureJLAlgorithm
+    error_norm::Int32
+end
+CubatureJLp() = CubatureJLp(Cubature.INDIVIDUAL)
 
 function Integrals.__solvebp_call(prob::IntegralProblem,
                                   alg::AbstractCubatureJLAlgorithm,
                                   sensealg, lb, ub, p;
                                   reltol = 1e-8, abstol = 1e-8,
-                                  maxiters = typemax(Int),
-                                  kwargs...)
+                                  maxiters = typemax(Int))
     prob = transformation_if_inf(prob) #intercept for infinite transformation
     nout = prob.nout
     if nout == 1
@@ -130,21 +142,25 @@ function Integrals.__solvebp_call(prob::IntegralProblem,
                 if alg isa CubatureJLh
                     val, err = Cubature.hquadrature(nout, f, lb, ub;
                                                     reltol = reltol, abstol = abstol,
-                                                    maxevals = maxiters)
+                                                    maxevals = maxiters,
+                                                    error_norm = alg.error_norm)
                 else
                     val, err = Cubature.pquadrature(nout, f, lb, ub;
                                                     reltol = reltol, abstol = abstol,
-                                                    maxevals = maxiters)
+                                                    maxevals = maxiters,
+                                                    error_norm = alg.error_norm)
                 end
             else
                 if alg isa CubatureJLh
                     val, err = Cubature.hcubature(nout, f, lb, ub;
                                                   reltol = reltol, abstol = abstol,
-                                                  maxevals = maxiters)
+                                                  maxevals = maxiters,
+                                                  error_norm = alg.error_norm)
                 else
                     val, err = Cubature.pcubature(nout, f, lb, ub;
                                                   reltol = reltol, abstol = abstol,
-                                                  maxevals = maxiters)
+                                                  maxevals = maxiters,
+                                                  error_norm = alg.error_norm)
                 end
             end
         else
@@ -162,21 +178,25 @@ function Integrals.__solvebp_call(prob::IntegralProblem,
                 if alg isa CubatureJLh
                     val, err = Cubature.hquadrature_v(nout, f, lb, ub;
                                                       reltol = reltol, abstol = abstol,
-                                                      maxevals = maxiters)
+                                                      maxevals = maxiters,
+                                                      error_norm = alg.error_norm)
                 else
                     val, err = Cubature.pquadrature_v(nout, f, lb, ub;
                                                       reltol = reltol, abstol = abstol,
-                                                      maxevals = maxiters)
+                                                      maxevals = maxiters,
+                                                      error_norm = alg.error_norm)
                 end
             else
                 if alg isa CubatureJLh
                     val, err = Cubature.hcubature_v(nout, f, lb, ub;
                                                     reltol = reltol, abstol = abstol,
-                                                    maxevals = maxiters)
+                                                    maxevals = maxiters,
+                                                    error_norm = alg.error_norm)
                 else
                     val, err = Cubature.pcubature_v(nout, f, lb, ub;
                                                     reltol = reltol, abstol = abstol,
-                                                    maxevals = maxiters)
+                                                    maxevals = maxiters,
+                                                    error_norm = alg.error_norm)
                 end
             end
         end
