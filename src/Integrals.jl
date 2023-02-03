@@ -9,11 +9,12 @@ import ChainRulesCore: NoTangent
 import ZygoteRules
 
 """
-    QuadGKJL(; order = 7)
+    QuadGKJL(; order = 7, norm=norm)
 
 One-dimensional Gauss-Kronrod integration from QuadGK.jl.
-This method also takes the optional argument `order`,
-which is the order of the integration rule.
+This method also takes the optional arguments `order` and `norm`.
+Which are the order of the integration rule
+and the norm for calculating the error, respectively
 ## References
 @article{laurie1997calculation,
   title={Calculation of Gauss-Kronrod quadrature rules},
@@ -25,16 +26,18 @@ which is the order of the integration rule.
   year={1997}
 }
 """
-struct QuadGKJL <: SciMLBase.AbstractIntegralAlgorithm
+struct QuadGKJL{F} <: SciMLBase.AbstractIntegralAlgorithm where {F}
     order::Int
+    norm::F
 end
 """
-    HCubatureJL(; initdiv=1)
+    HCubatureJL(; norm=norm, initdiv=1)
 
 Multidimensional "h-adaptive" integration from HCubature.jl.
-This method also takes the optional argument `initdiv`,
-which is the intial number of segments
-each dimension of the integration domain is divided into.
+This method also takes the optional arguments `initdiv` and `norm`.
+Which are the intial number of segments
+each dimension of the integration domain is divided into,
+and the norm for calculating the error, respectively.
 ## References
 @article{genz1980remarks,
   title={Remarks on algorithm 006: An adaptive algorithm for numerical integration over an N-dimensional rectangular region},
@@ -47,18 +50,20 @@ each dimension of the integration domain is divided into.
   publisher={Elsevier}
 }
 """
-struct HCubatureJL <: SciMLBase.AbstractIntegralAlgorithm
+struct HCubatureJL{F} <: SciMLBase.AbstractIntegralAlgorithm where {F}
     initdiv::Int
+    norm::F
 end
 """
-    VEGAS(; nbins = 100, ncalls = 1000)
+    VEGAS(; nbins = 100, ncalls = 1000, debug=false)
 
 Multidimensional adaptive Monte Carlo integration from MonteCarloIntegration.jl.
 Importance sampling is used to reduce variance.
-This method also takes two optional arguments `nbins` and `ncalls`,
+This method also takes three optional arguments `nbins`, `ncalls` and `debug`
 which are the intial number of bins
-each dimension of the integration domain is divided into
-and the number of function calls per iteration of the algorithm.
+each dimension of the integration domain is divided into,
+the number of function calls per iteration of the algorithm,
+and whether debug info should be printed, respectively.
 ## References
 @article{lepage1978new,
   title={A new algorithm for adaptive multidimensional integration},
@@ -74,10 +79,11 @@ and the number of function calls per iteration of the algorithm.
 struct VEGAS <: SciMLBase.AbstractIntegralAlgorithm
     nbins::Int
     ncalls::Int
+    debug::Bool
 end
-QuadGKJL(; order = 7) = QuadGKJL(order)
-HCubatureJL(; initdiv = 1) = HCubatureJL(initdiv)
-VEGAS(; nbins = 100, ncalls = 1000) = VEGAS(nbins, ncalls)
+QuadGKJL(; order = 7, norm = norm) = QuadGKJL(order, norm)
+HCubatureJL(; initdiv = 1, norm = norm) = HCubatureJL(initdiv, norm)
+VEGAS(; nbins = 100, ncalls = 1000, debug = false) = VEGAS(nbins, ncalls, debug)
 
 abstract type QuadSensitivityAlg end
 struct ReCallVJP{V}
@@ -198,6 +204,31 @@ function transformation_if_inf(prob, do_inf_transformation = nothing)
     transformation_if_inf(prob, do_inf_transformation)
 end
 
+const allowedkeywords = (:maxiters, :abstol, :reltol)
+const KWARGERROR_MESSAGE = """
+                           Unrecognized keyword arguments found.
+                           The only allowed keyword arguments to `solve` are:
+                           $allowedkeywords
+                           See https://docs.sciml.ai/Integrals/stable/basics/solve/ for more details.
+                           """
+struct CommonKwargError <: Exception
+    kwargs::Any
+end
+function Base.showerror(io::IO, e::CommonKwargError)
+    println(io, KWARGERROR_MESSAGE)
+    notin = collect(map(x -> x.first ∉ allowedkeywords, e.kwargs))
+    unrecognized = collect(map(x -> x.first, e.kwargs))[notin]
+    print(io, "Unrecognized keyword arguments: ")
+    printstyled(io, unrecognized; bold = true, color = :red)
+    print(io, "\n\n")
+end
+function checkkwargs(kwargs...)
+    if any(x -> x.first ∉ allowedkeywords, kwargs)
+        throw(CommonKwargError(kwargs))
+    end
+    return nothing
+end
+ChainRulesCore.@non_differentiable checkkwargs(kwargs...)
 function SciMLBase.solve(prob::IntegralProblem; sensealg = ReCallVJP(ZygoteVJP()),
                          do_inf_transformation = nothing, kwargs...)
     if prob.batch != 0
@@ -241,6 +272,7 @@ function SciMLBase.solve(prob::IntegralProblem,
                          alg::SciMLBase.AbstractIntegralAlgorithm;
                          sensealg = ReCallVJP(ZygoteVJP()),
                          do_inf_transformation = nothing, kwargs...)
+    checkkwargs(kwargs...)
     prob = transformation_if_inf(prob, do_inf_transformation)
     __solvebp(prob, alg, sensealg, prob.lb, prob.ub, prob.p; kwargs...)
 end
@@ -250,8 +282,7 @@ __solvebp(args...; kwargs...) = __solvebp_call(args...; kwargs...)
 
 function __solvebp_call(prob::IntegralProblem, alg::QuadGKJL, sensealg, lb, ub, p;
                         reltol = 1e-8, abstol = 1e-8,
-                        maxiters = typemax(Int),
-                        kwargs...)
+                        maxiters = typemax(Int))
     if isinplace(prob) || lb isa AbstractArray || ub isa AbstractArray
         error("QuadGKJL only accepts one-dimensional quadrature problems.")
     end
@@ -260,15 +291,13 @@ function __solvebp_call(prob::IntegralProblem, alg::QuadGKJL, sensealg, lb, ub, 
     p = p
     f = x -> prob.f(x, p)
     val, err = quadgk(f, lb, ub,
-                      rtol = reltol, atol = abstol, order = alg.order,
-                      kwargs...)
+                      rtol = reltol, atol = abstol, order = alg.order, norm = alg.norm)
     SciMLBase.build_solution(prob, QuadGKJL(), val, err, retcode = ReturnCode.Success)
 end
 
 function __solvebp_call(prob::IntegralProblem, alg::HCubatureJL, sensealg, lb, ub, p;
                         reltol = 1e-8, abstol = 1e-8,
-                        maxiters = typemax(Int),
-                        kwargs...)
+                        maxiters = typemax(Int))
     p = p
 
     if isinplace(prob)
@@ -282,19 +311,18 @@ function __solvebp_call(prob::IntegralProblem, alg::HCubatureJL, sensealg, lb, u
     if lb isa Number
         val, err = hquadrature(f, lb, ub;
                                rtol = reltol, atol = abstol,
-                               maxevals = maxiters, initdiv = alg.initdiv, kwargs...)
+                               maxevals = maxiters, norm = alg.norm, initdiv = alg.initdiv)
     else
         val, err = hcubature(f, lb, ub;
                              rtol = reltol, atol = abstol,
-                             maxevals = maxiters, initdiv = alg.initdiv, kwargs...)
+                             maxevals = maxiters, norm = alg.norm, initdiv = alg.initdiv)
     end
     SciMLBase.build_solution(prob, HCubatureJL(), val, err, retcode = ReturnCode.Success)
 end
 
 function __solvebp_call(prob::IntegralProblem, alg::VEGAS, sensealg, lb, ub, p;
                         reltol = 1e-8, abstol = 1e-8,
-                        maxiters = typemax(Int),
-                        kwargs...)
+                        maxiters = typemax(Int))
     p = p
     @assert prob.nout == 1
     if prob.batch == 0
@@ -314,8 +342,8 @@ function __solvebp_call(prob::IntegralProblem, alg::VEGAS, sensealg, lb, ub, p;
     end
     ncalls = prob.batch == 0 ? alg.ncalls : prob.batch
     val, err, chi = vegas(f, lb, ub, rtol = reltol, atol = abstol,
-                          maxiter = maxiters, nbins = alg.nbins,
-                          ncalls = ncalls, batch = prob.batch != 0, kwargs...)
+                          maxiter = maxiters, nbins = alg.nbins, debug = alg.debug,
+                          ncalls = ncalls, batch = prob.batch != 0)
     SciMLBase.build_solution(prob, alg, val, err, chi = chi, retcode = ReturnCode.Success)
 end
 
