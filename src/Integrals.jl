@@ -2,7 +2,7 @@ module Integrals
 
 using Reexport, MonteCarloIntegration, QuadGK, HCubature
 @reexport using SciMLBase
-using Zygote, ReverseDiff, ForwardDiff, LinearAlgebra
+using Zygote, ForwardDiff, LinearAlgebra
 
 import ChainRulesCore
 import ChainRulesCore: NoTangent
