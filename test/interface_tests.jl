@@ -309,7 +309,8 @@ end
         for i in 1:length(integrands_v)
             for dim in 1:max_dim_test
                 (lb, ub) = (ones(dim), 3ones(dim))
-                prob = IntegralProblem(batch_f_v(integrands_v[i], nout), lb, ub, batch = 1000,
+                prob = IntegralProblem(batch_f_v(integrands_v[i], nout), lb, ub,
+                                       batch = 1000,
                                        nout = nout)
                 if dim > req.max_dim || dim < req.min_dim || !req.allows_batch ||
                    req.nout < nout

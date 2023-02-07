@@ -9,16 +9,18 @@ abstract type AbstractCubaAlgorithm <: SciMLBase.AbstractIntegralAlgorithm end
 
 Multidimensional adaptive Monte Carlo integration from Cuba.jl.
 Importance sampling is used to reduce variance.
+
 ## References
+
 @article{lepage1978new,
-  title={A new algorithm for adaptive multidimensional integration},
-  author={Lepage, G Peter},
-  journal={Journal of Computational Physics},
-  volume={27},
-  number={2},
-  pages={192--203},
-  year={1978},
-  publisher={Elsevier}
+title={A new algorithm for adaptive multidimensional integration},
+author={Lepage, G Peter},
+journal={Journal of Computational Physics},
+volume={27},
+number={2},
+pages={192--203},
+year={1978},
+publisher={Elsevier}
 }
 """
 struct CubaVegas <: AbstractCubaAlgorithm
@@ -35,16 +37,18 @@ end
 Multidimensional adaptive Monte Carlo integration from Cuba.jl.
 Suave stands for subregion-adaptive VEGAS.
 Importance sampling and subdivision are thus used to reduce variance.
+
 ## References
+
 @article{hahn2005cuba,
-  title={Cuba—a library for multidimensional numerical integration},
-  author={Hahn, Thomas},
-  journal={Computer Physics Communications},
-  volume={168},
-  number={2},
-  pages={78--95},
-  year={2005},
-  publisher={Elsevier}
+title={Cuba—a library for multidimensional numerical integration},
+author={Hahn, Thomas},
+journal={Computer Physics Communications},
+volume={168},
+number={2},
+pages={78--95},
+year={2005},
+publisher={Elsevier}
 }
 """
 struct CubaSUAVE{R} <: AbstractCubaAlgorithm where {R <: Real}
@@ -60,16 +64,18 @@ end
 
 Multidimensional adaptive Monte Carlo integration from Cuba.jl.
 Stratified sampling is used to reduce variance.
+
 ## References
+
 @article{friedman1981nested,
-  title={A nested partitioning procedure for numerical multiple integration},
-  author={Friedman, Jerome H and Wright, Margaret H},
-  journal={ACM Transactions on Mathematical Software (TOMS)},
-  volume={7},
-  number={1},
-  pages={76--92},
-  year={1981},
-  publisher={ACM New York, NY, USA}
+title={A nested partitioning procedure for numerical multiple integration},
+author={Friedman, Jerome H and Wright, Margaret H},
+journal={ACM Transactions on Mathematical Software (TOMS)},
+volume={7},
+number={1},
+pages={76--92},
+year={1981},
+publisher={ACM New York, NY, USA}
 }
 """
 struct CubaDivonne{R1, R2, R3} <:
@@ -89,16 +95,18 @@ end
     CubaCuhre()
 
 Multidimensional h-adaptive integration from Cuba.jl.
+
 ## References
+
 @article{berntsen1991adaptive,
-  title={An adaptive algorithm for the approximate calculation of multiple integrals},
-  author={Berntsen, Jarle and Espelid, Terje O and Genz, Alan},
-  journal={ACM Transactions on Mathematical Software (TOMS)},
-  volume={17},
-  number={4},
-  pages={437--451},
-  year={1991},
-  publisher={ACM New York, NY, USA}
+title={An adaptive algorithm for the approximate calculation of multiple integrals},
+author={Berntsen, Jarle and Espelid, Terje O and Genz, Alan},
+journal={ACM Transactions on Mathematical Software (TOMS)},
+volume={17},
+number={4},
+pages={437--451},
+year={1991},
+publisher={ACM New York, NY, USA}
 }
 """
 struct CubaCuhre <: AbstractCubaAlgorithm
