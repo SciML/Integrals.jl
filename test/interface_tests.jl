@@ -152,7 +152,7 @@ end
     for alg in algs
         req = alg_req[alg]
         for i in 1:length(integrands)
-            prob = IntegralProblem(batch_f(integrands[i]), lb, ub, batch = 10)
+            prob = IntegralProblem(batch_f(integrands[i]), lb, ub, batch = 1000)
             if req.min_dim > 1 || !req.allows_batch
                 continue
             end
@@ -290,7 +290,7 @@ end end
     for alg in algs
         req = alg_req[alg]
         for i in 1:length(integrands_v)
-            prob = IntegralProblem(batch_f_v(integrands_v[i], nout), lb, ub, batch = 10,
+            prob = IntegralProblem(batch_f_v(integrands_v[i], nout), lb, ub, batch = 1000,
                                    nout = nout)
             if req.min_dim > 1 || !req.allows_batch || req.nout < nout
                 continue
@@ -309,7 +309,8 @@ end
         for i in 1:length(integrands_v)
             for dim in 1:max_dim_test
                 (lb, ub) = (ones(dim), 3ones(dim))
-                prob = IntegralProblem(batch_f_v(integrands_v[i], nout), lb, ub, batch = 10,
+                prob = IntegralProblem(batch_f_v(integrands_v[i], nout), lb, ub,
+                                       batch = 1000,
                                        nout = nout)
                 if dim > req.max_dim || dim < req.min_dim || !req.allows_batch ||
                    req.nout < nout
