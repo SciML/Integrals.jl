@@ -35,7 +35,7 @@ jobs:
       - uses: julia-actions/julia-runtest@v1
       - uses: julia-actions/julia-processcoverage@v1
         with:
-          directories: src,lib/IntegralsCuba/src,lib/IntegralsCubature/src
+          directories: src,ext,lib/IntegralsCuba/src,lib/IntegralsCubature/src
       - uses: codecov/codecov-action@v3
         with:
           files: lcov.info
