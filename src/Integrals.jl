@@ -107,6 +107,16 @@ function SciMLBase.solve(prob::IntegralProblem,
     prob = transformation_if_inf(prob, do_inf_transformation)
     __solvebp(prob, alg, sensealg, prob.lb, prob.ub, prob.p; kwargs...)
 end
+# Throw error if alg is not provided, as defaults are not implemented.
+solve(::IntegralProblem) = throw(ArgumentError("""
+    No integration algorithm `alg` was supplied as the second positional argument.
+    Reccomended integration algorithms are:
+    For scalar functions: QuadGKJL()
+    For ≤ 8 dimensional vector functions: HCubatureJL()
+    For > 8 dimensional vector functions: MonteCarloIntegration.vegas(f, st, en, kwargs...)
+    See the docstrings of the different algorithms for more detail.
+    """
+))
 
 # Give a layer to intercept with AD
 __solvebp(args...; kwargs...) = __solvebp_call(args...; kwargs...)
