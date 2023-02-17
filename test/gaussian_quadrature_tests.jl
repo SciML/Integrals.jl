@@ -1,4 +1,4 @@
-using Integrals, Test, FastGaussQuadrature, LinearAlgebra
+using Integrals, Test, FastGaussQuadrature
 
 #=
 f = (x, p) -> x^3 * sin(5x)
