@@ -1,10 +1,11 @@
 name = "Integrals"
 uuid = "de52edbc-65ea-441a-8357-d3a637375a31"
 authors = ["Chris Rackauckas <accounts@chrisrackauckas.com>"]
-version = "3.6.0"
+version = "3.7.0"
 
 [deps]
 CommonSolve = "38540f10-b2f7-11e9-35d8-d573e4eb0ff2"
+FastGaussQuadrature = "442a2c76-b920-505d-bb47-c5924d526838"
 HCubature = "19dc6840-f33b-545b-b366-655c7e3ffd49"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 MonteCarloIntegration = "4886b29c-78c9-11e9-0a6e-41e1f4161f7b"
@@ -26,6 +27,7 @@ Requires = "1"
 SciMLBase = "1.70"
 Zygote = "0.4.22, 0.5, 0.6"
 julia = "1.6"
+FastGaussQuadrature = "0.5"
 
 [extensions]
 IntegralsForwardDiffExt = "ForwardDiff"

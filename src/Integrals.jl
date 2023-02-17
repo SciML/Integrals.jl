@@ -7,10 +7,12 @@ end
 using Reexport, MonteCarloIntegration, QuadGK, HCubature
 @reexport using SciMLBase
 using LinearAlgebra
+using FastGaussQuadrature
 
 include("init.jl")
 include("algorithms.jl")
 include("infinity_handling.jl")
+include("gaussian_quadrature.jl")
 
 abstract type QuadSensitivityAlg end
 struct ReCallVJP{V}
@@ -108,15 +110,16 @@ function SciMLBase.solve(prob::IntegralProblem,
     __solvebp(prob, alg, sensealg, prob.lb, prob.ub, prob.p; kwargs...)
 end
 # Throw error if alg is not provided, as defaults are not implemented.
-SciMLBase.solve(::IntegralProblem) = throw(ArgumentError("""
-    No integration algorithm `alg` was supplied as the second positional argument.
-    Reccomended integration algorithms are:
-    For scalar functions: QuadGKJL()
-    For ≤ 8 dimensional vector functions: HCubatureJL()
-    For > 8 dimensional vector functions: MonteCarloIntegration.vegas(f, st, en, kwargs...)
-    See the docstrings of the different algorithms for more detail.
-    """
-))
+function SciMLBase.solve(::IntegralProblem)
+    throw(ArgumentError("""
+No integration algorithm `alg` was supplied as the second positional argument.
+Reccomended integration algorithms are:
+For scalar functions: QuadGKJL()
+For ≤ 8 dimensional vector functions: HCubatureJL()
+For > 8 dimensional vector functions: MonteCarloIntegration.vegas(f, st, en, kwargs...)
+See the docstrings of the different algorithms for more detail.
+"""))
+end
 
 # Give a layer to intercept with AD
 __solvebp(args...; kwargs...) = __solvebp_call(args...; kwargs...)
@@ -188,5 +191,23 @@ function __solvebp_call(prob::IntegralProblem, alg::VEGAS, sensealg, lb, ub, p;
     SciMLBase.build_solution(prob, alg, val, err, chi = chi, retcode = ReturnCode.Success)
 end
 
-export QuadGKJL, HCubatureJL, VEGAS
+function __solvebp_call(prob::IntegralProblem, alg::GaussLegendre{C}, sensealg, lb, ub, p;
+                        reltol = nothing, abstol = nothing, maxiters = nothing) where {C}
+    if isinplace(prob) || lb isa AbstractArray || ub isa AbstractArray
+        error("GaussLegendre only accepts one-dimensional quadrature problems.")
+    end
+    @assert prob.batch == 0
+    @assert prob.nout == 1
+    if C
+        val = composite_gauss_legendre(prob.f, prob.p, lb, ub,
+                                       alg.nodes, alg.weights, alg.subintervals)
+    else
+        val = gauss_legendre(prob.f, prob.p, lb, ub,
+                             alg.nodes, alg.weights)
+    end
+    err = nothing
+    SciMLBase.build_solution(prob, alg, val, err, retcode = ReturnCode.Success)
+end
+
+export QuadGKJL, HCubatureJL, VEGAS, GaussLegendre
 end # module

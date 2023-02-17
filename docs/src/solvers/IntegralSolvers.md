@@ -11,9 +11,11 @@ The following algorithms are available:
   - `CubaSUAVE`: SUAVE from Cuba.jl. Requires `using IntegralsCuba`.
   - `CubaDivonne`: Divonne from Cuba.jl. Requires `using IntegralsCuba`.
   - `CubaCuhre`: Cuhre from Cuba.jl. Requires `using IntegralsCuba`.
+  - `GaussLegendre`: Uses Gauss-Legendre quadrature with nodes and weights from FastGaussQuadrature.jl.
 
 ```@docs
 QuadGKJL
 HCubatureJL
 VEGAS
+GaussLegendre
 ```
