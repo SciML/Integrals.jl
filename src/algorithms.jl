@@ -115,6 +115,7 @@ struct GaussLegendre{C, N, W} <: SciMLBase.AbstractIntegralAlgorithm
         end
     end
 end
+function gausslegendre end
 function GaussLegendre(; n = 250, subintervals = 1, nodes = nothing, weights = nothing)
     if isnothing(nodes) || isnothing(weights)
         nodes, weights = gausslegendre(n)

@@ -7,12 +7,10 @@ end
 using Reexport, MonteCarloIntegration, QuadGK, HCubature
 @reexport using SciMLBase
 using LinearAlgebra
-using FastGaussQuadrature
 
 include("init.jl")
 include("algorithms.jl")
 include("infinity_handling.jl")
-include("gaussian_quadrature.jl")
 
 abstract type QuadSensitivityAlg end
 struct ReCallVJP{V}
@@ -189,24 +187,6 @@ function __solvebp_call(prob::IntegralProblem, alg::VEGAS, sensealg, lb, ub, p;
                           maxiter = maxiters, nbins = alg.nbins, debug = alg.debug,
                           ncalls = ncalls, batch = prob.batch != 0)
     SciMLBase.build_solution(prob, alg, val, err, chi = chi, retcode = ReturnCode.Success)
-end
-
-function __solvebp_call(prob::IntegralProblem, alg::GaussLegendre{C}, sensealg, lb, ub, p;
-                        reltol = nothing, abstol = nothing, maxiters = nothing) where {C}
-    if isinplace(prob) || lb isa AbstractArray || ub isa AbstractArray
-        error("GaussLegendre only accepts one-dimensional quadrature problems.")
-    end
-    @assert prob.batch == 0
-    @assert prob.nout == 1
-    if C
-        val = composite_gauss_legendre(prob.f, prob.p, lb, ub,
-                                       alg.nodes, alg.weights, alg.subintervals)
-    else
-        val = gauss_legendre(prob.f, prob.p, lb, ub,
-                             alg.nodes, alg.weights)
-    end
-    err = nothing
-    SciMLBase.build_solution(prob, alg, val, err, retcode = ReturnCode.Success)
 end
 
 export QuadGKJL, HCubatureJL, VEGAS, GaussLegendre
