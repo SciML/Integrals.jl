@@ -27,7 +27,7 @@ the documentation, which contains the unreleased features.
 
 ## Examples
 
-To perform one-dimensional quadrature, we can simply construct an `IntegralProblem`. The code below evaluates $\int_{-2}^5 \sin(xp)~\mathrm{dx}$ with $p = 1.7$. This argument $p$ is passed
+To perform one-dimensional quadrature, we can simply construct an `IntegralProblem`. The code below evaluates $\int_{-2}^5 \sin(xp)~\mathrm{d}x$ with $p = 1.7$. This argument $p$ is passed
 into the problem as the fourth argument of `IntegralProblem`.
 
 ```julia
