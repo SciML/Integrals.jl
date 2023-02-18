@@ -15,8 +15,7 @@ Integrals.gausslegendre(n) = FastGaussQuadrature.gausslegendre(n)
 function gauss_legendre(f, p, lb, ub, nodes, weights)
     scale = (ub - lb) / 2
     shift = (lb + ub) / 2
-    scaled_f = s -> f(scale * s + shift, p)
-    I = dot(weights, @. scaled_f(nodes))
+    I = dot(weights, @. f(scale * nodes + shift, $Ref(p)))
     return scale * I
 end
 function composite_gauss_legendre(f, p, lb, ub, nodes, weights, subintervals)

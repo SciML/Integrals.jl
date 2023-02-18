@@ -86,3 +86,14 @@ alg = GaussLegendre(subintervals=1)
 @test sol.u ≈ sqrt(π)/2
 alg = GaussLegendre(subintervals=17)
 @test sol.u ≈ sqrt(π)/2
+
+# Make sure broadcasting correctly handles the argument p 
+f = (x, p) -> 1 + x + x^p[1] - cos(x*p[2]) + exp(x)*p[3] 
+p = [0.3, 1.3, -0.5]
+prob = IntegralProblem(f, 2, 6.3, p)
+alg = GaussLegendre()
+sol = solve(prob, alg)
+@test sol.u ≈ -240.25235266303063249920743158729
+alg = GaussLegendre(n = 500, subintervals = 17)
+sol = solve(prob, alg)
+@test sol.u ≈ -240.25235266303063249920743158729
