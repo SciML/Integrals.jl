@@ -59,36 +59,36 @@ alg = GaussLegendre(subintervals = 7)
 sol = solve(prob, alg)
 @test sol.u ≈ -exp(3) * 3.3 + 3.3 / exp(5) - 40 + cos(5) - cos(3)
 
-f = (x, p) -> exp(-x^2) 
+f = (x, p) -> exp(-x^2)
 prob = IntegralProblem(f, 0.0, Inf)
 alg = GaussLegendre()
 sol = solve(prob, alg)
-@test sol.u ≈ sqrt(π)/2
-alg = GaussLegendre(subintervals=1)
-@test sol.u ≈ sqrt(π)/2
-alg = GaussLegendre(subintervals=17)
-@test sol.u ≈ sqrt(π)/2
+@test sol.u ≈ sqrt(π) / 2
+alg = GaussLegendre(subintervals = 1)
+@test sol.u ≈ sqrt(π) / 2
+alg = GaussLegendre(subintervals = 17)
+@test sol.u ≈ sqrt(π) / 2
 
 prob = IntegralProblem(f, -Inf, Inf)
 alg = GaussLegendre()
 sol = solve(prob, alg)
 @test sol.u ≈ sqrt(π)
-alg = GaussLegendre(subintervals=1)
+alg = GaussLegendre(subintervals = 1)
 @test sol.u ≈ sqrt(π)
-alg = GaussLegendre(subintervals=17)
+alg = GaussLegendre(subintervals = 17)
 @test sol.u ≈ sqrt(π)
 
 prob = IntegralProblem(f, -Inf, 0.0)
 alg = GaussLegendre()
 sol = solve(prob, alg)
-@test sol.u ≈ sqrt(π)/2
-alg = GaussLegendre(subintervals=1)
-@test sol.u ≈ sqrt(π)/2
-alg = GaussLegendre(subintervals=17)
-@test sol.u ≈ sqrt(π)/2
+@test sol.u ≈ sqrt(π) / 2
+alg = GaussLegendre(subintervals = 1)
+@test sol.u ≈ sqrt(π) / 2
+alg = GaussLegendre(subintervals = 17)
+@test sol.u ≈ sqrt(π) / 2
 
 # Make sure broadcasting correctly handles the argument p 
-f = (x, p) -> 1 + x + x^p[1] - cos(x*p[2]) + exp(x)*p[3] 
+f = (x, p) -> 1 + x + x^p[1] - cos(x * p[2]) + exp(x) * p[3]
 p = [0.3, 1.3, -0.5]
 prob = IntegralProblem(f, 2, 6.3, p)
 alg = GaussLegendre()

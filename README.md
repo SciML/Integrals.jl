@@ -31,14 +31,14 @@ To perform one-dimensional quadrature, we can simply construct an `IntegralProbl
 into the problem as the fourth argument of `IntegralProblem`.
 
 ```julia
-using Integrals 
-f(x, p) = sin(x*p)
+using Integrals
+f(x, p) = sin(x * p)
 p = 1.7
 prob = IntegralProblem(f, -2, 5, p)
 sol = solve(prob, QuadGKJL())
 ```
 
-For basic multidimensional quadrature we can construct and solve a `IntegralProblem`. Since we are using no arguments `p` in this example, we omit the fourth argument of `IntegralProblem` 
+For basic multidimensional quadrature we can construct and solve a `IntegralProblem`. Since we are using no arguments `p` in this example, we omit the fourth argument of `IntegralProblem`
 from above. The lower and upper bounds are now passed as vectors, with the `i`th elements of
 the bounds giving the interval of integration for `x[i]`.
 
