@@ -13,3 +13,4 @@ dev_subpkg("IntegralsCubature")
 @time @safetestset "Interface Tests" begin include("interface_tests.jl") end
 @time @safetestset "Derivative Tests" begin include("derivative_tests.jl") end
 @time @safetestset "Infinite Integral Tests" begin include("inf_integral_tests.jl") end
+@time @safetestset "Gaussian Quadrature Tests" begin include("gaussian_quadrature_tests.jl") end

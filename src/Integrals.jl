@@ -108,15 +108,16 @@ function SciMLBase.solve(prob::IntegralProblem,
     __solvebp(prob, alg, sensealg, prob.lb, prob.ub, prob.p; kwargs...)
 end
 # Throw error if alg is not provided, as defaults are not implemented.
-SciMLBase.solve(::IntegralProblem) = throw(ArgumentError("""
-    No integration algorithm `alg` was supplied as the second positional argument.
-    Reccomended integration algorithms are:
-    For scalar functions: QuadGKJL()
-    For ≤ 8 dimensional vector functions: HCubatureJL()
-    For > 8 dimensional vector functions: MonteCarloIntegration.vegas(f, st, en, kwargs...)
-    See the docstrings of the different algorithms for more detail.
-    """
-))
+function SciMLBase.solve(::IntegralProblem)
+    throw(ArgumentError("""
+No integration algorithm `alg` was supplied as the second positional argument.
+Reccomended integration algorithms are:
+For scalar functions: QuadGKJL()
+For ≤ 8 dimensional vector functions: HCubatureJL()
+For > 8 dimensional vector functions: MonteCarloIntegration.vegas(f, st, en, kwargs...)
+See the docstrings of the different algorithms for more detail.
+"""))
+end
 
 # Give a layer to intercept with AD
 __solvebp(args...; kwargs...) = __solvebp_call(args...; kwargs...)
@@ -188,5 +189,5 @@ function __solvebp_call(prob::IntegralProblem, alg::VEGAS, sensealg, lb, ub, p;
     SciMLBase.build_solution(prob, alg, val, err, chi = chi, retcode = ReturnCode.Success)
 end
 
-export QuadGKJL, HCubatureJL, VEGAS
+export QuadGKJL, HCubatureJL, VEGAS, GaussLegendre
 end # module

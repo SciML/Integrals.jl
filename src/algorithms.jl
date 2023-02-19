@@ -82,3 +82,43 @@ struct VEGAS <: SciMLBase.AbstractIntegralAlgorithm
     debug::Bool
 end
 VEGAS(; nbins = 100, ncalls = 1000, debug = false) = VEGAS(nbins, ncalls, debug)
+
+"""
+    GaussLegendre{C, N, W}
+
+Struct for evaluating an integral via (composite) Gauss-Legendre quadrature.
+The field `C` will be `true` if `subintervals > 1`, and `false` otherwise.
+
+The fields `nodes::N` and `weights::W` are defined by 
+`nodes, weights = gausslegendre(n)` for a given number of nodes `n`. 
+
+The field `subintervals::Int64 = 1` (with default value `1`) defines the 
+number of intervals to partition the original interval of integration 
+`[a, b]` into, splitting it into `[xⱼ, xⱼ₊₁]` for `j = 1,…,subintervals`,
+where `xⱼ = a + (j-1)h` and `h = (b-a)/subintervals`. Gauss-Legendre 
+quadrature is then applied on each subinterval. For example, if 
+`[a, b] = [-1, 1]` and `subintervals = 2`, then Gauss-Legendre 
+quadrature will be applied separately on `[-1, 0]` and `[0, 1]`,
+summing the two results.
+"""
+struct GaussLegendre{C, N, W} <: SciMLBase.AbstractIntegralAlgorithm
+    nodes::N
+    weights::W
+    subintervals::Int64
+    function GaussLegendre(nodes::N, weights::W, subintervals = 1) where {N, W}
+        if subintervals > 1
+            return new{true, N, W}(nodes, weights, subintervals)
+        elseif subintervals == 1
+            return new{false, N, W}(nodes, weights, subintervals)
+        else
+            throw(ArgumentError("Cannot use a nonpositive number of subintervals."))
+        end
+    end
+end
+function gausslegendre end
+function GaussLegendre(; n = 250, subintervals = 1, nodes = nothing, weights = nothing)
+    if isnothing(nodes) || isnothing(weights)
+        nodes, weights = gausslegendre(n)
+    end
+    return GaussLegendre(nodes, weights, subintervals)
+end
