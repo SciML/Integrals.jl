@@ -18,11 +18,12 @@ pages={1133--1145},
 year={1997}
 }
 """
-struct QuadGKJL{F} <: SciMLBase.AbstractIntegralAlgorithm where {F}
+struct QuadGKJL{F,S} <: SciMLBase.AbstractIntegralAlgorithm where {F,S}
     order::Int
     norm::F
+    segbuf::S
 end
-QuadGKJL(; order = 7, norm = norm) = QuadGKJL(order, norm)
+QuadGKJL(; order = 7, norm = norm, segbuf = nothing) = QuadGKJL(order, norm, segbuf)
 
 """
     HCubatureJL(; norm=norm, initdiv=1)

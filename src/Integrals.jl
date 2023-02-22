@@ -133,7 +133,7 @@ function __solvebp_call(prob::IntegralProblem, alg::QuadGKJL, sensealg, lb, ub, 
     p = p
     f = x -> prob.f(x, p)
     val, err = quadgk(f, lb, ub,
-                      rtol = reltol, atol = abstol, order = alg.order, norm = alg.norm)
+                      rtol = reltol, atol = abstol, order = alg.order, norm = alg.norm, segbuf = alg.segbuf)
     SciMLBase.build_solution(prob, QuadGKJL(), val, err, retcode = ReturnCode.Success)
 end
 
