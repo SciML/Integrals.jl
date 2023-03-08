@@ -108,7 +108,8 @@ function SciMLBase.solve(prob::IntegralProblem,
     __solvebp(prob, alg, sensealg, prob.lb, prob.ub, prob.p; kwargs...)
 end
 # Throw error if alg is not provided, as defaults are not implemented.
-function SciMLBase.solve(::IntegralProblem)
+function SciMLBase.solve(::IntegralProblem; kwargs...)
+    checkkwargs(kwargs...)
     throw(ArgumentError("""
 No integration algorithm `alg` was supplied as the second positional argument.
 Reccomended integration algorithms are:
