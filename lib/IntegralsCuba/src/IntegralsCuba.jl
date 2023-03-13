@@ -137,19 +137,15 @@ function Integrals.__solvebp_call(prob::IntegralProblem, alg::AbstractCubaAlgori
                                   reltol = 1e-8, abstol = 1e-8,
                                   maxiters = alg isa CubaSUAVE ? 1000000 : typemax(Int))
     @assert maxiters>=1000 "maxiters for $alg should be larger than 1000"
-    prob = transformation_if_inf(prob) #intercept for infinite transformation
-    p = p
     if lb isa Number && prob.batch == 0
         _x = Float64[lb]
     elseif lb isa Number
-        _x = zeros(length(lb), prob.batch)
+        _x = zeros(eltype(lb), length(lb), prob.batch)
     elseif prob.batch == 0
-        _x = zeros(length(lb))
+        _x = zeros(eltype(lb), length(lb))
     else
-        _x = zeros(length(lb), prob.batch)
+        _x = zeros(eltype(lb), length(lb), prob.batch)
     end
-    ub = ub
-    lb = lb
 
     if prob.batch == 0
         if isinplace(prob)
