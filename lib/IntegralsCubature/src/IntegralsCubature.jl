@@ -52,12 +52,11 @@ function Integrals.__solvebp_call(prob::IntegralProblem,
                                   sensealg, lb, ub, p;
                                   reltol = 1e-8, abstol = 1e-8,
                                   maxiters = typemax(Int))
-    prob = transformation_if_inf(prob) #intercept for infinite transformation
     nout = prob.nout
     if nout == 1
         if prob.batch == 0
             if isinplace(prob)
-                dx = zeros(prob.nout)
+                dx = zeros(eltype(lb), prob.nout)
                 f = (x) -> (prob.f(dx, x, p); dx[1])
             else
                 f = (x) -> prob.f(x, p)[1]

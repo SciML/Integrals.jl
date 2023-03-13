@@ -116,7 +116,7 @@ function __solvebp_call(prob::IntegralProblem, alg::HCubatureJL, sensealg, lb, u
     p = p
 
     if isinplace(prob)
-        dx = zeros(prob.nout)
+        dx = zeros(eltype(lb), prob.nout)
         f = x -> (prob.f(dx, x, prob.p); dx)
     else
         f = x -> prob.f(x, prob.p)
@@ -142,14 +142,14 @@ function __solvebp_call(prob::IntegralProblem, alg::VEGAS, sensealg, lb, ub, p;
     @assert prob.nout == 1
     if prob.batch == 0
         if isinplace(prob)
-            dx = zeros(prob.nout)
+            dx = zeros(eltype(lb), prob.nout)
             f = x -> (prob.f(dx, x, p); dx[1])
         else
             f = x -> prob.f(x, prob.p)
         end
     else
         if isinplace(prob)
-            dx = zeros(prob.batch)
+            dx = zeros(eltype(lb), prob.batch)
             f = x -> (prob.f(dx, x', p); dx)
         else
             f = x -> prob.f(x', p)
