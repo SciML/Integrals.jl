@@ -49,6 +49,28 @@ function substitute_f_vector(t, p, f, lb, ub)
     end
     f(x, p) * prod(jac_diag)
 end
+function substitute_f_vector_iip(dt, t, p, f, lb, ub)
+    x = similar(t)
+    jac_diag = similar(t)
+    for i in eachindex(lb)
+        if isinf(lb[i]) && isinf(ub[i])
+            x[i] = t[i] / (1 - t[i]^2)
+            jac_diag[i] = (1 + t[i]^2) / (1 - t[i]^2)^2
+        elseif isinf(lb[i])
+            x[i] = ub[i] + (t[i] / (1 + t[i]))
+            jac_diag[i] = 1 / ((1 + t[i])^2)
+        elseif isinf(ub[i])
+            x[i] = lb[i] + (t[i] / (1 - t[i]))
+            jac_diag[i] = 1 / ((1 - t[i])^2)
+        else
+            x[i] = t[i]
+            jac_diag[i] = one(lb[i])
+        end
+    end
+    f(dt, x, p)
+    dt .*= prod(jac_diag)
+end
+
 function transformation_if_inf(prob, ::Val{true})
     lb = prob.lb
     ub = prob.ub
@@ -56,14 +78,17 @@ function transformation_if_inf(prob, ::Val{true})
     if lb isa Number
         lb_sub, ub_sub = substitute_bounds(lb, ub)
         f_sub = (t, p) -> substitute_f_scalar(t, p, f, lb, ub)
-        return remake(prob, f = f_sub, lb = lb_sub, ub = ub_sub)
     else
         bounds = substitute_bounds.(lb, ub)
         lb_sub = first.(bounds)
         ub_sub = last.(bounds)
-        f_sub = (t, p) -> substitute_f_vector(t, p, f, lb, ub)
-        return remake(prob, f = f_sub, lb = lb_sub, ub = ub_sub)
+        if isinplace(prob)
+            f_sub = (dt, t, p) -> substitute_f_vector_iip(dt, t, p, f, lb, ub)
+        else
+            f_sub = (t, p) -> substitute_f_vector(t, p, f, lb, ub)
+        end
     end
+    return remake(prob, f = f_sub, lb = lb_sub, ub = ub_sub)
 end
 
 function transformation_if_inf(prob, ::Nothing)
