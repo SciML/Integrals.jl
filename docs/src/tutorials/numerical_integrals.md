@@ -44,7 +44,7 @@ sol = solve(prob, HCubatureJL(); reltol = 1e-3, abstol = 1e-3)
 sol.u
 ```
 
-The keyword `nout` now has to be specified equal to the number of integrals ware are calculating, 2.
+The keyword `nout` now has to be specified equal to the number of integrals we are are calculating, 2.
 Another way to think about this is that the integrand is now a vector valued function.
 The default value for the keyword `nout` is 1,
 and thus it does not need to be specified for scalar valued functions.
