@@ -56,7 +56,6 @@ function checkkwargs(kwargs...)
     end
     return nothing
 end
-
 """
 ```julia
 solve(prob::IntegralProblem, alg::SciMLBase.AbstractIntegralAlgorithm; kwargs...)
