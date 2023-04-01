@@ -61,11 +61,10 @@ These common arguments are:
 function SciMLBase.solve(prob::IntegralProblem,
                          alg::SciMLBase.AbstractIntegralAlgorithm;
                          kwargs...)
-    solve(init(prob, alg; kwargs...))
+    solve!(init(prob, alg; kwargs...))
 end
 
-function SciMLBase.solve(cache::IntegralCache; kwargs...)
-    checkkwargs(kwargs...)
+function SciMLBase.solve!(cache::IntegralCache)
     prob = cache.prob
-    __solvebp(prob, cache.alg, cache.sensealg, prob.lb, prob.ub, prob.p; cache.kwargs..., kwargs...)
+    __solvebp(prob, cache.alg, cache.sensealg, prob.lb, prob.ub, prob.p; cache.kwargs...)
 end
