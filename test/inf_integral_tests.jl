@@ -18,6 +18,14 @@ sol = solve(prob, HCubatureJL(), reltol = 1e-3, abstol = 1e-3)
 @test (0.500 - sol.u)^2 < 1e-6
 @test_nowarn @inferred Integrals.transformation_if_inf(prob, Val(true))
 
+μ = [0.00, 0.00]
+Σ = [0.4 0.0; 0.00 0.4]
+d = MvNormal(μ, Σ)
+m_iip(dx, x, p) = dx .= pdf(d, x)
+prob = IntegralProblem(m_iip, [-Inf, 0.00], [Inf, Inf])
+sol = solve(prob, HCubatureJL(), reltol = 1e-3, abstol = 1e-3)
+@test (0.500 - sol.u[1])^2 < 1e-6
+
 f(x, p) = pdf(Normal(0.00, 1.00), x)
 prob = IntegralProblem(f, -Inf, Inf)
 sol = solve(prob, HCubatureJL(), reltol = 1e-3, abstol = 1e-3)

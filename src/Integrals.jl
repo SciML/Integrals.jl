@@ -58,7 +58,6 @@ function checkkwargs(kwargs...)
     return nothing
 end
 
-
 # Give a layer to intercept with AD
 __solvebp(args...; kwargs...) = __solvebp_call(args...; kwargs...)
 
