@@ -1,4 +1,4 @@
-struct IntegralCache{P,A,S,K,Tc}
+struct IntegralCache{P, A, S, K, Tc}
     prob::P
     alg::A
     sensealg::S
@@ -21,15 +21,13 @@ function SciMLBase.init(prob::IntegralProblem,
                   typeof(alg),
                   typeof(sensealg),
                   typeof(kwargs),
-                  typeof(cacheval)}(
-                    prob,
-                    alg,
-                    sensealg,
-                    kwargs,
-                    cacheval,
-                    isfresh)
+                  typeof(cacheval)}(prob,
+                                    alg,
+                                    sensealg,
+                                    kwargs,
+                                    cacheval,
+                                    isfresh)
 end
-
 
 # Throw error if alg is not provided, as defaults are not implemented.
 function SciMLBase.solve(::IntegralProblem; kwargs...)
