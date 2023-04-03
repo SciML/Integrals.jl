@@ -8,6 +8,7 @@ using Reexport, MonteCarloIntegration, QuadGK, HCubature
 @reexport using SciMLBase
 using LinearAlgebra
 
+include("common.jl")
 include("init.jl")
 include("algorithms.jl")
 include("infinity_handling.jl")
@@ -55,40 +56,6 @@ function checkkwargs(kwargs...)
         throw(CommonKwargError(kwargs))
     end
     return nothing
-end
-"""
-```julia
-solve(prob::IntegralProblem, alg::SciMLBase.AbstractIntegralAlgorithm; kwargs...)
-```
-
-## Keyword Arguments
-
-The arguments to `solve` are common across all of the quadrature methods.
-These common arguments are:
-
-  - `maxiters` (the maximum number of iterations)
-  - `abstol` (absolute tolerance in changes of the objective value)
-  - `reltol` (relative tolerance  in changes of the objective value)
-"""
-function SciMLBase.solve(prob::IntegralProblem,
-                         alg::SciMLBase.AbstractIntegralAlgorithm;
-                         sensealg = ReCallVJP(ZygoteVJP()),
-                         do_inf_transformation = nothing, kwargs...)
-    checkkwargs(kwargs...)
-    prob = transformation_if_inf(prob, do_inf_transformation)
-    __solvebp(prob, alg, sensealg, prob.lb, prob.ub, prob.p; kwargs...)
-end
-# Throw error if alg is not provided, as defaults are not implemented.
-function SciMLBase.solve(::IntegralProblem; kwargs...)
-    checkkwargs(kwargs...)
-    throw(ArgumentError("""
-No integration algorithm `alg` was supplied as the second positional argument.
-Reccomended integration algorithms are:
-For scalar functions: QuadGKJL()
-For ≤ 8 dimensional vector functions: HCubatureJL()
-For > 8 dimensional vector functions: MonteCarloIntegration.vegas(f, st, en, kwargs...)
-See the docstrings of the different algorithms for more detail.
-"""))
 end
 
 # Give a layer to intercept with AD
