@@ -34,7 +34,7 @@ function SciMLBase.solve(::IntegralProblem; kwargs...)
     checkkwargs(kwargs...)
     throw(ArgumentError("""
 No integration algorithm `alg` was supplied as the second positional argument.
-Reccomended integration algorithms are:
+Recommended integration algorithms are:
 For scalar functions: QuadGKJL()
 For ≤ 8 dimensional vector functions: HCubatureJL()
 For > 8 dimensional vector functions: MonteCarloIntegration.vegas(f, st, en, kwargs...)
