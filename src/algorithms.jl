@@ -29,7 +29,7 @@ QuadGKJL(; order = 7, norm = norm) = QuadGKJL(order, norm)
 
 Multidimensional "h-adaptive" integration from HCubature.jl.
 This method also takes the optional arguments `initdiv` and `norm`.
-Which are the intial number of segments
+Which are the initial number of segments
 each dimension of the integration domain is divided into,
 and the norm for calculating the error, respectively.
 
@@ -58,7 +58,7 @@ HCubatureJL(; initdiv = 1, norm = norm) = HCubatureJL(initdiv, norm)
 Multidimensional adaptive Monte Carlo integration from MonteCarloIntegration.jl.
 Importance sampling is used to reduce variance.
 This method also takes three optional arguments `nbins`, `ncalls` and `debug`
-which are the intial number of bins
+which are the initial number of bins
 each dimension of the integration domain is divided into,
 the number of function calls per iteration of the algorithm,
 and whether debug info should be printed, respectively.
