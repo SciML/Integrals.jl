@@ -280,7 +280,7 @@ version = "0.4.9"
 deps = ["CommonSolve", "HCubature", "LinearAlgebra", "MonteCarloIntegration", "QuadGK", "Reexport", "Requires", "SciMLBase"]
 path = "/home/runner/work/Integrals.jl/Integrals.jl"
 uuid = "de52edbc-65ea-441a-8357-d3a637375a31"
-version = "3.7.0"
+version = "3.8.0"
 
 [[deps.IntegralsCuba]]
 deps = ["Cuba", "Integrals"]
