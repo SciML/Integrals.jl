@@ -20,7 +20,10 @@ function set_f(cache::IntegralCache, f, nout=cache.nout)
     @set! cache.f = f
     @set! cache.iip = Val(isinplace(f, 3))
     @set! cache.nout = nout
-    @set! cache.isfresh = true
+    prob = build_problem(cache)
+    cacheval, isfresh = init_cacheval(cache.alg, prob)
+    @set! cache.cacheval = cacheval
+    @set! cache.isfresh = isfresh
     return cache
 end
 
@@ -29,6 +32,7 @@ function set_lb(cache::IntegralCache, lb)
     return cache
 end
 
+# since types of lb and ub are constrained, we do not need to refresh cache
 function set_ub(cache::IntegralCache, ub)
     @set! cache.ub = ub
     return cache
@@ -36,6 +40,10 @@ end
 
 function set_p(cache::IntegralCache, p)
     @set! cache.p = p
+    prob = build_problem(cache)
+    cacheval, isfresh = init_cacheval(cache.alg, prob)
+    @set! cache.cacheval = cacheval
+    @set! cache.isfresh = isfresh
     return cache
 end
 

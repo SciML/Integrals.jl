@@ -62,17 +62,30 @@ end
 # Give a layer to intercept with AD
 __solvebp(args...; kwargs...) = __solvebp_call(args...; kwargs...)
 
-function __solvebp_call(prob::IntegralProblem, alg::QuadGKJL, sensealg, lb, ub, p;
+function init_cacheval(alg::QuadGKJL, prob::IntegralProblem)
+    mid = (prob.lb + prob.ub) / 2
+    DT = typeof(mid)
+    val = prob.f(mid, prob.p)   # TODO: infer this type or let user pass it
+    RT = typeof(val)
+    NT = typeof(alg.norm(val))
+    return (QuadGK.alloc_segbuf(DT, RT, NT), false)
+end
+
+function __solvebp_call(cache::IntegralCache, alg::QuadGKJL, sensealg, lb, ub, p;
                         reltol = 1e-8, abstol = 1e-8,
                         maxiters = typemax(Int))
+    prob = build_problem(cache)
     if isinplace(prob) || lb isa AbstractArray || ub isa AbstractArray
         error("QuadGKJL only accepts one-dimensional quadrature problems.")
     end
     @assert prob.batch == 0
     @assert prob.nout == 1
+
+    cache.isfresh && throw(ArgumentError("cannot reset QuadGK cache"))
+
     p = p
     f = x -> prob.f(x, p)
-    val, err = quadgk(f, lb, ub,
+    val, err = quadgk(f, lb, ub, segbuf=cache.cacheval, maxevals=maxiters,
                       rtol = reltol, atol = abstol, order = alg.order, norm = alg.norm)
     SciMLBase.build_solution(prob, QuadGKJL(), val, err, retcode = ReturnCode.Success)
 end
