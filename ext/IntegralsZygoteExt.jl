@@ -1,5 +1,6 @@
 module IntegralsZygoteExt
 using Integrals
+using Integrals: set_f
 if isdefined(Base, :get_extension)
     using Zygote
     import ChainRulesCore
@@ -11,19 +12,21 @@ else
 end
 ChainRulesCore.@non_differentiable Integrals.checkkwargs(kwargs...)
 
-function ChainRulesCore.rrule(::typeof(Integrals.__solvebp), prob, alg, sensealg, lb, ub, p;
+function ChainRulesCore.rrule(::typeof(Integrals.__solvebp), cache, alg, sensealg, lb, ub, p;
                               kwargs...)
-    out = Integrals.__solvebp_call(prob, alg, sensealg, lb, ub, p; kwargs...)
+
+    out = Integrals.__solvebp_call(cache, alg, sensealg, lb, ub, p; kwargs...)
+
     function quadrature_adjoint(Δ)
         y = typeof(Δ) <: Array{<:Number, 0} ? Δ[1] : Δ
-        if isinplace(prob)
-            dx = zeros(prob.nout)
-            _f = x -> prob.f(dx, x, p)
+        if isinplace(cache)
+            dx = zeros(cache.nout)
+            _f = x -> cache.f(dx, x, p)
             if sensealg.vjp isa Integrals.ZygoteVJP
                 dfdp = function (dx, x, p)
                     _, back = Zygote.pullback(p) do p
-                        _dx = Zygote.Buffer(x, prob.nout, size(x, 2))
-                        prob.f(_dx, x, p)
+                        _dx = Zygote.Buffer(x, cache.nout, size(x, 2))
+                        cache.f(_dx, x, p)
                         copy(_dx)
                     end
 
@@ -38,11 +41,11 @@ function ChainRulesCore.rrule(::typeof(Integrals.__solvebp), prob, alg, sensealg
                 error("TODO")
             end
         else
-            _f = x -> prob.f(x, p)
+            _f = x -> cache.f(x, p)
             if sensealg.vjp isa Integrals.ZygoteVJP
-                if prob.batch > 0
+                if cache.batch > 0
                     dfdp = function (x, p)
-                        _, back = Zygote.pullback(p -> prob.f(x, p), p)
+                        _, back = Zygote.pullback(p -> cache.f(x, p), p)
 
                         out = zeros(length(p), size(x, 2))
                         z = zeros(size(x, 2))
@@ -55,7 +58,7 @@ function ChainRulesCore.rrule(::typeof(Integrals.__solvebp), prob, alg, sensealg
                     end
                 else
                     dfdp = function (x, p)
-                        _, back = Zygote.pullback(p -> prob.f(x, p), p)
+                        _, back = Zygote.pullback(p -> cache.f(x, p), p)
                         back(y)[1]
                     end
                 end
@@ -65,12 +68,12 @@ function ChainRulesCore.rrule(::typeof(Integrals.__solvebp), prob, alg, sensealg
             end
         end
 
-        dp_prob = remake(prob, f = dfdp, lb = lb, ub = ub, p = p, nout = length(p))
+        dp_cache = set_f(cache, dfdp, length(p))
 
         if p isa Number
-            dp = Integrals.__solvebp_call(dp_prob, alg, sensealg, lb, ub, p; kwargs...)[1]
+            dp = Integrals.__solvebp_call(dp_cache, alg, sensealg, lb, ub, p; kwargs...)[1]
         else
-            dp = Integrals.__solvebp_call(dp_prob, alg, sensealg, lb, ub, p; kwargs...).u
+            dp = Integrals.__solvebp_call(dp_cache, alg, sensealg, lb, ub, p; kwargs...).u
         end
 
         if lb isa Number
