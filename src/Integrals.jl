@@ -85,7 +85,7 @@ function __solvebp_call(cache::IntegralCache, alg::QuadGKJL, sensealg, lb, ub, p
 
     p = p
     f = x -> prob.f(x, p)
-    val, err = quadgk(f, lb, ub, segbuf=cache.cacheval, maxevals=maxiters,
+    val, err = quadgk(f, lb, ub, segbuf = cache.cacheval, maxevals = maxiters,
                       rtol = reltol, atol = abstol, order = alg.order, norm = alg.norm)
     SciMLBase.build_solution(prob, QuadGKJL(), val, err, retcode = ReturnCode.Success)
 end

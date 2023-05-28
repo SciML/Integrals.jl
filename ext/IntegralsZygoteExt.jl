@@ -12,9 +12,9 @@ else
 end
 ChainRulesCore.@non_differentiable Integrals.checkkwargs(kwargs...)
 
-function ChainRulesCore.rrule(::typeof(Integrals.__solvebp), cache, alg, sensealg, lb, ub, p;
+function ChainRulesCore.rrule(::typeof(Integrals.__solvebp), cache, alg, sensealg, lb, ub,
+                              p;
                               kwargs...)
-
     out = Integrals.__solvebp_call(cache, alg, sensealg, lb, ub, p; kwargs...)
 
     function quadrature_adjoint(Δ)

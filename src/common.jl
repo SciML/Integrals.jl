@@ -1,4 +1,4 @@
-struct IntegralCache{iip,F,B,P,PK,A,S,K,Tc}
+struct IntegralCache{iip, F, B, P, PK, A, S, K, Tc}
     iip::Val{iip}
     f::F
     lb::B
@@ -14,9 +14,9 @@ struct IntegralCache{iip,F,B,P,PK,A,S,K,Tc}
     isfresh::Bool   # false => cacheval is set wrt f, true => update cacheval wrt f
 end
 
-SciMLBase.isinplace(::IntegralCache{iip}) where iip = iip
+SciMLBase.isinplace(::IntegralCache{iip}) where {iip} = iip
 
-function set_f(cache::IntegralCache, f, nout=cache.nout)
+function set_f(cache::IntegralCache, f, nout = cache.nout)
     @set! cache.f = f
     @set! cache.iip = Val(isinplace(f, 3))
     @set! cache.nout = nout
@@ -52,7 +52,7 @@ init_cacheval(::SciMLBase.AbstractIntegralAlgorithm, args...) = (nothing, true)
 function SciMLBase.init(prob::IntegralProblem{iip},
                         alg::SciMLBase.AbstractIntegralAlgorithm;
                         sensealg = ReCallVJP(ZygoteVJP()),
-                        do_inf_transformation = nothing, kwargs...) where iip
+                        do_inf_transformation = nothing, kwargs...) where {iip}
     checkkwargs(kwargs...)
     prob = transformation_if_inf(prob, do_inf_transformation)
     cacheval, isfresh = init_cacheval(alg, prob)
@@ -114,12 +114,13 @@ function SciMLBase.solve(prob::IntegralProblem,
 end
 
 function SciMLBase.solve!(cache::IntegralCache)
-    __solvebp(cache, cache.alg, cache.sensealg, cache.lb, cache.ub, cache.p; cache.kwargs...)
+    __solvebp(cache, cache.alg, cache.sensealg, cache.lb, cache.ub, cache.p;
+              cache.kwargs...)
 end
 
-function build_problem(cache::IntegralCache{iip}) where iip
+function build_problem(cache::IntegralCache{iip}) where {iip}
     IntegralProblem{iip}(cache.f, cache.lb, cache.ub, cache.p;
-    nout = cache.nout, batch = cache.batch, cache.prob_kwargs...)
+                         nout = cache.nout, batch = cache.batch, cache.prob_kwargs...)
 end
 
 # fallback method for existing algorithms which use no cache
