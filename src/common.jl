@@ -55,8 +55,9 @@ refresh_cacheval(cacheval, alg, prob) = nothing
 Return a new cache with the new integrand `f`, optionally resetting `nout` at the same time.
 """
 function set_f(cache::IntegralCache, f, nout = cache.nout)
-    prob = remake(build_problem(cache), f=f, nout=nout)
-    alg = cache.alg; cacheval = cache.cacheval
+    prob = remake(build_problem(cache), f = f, nout = nout)
+    alg = cache.alg
+    cacheval = cache.cacheval
     # lots of type-instability hereafter
     @set! cache.f = f
     @set! cache.iip = Val(isinplace(f, 3))
@@ -93,13 +94,13 @@ end
 Return a new cache with parameters `p`.
 """
 function set_p(cache::IntegralCache, p)
-    prob = remake(build_problem(cache), p=p)
-    alg = cache.alg; cacheval = cache.cacheval
+    prob = remake(build_problem(cache), p = p)
+    alg = cache.alg
+    cacheval = cache.cacheval
     @set! cache.p = p
-    @set! cache.cacheval =  refresh_cacheval(cacheval, alg, prob)
+    @set! cache.cacheval = refresh_cacheval(cacheval, alg, prob)
     return cache
 end
-
 
 # Throw error if alg is not provided, as defaults are not implemented.
 function SciMLBase.solve(::IntegralProblem; kwargs...)

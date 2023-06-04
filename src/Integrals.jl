@@ -76,7 +76,7 @@ end
 function refresh_cacheval(cacheval, alg::QuadGKJL, prob)
     DT, RT, NT = quadgk_prob_types(prob.f, prob.lb, prob.ub, prob.p, alg.norm)
     isconcretetype(RT) || return nothing
-    T = QuadGK.Segment{DT,RT,NT}
+    T = QuadGK.Segment{DT, RT, NT}
     return (cacheval isa Vector{T} ? cacheval : QuadGK.alloc_segbuf(DT, RT, NT))
 end
 

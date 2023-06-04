@@ -375,7 +375,7 @@ end
             p = missing # the integrands don't actually use this
             cache = Integrals.set_p(cache, p)
             @test solve!(cache).u≈exact_sol[i](dim, nout, lb, ub) rtol=1e-2
-            f = (x,p) -> integrands[i](x,p) # for lack of creativity, wrap the old integrand
+            f = (x, p) -> integrands[i](x, p) # for lack of creativity, wrap the old integrand
             cache = Integrals.set_f(cache, f)
             @test solve!(cache).u≈exact_sol[i](dim, nout, lb, ub) rtol=1e-2
         end
