@@ -62,10 +62,9 @@ end
 # Give a layer to intercept with AD
 __solvebp(args...; kwargs...) = __solvebp_call(args...; kwargs...)
 
-function quadgk_prob_types(f, lb, ub, p, nrm)
-    mid = (lb + ub) / 2
-    DT = typeof(mid)
-    RT = Base.promote_op(f, DT, typeof(p))
+function quadgk_prob_types(f, lb::T, ub::T, p, nrm) where {T}
+    DT = float(T)   # we need to be careful to infer the same result as `evalrule`
+    RT = Base.promote_op(*, real(DT), Base.promote_op(f, DT, typeof(p)))    # kernel
     NT = Base.promote_op(nrm, RT)
     return DT, RT, NT
 end
