@@ -353,3 +353,31 @@ end
                                                                                        relztol = 1e-3,
                                                                                        abstol = 1e-3)
 end
+
+@testset "Caching interface" begin
+    lb, ub = (1.0, 3.0)
+    nout = 1
+    dim = 1
+    for alg in algs
+        if alg_req[alg].min_dim > 1
+            continue
+        end
+        for i in 1:length(integrands)
+            prob = IntegralProblem(integrands[i], lb, ub)
+            cache = init(prob, alg, reltol = reltol, abstol = abstol)
+            @test solve!(cache).u≈exact_sol[i](dim, nout, lb, ub) rtol=1e-2
+            lb = 0.5
+            cache = Integrals.set_lb(cache, lb)
+            @test solve!(cache).u≈exact_sol[i](dim, nout, lb, ub) rtol=1e-2
+            ub = 3.5
+            cache = Integrals.set_ub(cache, ub)
+            @test solve!(cache).u≈exact_sol[i](dim, nout, lb, ub) rtol=1e-2
+            p = missing # the integrands don't actually use this
+            cache = Integrals.set_p(cache, p)
+            @test solve!(cache).u≈exact_sol[i](dim, nout, lb, ub) rtol=1e-2
+            f = (x,p) -> integrands[i](x,p) # for lack of creativity, wrap the old integrand
+            cache = Integrals.set_f(cache, f)
+            @test solve!(cache).u≈exact_sol[i](dim, nout, lb, ub) rtol=1e-2
+        end
+    end
+end
