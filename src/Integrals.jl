@@ -62,13 +62,22 @@ end
 # Give a layer to intercept with AD
 __solvebp(args...; kwargs...) = __solvebp_call(args...; kwargs...)
 
-function init_cacheval(alg::QuadGKJL, prob::IntegralProblem)
-    mid = (prob.lb + prob.ub) / 2
+function quadgk_prob_types(f, lb, ub, p, nrm)
+    mid = (lb + ub) / 2
     DT = typeof(mid)
-    val = prob.f(mid, prob.p)   # TODO: infer this type or let user pass it
-    RT = typeof(val)
-    NT = typeof(alg.norm(val))
-    return (QuadGK.alloc_segbuf(DT, RT, NT), false)
+    RT = Base.promote_op(f, DT, typeof(p))
+    NT = Base.promote_op(nrm, RT)
+    return DT, RT, NT
+end
+function init_cacheval(alg::QuadGKJL, prob::IntegralProblem)
+    DT, RT, NT = quadgk_prob_types(prob.f, prob.lb, prob.ub, prob.p, alg.norm)
+    return (isconcretetype(RT) ? QuadGK.alloc_segbuf(DT, RT, NT) : nothing)
+end
+function refresh_cacheval(cacheval, alg::QuadGKJL, prob)
+    DT, RT, NT = quadgk_prob_types(prob.f, prob.lb, prob.ub, prob.p, alg.norm)
+    isconcretetype(RT) || return nothing
+    T = QuadGK.Segment{DT,RT,NT}
+    return (cacheval isa Vector{T} ? cacheval : QuadGK.alloc_segbuf(DT, RT, NT))
 end
 
 function __solvebp_call(cache::IntegralCache, alg::QuadGKJL, sensealg, lb, ub, p;
@@ -80,8 +89,6 @@ function __solvebp_call(cache::IntegralCache, alg::QuadGKJL, sensealg, lb, ub, p
     end
     @assert prob.batch == 0
     @assert prob.nout == 1
-
-    cache.isfresh && throw(ArgumentError("cannot reset QuadGK cache"))
 
     p = p
     f = x -> prob.f(x, p)
