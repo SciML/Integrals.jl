@@ -64,7 +64,7 @@ __solvebp(args...; kwargs...) = __solvebp_call(args...; kwargs...)
 
 function quadgk_prob_types(f, lb::T, ub::T, p, nrm) where {T}
     DT = float(T)   # we need to be careful to infer the same result as `evalrule`
-    RT = Base.promote_op(*, real(DT), Base.promote_op(f, DT, typeof(p)))    # kernel
+    RT = Base.promote_op(*, DT, Base.promote_op(f, DT, typeof(p)))    # kernel
     NT = Base.promote_op(nrm, RT)
     return DT, RT, NT
 end
