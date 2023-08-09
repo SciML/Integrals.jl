@@ -1,4 +1,4 @@
-struct IntegralCache{iip, F, B, P, PK, A, S, K, Tc}
+mutable struct IntegralCache{iip, F, B, P, PK, A, S, K, Tc}
     iip::Val{iip}
     f::F
     lb::B
@@ -45,61 +45,6 @@ function SciMLBase.init(prob::IntegralProblem{iip},
         sensealg,
         kwargs,
         cacheval)
-end
-
-refresh_cacheval(cacheval, alg, prob) = nothing
-
-"""
-    set_f(cache, f, [nout=cache.nout])
-
-Return a new cache with the new integrand `f`, optionally resetting `nout` at the same time.
-"""
-function set_f(cache::IntegralCache, f, nout = cache.nout)
-    prob = remake(build_problem(cache), f = f, nout = nout)
-    alg = cache.alg
-    cacheval = cache.cacheval
-    # lots of type-instability hereafter
-    @set! cache.f = f
-    @set! cache.iip = Val(isinplace(f, 3))
-    @set! cache.nout = nout
-    @set! cache.cacheval = refresh_cacheval(cacheval, alg, prob)
-    return cache
-end
-
-"""
-    set_lb(cache, lb)
-
-Return a new cache with new lower limits `lb`.
-"""
-function set_lb(cache::IntegralCache, lb)
-    @set! cache.lb = lb
-    return cache
-end
-
-# since types of lb and ub are constrained, we do not need to refresh cache
-
-"""
-    set_ub(cache, ub)
-
-Return a new cache with new lower limits `ub`.
-"""
-function set_ub(cache::IntegralCache, ub)
-    @set! cache.ub = ub
-    return cache
-end
-
-"""
-    set_p(cache, p, [refresh=true])
-
-Return a new cache with parameters `p`.
-"""
-function set_p(cache::IntegralCache, p)
-    prob = remake(build_problem(cache), p = p)
-    alg = cache.alg
-    cacheval = cache.cacheval
-    @set! cache.p = p
-    @set! cache.cacheval = refresh_cacheval(cacheval, alg, prob)
-    return cache
 end
 
 # Throw error if alg is not provided, as defaults are not implemented.

@@ -7,7 +7,6 @@ end
 using Reexport, MonteCarloIntegration, QuadGK, HCubature
 @reexport using SciMLBase
 using LinearAlgebra
-using Setfield
 
 include("common.jl")
 include("init.jl")
