@@ -1,6 +1,5 @@
 module IntegralsZygoteExt
 using Integrals
-using Integrals: set_f
 if isdefined(Base, :get_extension)
     using Zygote
     import ChainRulesCore
@@ -68,7 +67,14 @@ function ChainRulesCore.rrule(::typeof(Integrals.__solvebp), cache, alg, senseal
             end
         end
 
-        dp_cache = set_f(cache, dfdp, length(p))
+        prob = Integrals.build_problem(cache)
+        dp_prob = remake(prob, f = dfdp, nout = length(p))
+        # the infinity transformation was already applied to f so we don't apply it to dfdp
+        dp_cache = init(dp_prob,
+            alg;
+            sensealg = sensealg,
+            do_inf_transformation = Val(false),
+            cache.kwargs...)
 
         if p isa Number
             dp = Integrals.__solvebp_call(dp_cache, alg, sensealg, lb, ub, p; kwargs...)[1]

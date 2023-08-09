@@ -1,6 +1,5 @@
 module IntegralsForwardDiffExt
 using Integrals
-using Integrals: set_f, set_p, build_problem
 isdefined(Base, :get_extension) ? (using ForwardDiff) : (using ..ForwardDiff)
 ### Forward-Mode AD Intercepts
 
@@ -68,7 +67,14 @@ function Integrals.__solvebp(cache, alg, sensealg, lb, ub,
 
     rawp = copy(reinterpret(V, p))
 
-    dp_cache = set_p(set_f(cache, dfdp, nout), rawp)
+    prob = Integrals.build_problem(cache)
+    dp_prob = remake(prob, f = dfdp, nout = nout, p = rawp)
+    # the infinity transformation was already applied to f so we don't apply it to dfdp
+    dp_cache = init(dp_prob,
+        alg;
+        sensealg = sensealg,
+        do_inf_transformation = Val(false),
+        cache.kwargs...)
     dual = Integrals.__solvebp_call(dp_cache, alg, sensealg, lb, ub, rawp; kwargs...)
 
     res = similar(p, cache.nout)
@@ -79,6 +85,6 @@ function Integrals.__solvebp(cache, alg, sensealg, lb, ub,
     if primal.u isa Number
         res = first(res)
     end
-    SciMLBase.build_solution(build_problem(cache), alg, res, primal.resid)
+    SciMLBase.build_solution(prob, alg, res, primal.resid)
 end
 end
