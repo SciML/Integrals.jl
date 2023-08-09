@@ -18,33 +18,33 @@ SciMLBase.isinplace(::IntegralCache{iip}) where {iip} = iip
 init_cacheval(::SciMLBase.AbstractIntegralAlgorithm, args...) = nothing
 
 function SciMLBase.init(prob::IntegralProblem{iip},
-                        alg::SciMLBase.AbstractIntegralAlgorithm;
-                        sensealg = ReCallVJP(ZygoteVJP()),
-                        do_inf_transformation = nothing, kwargs...) where {iip}
+    alg::SciMLBase.AbstractIntegralAlgorithm;
+    sensealg = ReCallVJP(ZygoteVJP()),
+    do_inf_transformation = nothing, kwargs...) where {iip}
     checkkwargs(kwargs...)
     prob = transformation_if_inf(prob, do_inf_transformation)
     cacheval = init_cacheval(alg, prob)
 
     IntegralCache{iip,
-                  typeof(prob.f),
-                  typeof(prob.lb),
-                  typeof(prob.p),
-                  typeof(prob.kwargs),
-                  typeof(alg),
-                  typeof(sensealg),
-                  typeof(kwargs),
-                  typeof(cacheval)}(Val(iip),
-                                    prob.f,
-                                    prob.lb,
-                                    prob.ub,
-                                    prob.nout,
-                                    prob.p,
-                                    prob.batch,
-                                    prob.kwargs,
-                                    alg,
-                                    sensealg,
-                                    kwargs,
-                                    cacheval)
+        typeof(prob.f),
+        typeof(prob.lb),
+        typeof(prob.p),
+        typeof(prob.kwargs),
+        typeof(alg),
+        typeof(sensealg),
+        typeof(kwargs),
+        typeof(cacheval)}(Val(iip),
+        prob.f,
+        prob.lb,
+        prob.ub,
+        prob.nout,
+        prob.p,
+        prob.batch,
+        prob.kwargs,
+        alg,
+        sensealg,
+        kwargs,
+        cacheval)
 end
 
 refresh_cacheval(cacheval, alg, prob) = nothing
@@ -130,19 +130,19 @@ These common arguments are:
   - `reltol` (relative tolerance  in changes of the objective value)
 """
 function SciMLBase.solve(prob::IntegralProblem,
-                         alg::SciMLBase.AbstractIntegralAlgorithm;
-                         kwargs...)
+    alg::SciMLBase.AbstractIntegralAlgorithm;
+    kwargs...)
     solve!(init(prob, alg; kwargs...))
 end
 
 function SciMLBase.solve!(cache::IntegralCache)
     __solvebp(cache, cache.alg, cache.sensealg, cache.lb, cache.ub, cache.p;
-              cache.kwargs...)
+        cache.kwargs...)
 end
 
 function build_problem(cache::IntegralCache{iip}) where {iip}
     IntegralProblem{iip}(cache.f, cache.lb, cache.ub, cache.p;
-                         nout = cache.nout, batch = cache.batch, cache.prob_kwargs...)
+        nout = cache.nout, batch = cache.batch, cache.prob_kwargs...)
 end
 
 # fallback method for existing algorithms which use no cache

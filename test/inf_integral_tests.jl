@@ -57,5 +57,5 @@ prob = IntegralProblem(m2, SVector(-Inf, -Inf), SVector(Inf, Inf))
 
 prob = @test_nowarn @inferred Integrals.transformation_if_inf(prob, Val(true))
 @test_nowarn @inferred Integrals.__solvebp_call(prob, HCubatureJL(),
-                                                Integrals.ReCallVJP(Integrals.ZygoteVJP()),
-                                                prob.lb, prob.ub, prob.p)
+    Integrals.ReCallVJP(Integrals.ZygoteVJP()),
+    prob.lb, prob.ub, prob.p)
