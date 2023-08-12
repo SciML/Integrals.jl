@@ -332,7 +332,7 @@ version = "0.4.10"
 deps = ["CommonSolve", "HCubature", "LinearAlgebra", "MonteCarloIntegration", "QuadGK", "Reexport", "Requires", "SciMLBase"]
 path = "/home/runner/work/Integrals.jl/Integrals.jl"
 uuid = "de52edbc-65ea-441a-8357-d3a637375a31"
-version = "3.8.0"
+version = "3.9.0"
 
     [deps.Integrals.extensions]
     IntegralsFastGaussQuadratureExt = "FastGaussQuadrature"
