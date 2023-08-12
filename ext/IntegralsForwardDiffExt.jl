@@ -4,36 +4,36 @@ isdefined(Base, :get_extension) ? (using ForwardDiff) : (using ..ForwardDiff)
 ### Forward-Mode AD Intercepts
 
 # Direct AD on solvers with QuadGK and HCubature
-function Integrals.__solvebp(prob, alg::QuadGKJL, sensealg, lb, ub,
-                             p::AbstractArray{<:ForwardDiff.Dual{T, V, P}, N};
-                             kwargs...) where {T, V, P, N}
-    Integrals.__solvebp_call(prob, alg, sensealg, lb, ub, p; kwargs...)
+function Integrals.__solvebp(cache, alg::QuadGKJL, sensealg, lb, ub,
+    p::AbstractArray{<:ForwardDiff.Dual{T, V, P}, N};
+    kwargs...) where {T, V, P, N}
+    Integrals.__solvebp_call(cache, alg, sensealg, lb, ub, p; kwargs...)
 end
 
-function Integrals.__solvebp(prob, alg::HCubatureJL, sensealg, lb, ub,
-                             p::AbstractArray{<:ForwardDiff.Dual{T, V, P}, N};
-                             kwargs...) where {T, V, P, N}
-    Integrals.__solvebp_call(prob, alg, sensealg, lb, ub, p; kwargs...)
+function Integrals.__solvebp(cache, alg::HCubatureJL, sensealg, lb, ub,
+    p::AbstractArray{<:ForwardDiff.Dual{T, V, P}, N};
+    kwargs...) where {T, V, P, N}
+    Integrals.__solvebp_call(cache, alg, sensealg, lb, ub, p; kwargs...)
 end
 
 # Manually split for the pushforward
-function Integrals.__solvebp(prob, alg, sensealg, lb, ub,
-                             p::AbstractArray{<:ForwardDiff.Dual{T, V, P}, N};
-                             kwargs...) where {T, V, P, N}
-    primal = Integrals.__solvebp_call(prob, alg, sensealg, lb, ub, ForwardDiff.value.(p);
-                                      kwargs...)
+function Integrals.__solvebp(cache, alg, sensealg, lb, ub,
+    p::AbstractArray{<:ForwardDiff.Dual{T, V, P}, N};
+    kwargs...) where {T, V, P, N}
+    primal = Integrals.__solvebp_call(cache, alg, sensealg, lb, ub, ForwardDiff.value.(p);
+        kwargs...)
 
-    nout = prob.nout * P
+    nout = cache.nout * P
 
-    if isinplace(prob)
+    if isinplace(cache)
         dfdp = function (out, x, p)
             dualp = reinterpret(ForwardDiff.Dual{T, V, P}, p)
-            if prob.batch > 0
-                dx = similar(dualp, prob.nout, size(x, 2))
+            if cache.batch > 0
+                dx = similar(dualp, cache.nout, size(x, 2))
             else
-                dx = similar(dualp, prob.nout)
+                dx = similar(dualp, cache.nout)
             end
-            prob.f(dx, x, dualp)
+            cache.f(dx, x, dualp)
 
             ys = reinterpret(ForwardDiff.Dual{T, V, P}, dx)
             idx = 0
@@ -47,8 +47,8 @@ function Integrals.__solvebp(prob, alg, sensealg, lb, ub,
     else
         dfdp = function (x, p)
             dualp = reinterpret(ForwardDiff.Dual{T, V, P}, p)
-            ys = prob.f(x, dualp)
-            if prob.batch > 0
+            ys = cache.f(x, dualp)
+            if cache.batch > 0
                 out = similar(p, V, nout, size(x, 2))
             else
                 out = similar(p, V, nout)
@@ -64,12 +64,20 @@ function Integrals.__solvebp(prob, alg, sensealg, lb, ub,
             return out
         end
     end
+
     rawp = copy(reinterpret(V, p))
 
-    dp_prob = IntegralProblem(dfdp, lb, ub, rawp; nout = nout, batch = prob.batch,
-                              kwargs...)
-    dual = Integrals.__solvebp_call(dp_prob, alg, sensealg, lb, ub, rawp; kwargs...)
-    res = similar(p, prob.nout)
+    prob = Integrals.build_problem(cache)
+    dp_prob = remake(prob, f = dfdp, nout = nout, p = rawp)
+    # the infinity transformation was already applied to f so we don't apply it to dfdp
+    dp_cache = init(dp_prob,
+        alg;
+        sensealg = sensealg,
+        do_inf_transformation = Val(false),
+        cache.kwargs...)
+    dual = Integrals.__solvebp_call(dp_cache, alg, sensealg, lb, ub, rawp; kwargs...)
+
+    res = similar(p, cache.nout)
     partials = reinterpret(typeof(first(res).partials), dual.u)
     for idx in eachindex(res)
         res[idx] = ForwardDiff.Dual{T, V, P}(primal.u[idx], partials[idx])

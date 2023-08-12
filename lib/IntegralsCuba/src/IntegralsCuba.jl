@@ -116,26 +116,26 @@ struct CubaCuhre <: AbstractCubaAlgorithm
 end
 
 function CubaVegas(; flags = 0, seed = 0, minevals = 0, nstart = 1000, nincrease = 500,
-                   gridno = 0)
+    gridno = 0)
     CubaVegas(flags, seed, minevals, nstart, nincrease, gridno)
 end
 function CubaSUAVE(; flags = 0, seed = 0, minevals = 0, nnew = 1000, nmin = 2,
-                   flatness = 25.0)
+    flatness = 25.0)
     CubaSUAVE(flags, seed, minevals, nnew, nmin, flatness)
 end
 function CubaDivonne(; flags = 0, seed = 0, minevals = 0,
-                     key1 = 47, key2 = 1, key3 = 1, maxpass = 5, border = 0.0,
-                     maxchisq = 10.0, mindeviation = 0.25)
+    key1 = 47, key2 = 1, key3 = 1, maxpass = 5, border = 0.0,
+    maxchisq = 10.0, mindeviation = 0.25)
     CubaDivonne(flags, seed, minevals, key1, key2, key3, maxpass, border, maxchisq,
-                mindeviation)
+        mindeviation)
 end
 CubaCuhre(; flags = 0, minevals = 0, key = 0) = CubaCuhre(flags, minevals, key)
 
 function Integrals.__solvebp_call(prob::IntegralProblem, alg::AbstractCubaAlgorithm,
-                                  sensealg,
-                                  lb, ub, p;
-                                  reltol = 1e-8, abstol = 1e-8,
-                                  maxiters = alg isa CubaSUAVE ? 1000000 : typemax(Int))
+    sensealg,
+    lb, ub, p;
+    reltol = 1e-8, abstol = 1e-8,
+    maxiters = alg isa CubaSUAVE ? 1000000 : typemax(Int))
     @assert maxiters>=1000 "maxiters for $alg should be larger than 1000"
     if lb isa Number && prob.batch == 0
         _x = Float64[lb]
@@ -208,30 +208,30 @@ function Integrals.__solvebp_call(prob::IntegralProblem, alg::AbstractCubaAlgori
 
     if alg isa CubaVegas
         out = Cuba.vegas(f, ndim, prob.nout; rtol = reltol,
-                         atol = abstol, nvec = nvec,
-                         maxevals = maxiters,
-                         flags = alg.flags, seed = alg.seed, minevals = alg.minevals,
-                         nstart = alg.nstart, nincrease = alg.nincrease,
-                         gridno = alg.gridno)
+            atol = abstol, nvec = nvec,
+            maxevals = maxiters,
+            flags = alg.flags, seed = alg.seed, minevals = alg.minevals,
+            nstart = alg.nstart, nincrease = alg.nincrease,
+            gridno = alg.gridno)
     elseif alg isa CubaSUAVE
         out = Cuba.suave(f, ndim, prob.nout; rtol = reltol,
-                         atol = abstol, nvec = nvec,
-                         maxevals = maxiters,
-                         flags = alg.flags, seed = alg.seed, minevals = alg.minevals,
-                         nnew = alg.nnew, nmin = alg.nmin, flatness = alg.flatness)
+            atol = abstol, nvec = nvec,
+            maxevals = maxiters,
+            flags = alg.flags, seed = alg.seed, minevals = alg.minevals,
+            nnew = alg.nnew, nmin = alg.nmin, flatness = alg.flatness)
     elseif alg isa CubaDivonne
         out = Cuba.divonne(f, ndim, prob.nout; rtol = reltol,
-                           atol = abstol, nvec = nvec,
-                           maxevals = maxiters,
-                           flags = alg.flags, seed = alg.seed, minevals = alg.minevals,
-                           key1 = alg.key1, key2 = alg.key2, key3 = alg.key3,
-                           maxpass = alg.maxpass, border = alg.border,
-                           maxchisq = alg.maxchisq, mindeviation = alg.mindeviation)
+            atol = abstol, nvec = nvec,
+            maxevals = maxiters,
+            flags = alg.flags, seed = alg.seed, minevals = alg.minevals,
+            key1 = alg.key1, key2 = alg.key2, key3 = alg.key3,
+            maxpass = alg.maxpass, border = alg.border,
+            maxchisq = alg.maxchisq, mindeviation = alg.mindeviation)
     elseif alg isa CubaCuhre
         out = Cuba.cuhre(f, ndim, prob.nout; rtol = reltol,
-                         atol = abstol, nvec = nvec,
-                         maxevals = maxiters,
-                         flags = alg.flags, minevals = alg.minevals, key = alg.key)
+            atol = abstol, nvec = nvec,
+            maxevals = maxiters,
+            flags = alg.flags, minevals = alg.minevals, key = alg.key)
     end
 
     if isinplace(prob) || prob.batch != 0
@@ -245,7 +245,7 @@ function Integrals.__solvebp_call(prob::IntegralProblem, alg::AbstractCubaAlgori
     end
 
     SciMLBase.build_solution(prob, alg, val, out.error,
-                             chi = out.probability, retcode = ReturnCode.Success)
+        chi = out.probability, retcode = ReturnCode.Success)
 end
 
 export CubaVegas, CubaSUAVE, CubaDivonne, CubaCuhre

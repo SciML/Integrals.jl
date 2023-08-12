@@ -61,24 +61,43 @@ end
 # Give a layer to intercept with AD
 __solvebp(args...; kwargs...) = __solvebp_call(args...; kwargs...)
 
-function __solvebp_call(prob::IntegralProblem, alg::QuadGKJL, sensealg, lb, ub, p;
-                        reltol = 1e-8, abstol = 1e-8,
-                        maxiters = typemax(Int))
+function quadgk_prob_types(f, lb::T, ub::T, p, nrm) where {T}
+    DT = float(T)   # we need to be careful to infer the same result as `evalrule`
+    RT = Base.promote_op(*, DT, Base.promote_op(f, DT, typeof(p)))    # kernel
+    NT = Base.promote_op(nrm, RT)
+    return DT, RT, NT
+end
+function init_cacheval(alg::QuadGKJL, prob::IntegralProblem)
+    DT, RT, NT = quadgk_prob_types(prob.f, prob.lb, prob.ub, prob.p, alg.norm)
+    return (isconcretetype(RT) ? QuadGK.alloc_segbuf(DT, RT, NT) : nothing)
+end
+function refresh_cacheval(cacheval, alg::QuadGKJL, prob)
+    DT, RT, NT = quadgk_prob_types(prob.f, prob.lb, prob.ub, prob.p, alg.norm)
+    isconcretetype(RT) || return nothing
+    T = QuadGK.Segment{DT, RT, NT}
+    return (cacheval isa Vector{T} ? cacheval : QuadGK.alloc_segbuf(DT, RT, NT))
+end
+
+function __solvebp_call(cache::IntegralCache, alg::QuadGKJL, sensealg, lb, ub, p;
+    reltol = 1e-8, abstol = 1e-8,
+    maxiters = typemax(Int))
+    prob = build_problem(cache)
     if isinplace(prob) || lb isa AbstractArray || ub isa AbstractArray
         error("QuadGKJL only accepts one-dimensional quadrature problems.")
     end
     @assert prob.batch == 0
     @assert prob.nout == 1
+
     p = p
     f = x -> prob.f(x, p)
-    val, err = quadgk(f, lb, ub,
-                      rtol = reltol, atol = abstol, order = alg.order, norm = alg.norm)
+    val, err = quadgk(f, lb, ub, segbuf = cache.cacheval, maxevals = maxiters,
+        rtol = reltol, atol = abstol, order = alg.order, norm = alg.norm)
     SciMLBase.build_solution(prob, QuadGKJL(), val, err, retcode = ReturnCode.Success)
 end
 
 function __solvebp_call(prob::IntegralProblem, alg::HCubatureJL, sensealg, lb, ub, p;
-                        reltol = 1e-8, abstol = 1e-8,
-                        maxiters = typemax(Int))
+    reltol = 1e-8, abstol = 1e-8,
+    maxiters = typemax(Int))
     p = p
 
     if isinplace(prob)
@@ -91,19 +110,19 @@ function __solvebp_call(prob::IntegralProblem, alg::HCubatureJL, sensealg, lb, u
 
     if lb isa Number
         val, err = hquadrature(f, lb, ub;
-                               rtol = reltol, atol = abstol,
-                               maxevals = maxiters, norm = alg.norm, initdiv = alg.initdiv)
+            rtol = reltol, atol = abstol,
+            maxevals = maxiters, norm = alg.norm, initdiv = alg.initdiv)
     else
         val, err = hcubature(f, lb, ub;
-                             rtol = reltol, atol = abstol,
-                             maxevals = maxiters, norm = alg.norm, initdiv = alg.initdiv)
+            rtol = reltol, atol = abstol,
+            maxevals = maxiters, norm = alg.norm, initdiv = alg.initdiv)
     end
     SciMLBase.build_solution(prob, HCubatureJL(), val, err, retcode = ReturnCode.Success)
 end
 
 function __solvebp_call(prob::IntegralProblem, alg::VEGAS, sensealg, lb, ub, p;
-                        reltol = 1e-8, abstol = 1e-8,
-                        maxiters = typemax(Int))
+    reltol = 1e-8, abstol = 1e-8,
+    maxiters = typemax(Int))
     p = p
     @assert prob.nout == 1
     if prob.batch == 0
@@ -123,8 +142,8 @@ function __solvebp_call(prob::IntegralProblem, alg::VEGAS, sensealg, lb, ub, p;
     end
     ncalls = prob.batch == 0 ? alg.ncalls : prob.batch
     val, err, chi = vegas(f, lb, ub, rtol = reltol, atol = abstol,
-                          maxiter = maxiters, nbins = alg.nbins, debug = alg.debug,
-                          ncalls = ncalls, batch = prob.batch != 0)
+        maxiter = maxiters, nbins = alg.nbins, debug = alg.debug,
+        ncalls = ncalls, batch = prob.batch != 0)
     SciMLBase.build_solution(prob, alg, val, err, chi = chi, retcode = ReturnCode.Success)
 end
 
