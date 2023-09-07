@@ -147,5 +147,101 @@ function __solvebp_call(prob::IntegralProblem, alg::VEGAS, sensealg, lb, ub, p;
     SciMLBase.build_solution(prob, alg, val, err, chi = chi, retcode = ReturnCode.Success)
 end
 
-export QuadGKJL, HCubatureJL, VEGAS, GaussLegendre
+is_sampled_problem(prob::IntegralProblem) = prob.f isa AbstractArray
+import SciMLBase.IntegralProblem # this is type piracy, and belongs in SciMLBase
+function IntegralProblem(y::AbstractArray, lb, ub, args...; kwargs...)
+    IntegralProblem{false}(y, lb, ub, args...; kwargs...)
+end
+function construct_grid(prob, alg, lb, ub, dim)
+    x = alg.spec
+    if x isa Integer
+        @assert length(ub) == length(lb) == 1 "Multidimensional integration is not supported with the Trapezoidal method"
+        grid = range(lb[1], ub[1], length=x)
+    else 
+        grid = x
+        @assert ndims(grid) == 1 "Multidimensional integration is not supported with the Trapezoidal method"
+    end
+
+    @assert lb[1] ≈ grid[begin] "Lower bound in `IntegralProblem` must coincide with that of the grid"
+    @assert ub[1] ≈ grid[end] "Upper bound in `IntegralProblem` must coincide with that of the grid"
+    if is_sampled_problem(prob)
+        @assert size(prob.f, dim) == length(grid) "Integrand and grid must be of equal length along the integrated dimension"
+        @assert axes(prob.f, dim) == axes(grid,1) "Grid and integrand array must use same indexing along integrated dimension" 
+    end
+    return grid
+end
+
+@inline dimension(::Val{D}) where D = D
+function __solvebp_call(prob::IntegralProblem, alg::Trapezoidal{S, D}, sensealg, lb, ub, p; kwargs...) where {S,D}
+    # since all AbstractRange types are equidistant by design, we can rely on that
+    @assert prob.batch == 0
+    # using `Val`s for dimensionality is required to make `selectdim` not allocate
+    dim = dimension(D) 
+    p = p
+    if is_sampled_problem(prob)
+        @assert alg.spec isa AbstractArray "For pre-sampled problems where the integrand is an array, the integration grid must also be an array."
+    end
+
+    grid = construct_grid(prob, alg, lb, ub, dim)
+    
+    err = Inf64
+    if is_sampled_problem(prob)
+        # inlining is required in order to not allocate
+        @inline function integrand(i) 
+            # integrate along dimension `dim`
+            selectdim(prob.f, dim, i) 
+        end 
+    else
+        if isinplace(prob)
+            y = zeros(eltype(lb), prob.nout)
+            integrand = i -> @inbounds (prob.f(y, grid[i], p); y)
+        else
+            integrand = i -> @inbounds prob.f(grid[i], p)
+        end
+    end
+
+    firstidx, lastidx = firstindex(grid), lastindex(grid)
+
+    out = integrand(firstidx)
+    if isbits(out) 
+        # fast path for equidistant grids
+        if alg.spec isa Integer 
+            dx = grid[begin+1] - grid[begin]
+            for i in (firstidx+1):(lastidx-1)
+                out += 2*integrand(i)
+            end
+            out += integrand(lastidx)
+            out *= dx/2
+        # irregular grids:
+        elseif alg.spec isa AbstractVector
+            out *= (grid[firstidx + 1] - grid[firstidx])
+            for i in (firstidx+1):(lastidx-1)
+                @inbounds out += integrand(i) * (grid[i + 1] - grid[i-1])
+            end
+            out += integrand(lastidx) * (grid[lastidx] - grid[lastidx-1])
+            out /= 2
+        end
+    else # same, but inplace, broadcasted
+        out = zeros(eltype(out), size(out)...) # to prevent aliasing
+        if grid isa AbstractRange 
+            dx = grid[begin+1] - grid[begin]
+            for i in (firstidx+1):(lastidx-1)
+                out .+= 2.0 .* integrand(i)
+            end
+            out .+= integrand(lastidx)
+            out .*= dx/2
+        else 
+            out .*= (grid[firstidx + 1] - grid[firstidx])
+            for i in (firstidx+1):(lastidx-1)
+                @inbounds out .+= integrand(i) .* (grid[i + 1] - grid[i-1])
+            end
+            out .+= integrand(lastidx) .* (grid[lastidx] - grid[lastidx-1])
+            out ./= 2
+        end
+    end
+
+    return SciMLBase.build_solution(prob, alg, out, err, retcode = ReturnCode.Success)
+end
+
+export QuadGKJL, HCubatureJL, VEGAS, GaussLegendre, Trapezoidal
 end # module
