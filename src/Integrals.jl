@@ -171,6 +171,9 @@ function construct_grid(prob, alg, lb, ub, dim)
     return grid
 end
 
+@inline myselectdim(y::AbstractArray{T,dims}, d, i) where {T,dims} = selectdim(y, d, i)
+@inline myselectdim(y::AbstractArray{T,1}, _, i) where {T} = @inbounds y[i]
+
 @inline dimension(::Val{D}) where D = D
 function __solvebp_call(prob::IntegralProblem, alg::Trapezoidal{S, D}, sensealg, lb, ub, p; kwargs...) where {S,D}
     # since all AbstractRange types are equidistant by design, we can rely on that
@@ -186,10 +189,11 @@ function __solvebp_call(prob::IntegralProblem, alg::Trapezoidal{S, D}, sensealg,
     
     err = Inf64
     if is_sampled_problem(prob)
+        data = prob.f
         # inlining is required in order to not allocate
         @inline function integrand(i) 
-            # integrate along dimension `dim`
-            selectdim(prob.f, dim, i) 
+            # integrate along dimension `dim`, returning a n-1 dimensional array, or scalar if n=1
+            myselectdim(data, dim, i) 
         end 
     else
         if isinplace(prob)

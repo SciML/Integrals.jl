@@ -144,7 +144,7 @@ solve(problem, method)
 ```
 
 To use the Trapezoidal rule to integrate a function on an predefined irregular grid, see the following example.
-Note that the lower and upper bound of integration must coincide with the first and last element of the grid.
+Note that the lower and upper bound of integration must coincide with the first and last element of the grid. 
 
 ```@example trapz2
 using Integrals
@@ -181,7 +181,6 @@ struct Trapezoidal{S, DIM} <: SciMLBase.AbstractIntegralAlgorithm
         @assert npoints > 1
         @assert isfinite(first(grid))
         @assert isfinite(last(grid))
-        @assert issorted(grid) "The gridpoints must be sorted from low to high."
         return new{V, Val(dim)}(grid)
     end
 end
