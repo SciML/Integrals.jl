@@ -214,7 +214,7 @@ function __solvebp_call(prob::IntegralProblem, alg::Trapezoidal{S, D}, sensealg,
             out += integrand(lastidx)
             out *= dx/2
         # irregular grids:
-        elseif alg.spec isa AbstractVector
+        else 
             out *= (grid[firstidx + 1] - grid[firstidx])
             for i in (firstidx+1):(lastidx-1)
                 @inbounds out += integrand(i) * (grid[i + 1] - grid[i-1])
