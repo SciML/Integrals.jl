@@ -154,8 +154,8 @@ function IntegralProblem(y::AbstractArray, lb, ub, args...; kwargs...)
 end
 function construct_grid(prob, alg, lb, ub, dim)
     x = alg.spec
+    @assert length(ub) == length(lb) == 1 "Multidimensional integration is not supported with the Trapezoidal method"
     if x isa Integer
-        @assert length(ub) == length(lb) == 1 "Multidimensional integration is not supported with the Trapezoidal method"
         grid = range(lb[1], ub[1], length=x)
     else 
         grid = x
@@ -182,7 +182,7 @@ function __solvebp_call(prob::IntegralProblem, alg::Trapezoidal{S, D}, sensealg,
     dim = dimension(D) 
     p = p
     if is_sampled_problem(prob)
-        @assert alg.spec isa AbstractArray "For pre-sampled problems where the integrand is an array, the integration grid must also be an array."
+        @assert alg.spec isa AbstractArray "For pre-sampled problems where the integrand is an array, the integration grid must also be specified by an array."
     end
 
     grid = construct_grid(prob, alg, lb, ub, dim)
