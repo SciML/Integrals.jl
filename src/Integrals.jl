@@ -212,11 +212,12 @@ function __solvebp_call(prob::IntegralProblem, alg::Trapezoidal{S, D}, sensealg,
         # fast path for equidistant grids
         if grid isa AbstractRange 
             dx = grid[begin+1] - grid[begin]
+            out /= 2
             for i in (firstidx+1):(lastidx-1)
-                out += 2*integrand(i)
+                out += integrand(i)
             end
-            out += integrand(lastidx)
-            out *= dx/2
+            out += integrand(lastidx)/2
+            out *= dx
         # irregular grids:
         else 
             out *= (grid[firstidx + 1] - grid[firstidx])
@@ -230,11 +231,12 @@ function __solvebp_call(prob::IntegralProblem, alg::Trapezoidal{S, D}, sensealg,
         out = copy(out) # to prevent aliasing
         if grid isa AbstractRange 
             dx = grid[begin+1] - grid[begin]
+            out ./= 2
             for i in (firstidx+1):(lastidx-1)
-                out .+= 2.0 .* integrand(i)
+                out .+= integrand(i)
             end
-            out .+= integrand(lastidx)
-            out .*= dx/2
+            out .+= integrand(lastidx) ./ 2
+            out .*= dx
         else 
             out .*= (grid[firstidx + 1] - grid[firstidx])
             for i in (firstidx+1):(lastidx-1)
@@ -244,7 +246,6 @@ function __solvebp_call(prob::IntegralProblem, alg::Trapezoidal{S, D}, sensealg,
             out ./= 2
         end
     end
-
     return SciMLBase.build_solution(prob, alg, out, err, retcode = ReturnCode.Success)
 end
 
