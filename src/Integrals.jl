@@ -203,9 +203,10 @@ function __solvebp_call(prob::IntegralProblem, alg::Trapezoidal{S, D}, sensealg,
     firstidx, lastidx = firstindex(grid), lastindex(grid)
 
     out = integrand(firstidx)
+
     if isbits(out) 
         # fast path for equidistant grids
-        if alg.spec isa Integer 
+        if grid isa AbstractRange 
             dx = grid[begin+1] - grid[begin]
             for i in (firstidx+1):(lastidx-1)
                 out += 2*integrand(i)
@@ -222,7 +223,7 @@ function __solvebp_call(prob::IntegralProblem, alg::Trapezoidal{S, D}, sensealg,
             out /= 2
         end
     else # same, but inplace, broadcasted
-        out = zeros(eltype(out), size(out)...) # to prevent aliasing
+        out = copy(out) # to prevent aliasing
         if grid isa AbstractRange 
             dx = grid[begin+1] - grid[begin]
             for i in (firstidx+1):(lastidx-1)
