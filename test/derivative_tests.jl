@@ -1,4 +1,4 @@
-using Integrals, Zygote, FiniteDiff, ForwardDiff, SciMLSensitivity
+using Integrals, Zygote, FiniteDiff, ForwardDiff#, SciMLSensitivity
 using IntegralsCuba, IntegralsCubature
 using Test
 
@@ -117,7 +117,7 @@ dp4 = ForwardDiff.gradient(p -> testf(lb, ub, p), p)
 @test dp1 ≈ dp4
 
 ### Batch Single dim
-f(x, p) = x * p[1] .+ p[2] * p[3]
+f(x, p) = x * p[1] .+ p[2] * p[3]  # scalar integrand
 
 lb = 1.0
 ub = 3.0
@@ -130,14 +130,14 @@ function testf3(lb, ub, p; f = f)
 end
 
 dp1 = ForwardDiff.gradient(p -> testf3(lb, ub, p), p)
-# dp2 = Zygote.gradient(p->testf3(lb,ub,p),p)[1] # TODO fix: LoadError: DimensionMismatch("variable with size(x) == (1, 15) cannot have a gradient with size(dx) == (15,)")
+dp2 = Zygote.gradient(p->testf3(lb,ub,p),p)[1] # TODO fix: LoadError: DimensionMismatch("variable with size(x) == (1, 15) cannot have a gradient with size(dx) == (15,)")
 dp3 = FiniteDiff.finite_difference_gradient(p -> testf3(lb, ub, p), p)
 
 @test dp1 ≈ dp3 #passes
-@test_broken dp2 ≈ dp3 #passes
+@test dp2 ≈ dp3 #passes
 
 ### Batch single dim, nout
-f(x, p) = (x * p[1] .+ p[2] * p[3]) .* [1; 2]
+f(x, p) = (x' * p[1] .+ p[2] * p[3]) .* [1; 2]
 
 lb = 1.0
 ub = 3.0
@@ -150,11 +150,11 @@ function testf3(lb, ub, p; f = f)
 end
 
 dp1 = ForwardDiff.gradient(p -> testf3(lb, ub, p), p)
-# dp2 = Zygote.gradient(p->testf3(lb,ub,p),p)[1]
+dp2 = Zygote.gradient(p->testf3(lb,ub,p),p)[1]
 dp3 = FiniteDiff.finite_difference_gradient(p -> testf3(lb, ub, p), p)
 
 @test dp1 ≈ dp3 #passes
-# @test dp2 ≈ dp3 #passes
+@test dp2 ≈ dp3 #passes
 
 ### Batch multi dim
 f(x, p) = x[1, :] * p[1] .+ p[2] * p[3]
@@ -190,15 +190,15 @@ function testf3(lb, ub, p; f = f)
 end
 
 dp1 = ForwardDiff.gradient(p -> testf3(lb, ub, p), p)
-# dp2 = Zygote.gradient(p->testf3(lb,ub,p),p)[1]
+dp2 = Zygote.gradient(p->testf3(lb,ub,p),p)[1]
 dp3 = FiniteDiff.finite_difference_gradient(p -> testf3(lb, ub, p), p)
 
 @test dp1 ≈ dp3
-# @test dp2 ≈ dp3 
+@test dp2 ≈ dp3
 
-## iip Batch mulit dim
+## iip Batch multi dim
 function g(dx, x, p)
-    dx .= sum(x * p[1] .+ p[2] * p[3], dims = 1)
+    dx .= dropdims(sum(x * p[1] .+ p[2] * p[3], dims = 1), dims = 1)
 end
 
 lb = [1.0, 1.0]
@@ -236,8 +236,8 @@ function testf3(lb, ub, p; f = g)
 end
 
 dp1 = ForwardDiff.gradient(p -> testf3(lb, ub, p), p)
-# dp2 = Zygote.gradient(p->testf3(lb,ub,p),p)[1]
+dp2 = Zygote.gradient(p->testf3(lb,ub,p),p)[1]
 dp3 = FiniteDiff.finite_difference_gradient(p -> testf3(lb, ub, p), p)
 
 @test dp1 ≈ dp3
-# @test dp2 ≈ dp3 
+@test dp2 ≈ dp3
