@@ -122,3 +122,20 @@ function GaussLegendre(; n = 250, subintervals = 1, nodes = nothing, weights = n
     end
     return GaussLegendre(nodes, weights, subintervals)
 end
+
+"""
+    QuadratureFunction(q; n=250)
+
+Algorithm to construct and evaluate a quadrature rule `q` of `n` points computed from the
+inputs as `x, w = q(n)`
+"""
+struct QuadratureFunction{Q} <: SciMLBase.AbstractIntegralAlgorithm
+    q::Q
+    n::Int
+    function QuadratureFunction(q::Q, n::Integer) where {Q}
+        n > 0 ||
+            throw(ArgumentError("Cannot use a nonpositive number of quadrature nodes."))
+        return new{Q}(q, n)
+    end
+end
+QuadratureFunction(q; n = 250) = QuadratureFunction(q, n)
