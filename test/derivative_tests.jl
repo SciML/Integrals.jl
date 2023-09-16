@@ -130,7 +130,7 @@ function testf3(lb, ub, p; f = f)
 end
 
 dp1 = ForwardDiff.gradient(p -> testf3(lb, ub, p), p)
-dp2 = Zygote.gradient(p->testf3(lb,ub,p),p)[1] # TODO fix: LoadError: DimensionMismatch("variable with size(x) == (1, 15) cannot have a gradient with size(dx) == (15,)")
+dp2 = Zygote.gradient(p -> testf3(lb, ub, p), p)[1] # TODO fix: LoadError: DimensionMismatch("variable with size(x) == (1, 15) cannot have a gradient with size(dx) == (15,)")
 dp3 = FiniteDiff.finite_difference_gradient(p -> testf3(lb, ub, p), p)
 
 @test dp1 ≈ dp3 #passes
@@ -150,7 +150,7 @@ function testf3(lb, ub, p; f = f)
 end
 
 dp1 = ForwardDiff.gradient(p -> testf3(lb, ub, p), p)
-dp2 = Zygote.gradient(p->testf3(lb,ub,p),p)[1]
+dp2 = Zygote.gradient(p -> testf3(lb, ub, p), p)[1]
 dp3 = FiniteDiff.finite_difference_gradient(p -> testf3(lb, ub, p), p)
 
 @test dp1 ≈ dp3 #passes
@@ -190,7 +190,7 @@ function testf3(lb, ub, p; f = f)
 end
 
 dp1 = ForwardDiff.gradient(p -> testf3(lb, ub, p), p)
-dp2 = Zygote.gradient(p->testf3(lb,ub,p),p)[1]
+dp2 = Zygote.gradient(p -> testf3(lb, ub, p), p)[1]
 dp3 = FiniteDiff.finite_difference_gradient(p -> testf3(lb, ub, p), p)
 
 @test dp1 ≈ dp3
@@ -236,7 +236,7 @@ function testf3(lb, ub, p; f = g)
 end
 
 dp1 = ForwardDiff.gradient(p -> testf3(lb, ub, p), p)
-dp2 = Zygote.gradient(p->testf3(lb,ub,p),p)[1]
+dp2 = Zygote.gradient(p -> testf3(lb, ub, p), p)[1]
 dp3 = FiniteDiff.finite_difference_gradient(p -> testf3(lb, ub, p), p)
 
 @test dp1 ≈ dp3

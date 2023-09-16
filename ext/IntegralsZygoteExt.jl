@@ -32,15 +32,18 @@ function ChainRulesCore.rrule(::typeof(Integrals.__solvebp), cache, alg, senseal
             if sensealg.vjp isa Integrals.ZygoteVJP
                 dfdp = function (dx, x, p)
                     z, back = Zygote.pullback(p) do p
-                        _dx = cache.nout == 1 ? Zygote.Buffer(dx, eltype(y), size(x, ndims(x))) : Zygote.Buffer(dx, eltype(y), cache.nout, size(x, ndims(x)))
+                        _dx = cache.nout == 1 ?
+                              Zygote.Buffer(dx, eltype(y), size(x, ndims(x))) :
+                              Zygote.Buffer(dx, eltype(y), cache.nout, size(x, ndims(x)))
                         cache.f(_dx, x, p)
                         copy(_dx)
                     end
                     z .= zero(eltype(z))
                     for idx in 1:size(x, ndims(x))
-                        z isa Vector ? (z[idx] = y) : (z[:,idx] .= y)
+                        z isa Vector ? (z[idx] = y) : (z[:, idx] .= y)
                         dx[:, idx] .= back(z)[1]
-                        z isa Vector ? (z[idx] = zero(eltype(z))) : (z[:, idx] .= zero(eltype(z)))
+                        z isa Vector ? (z[idx] = zero(eltype(z))) :
+                        (z[:, idx] .= zero(eltype(z)))
                     end
                 end
             elseif sensealg.vjp isa Integrals.ReverseDiffVJP
@@ -62,8 +65,10 @@ function ChainRulesCore.rrule(::typeof(Integrals.__solvebp), cache, alg, senseal
                         out = zeros(eltype(p), size(p)..., size(x, ndims(x)))
                         for idx in 1:size(x, ndims(x))
                             z isa Vector ? (z[idx] = y) : (z[:, idx] .= y)
-                            out isa Vector ? (out[idx] = back(z)[1]) : (out[:, idx] .= back(z)[1])
-                            z isa Vector ? (z[idx] = zero(y)) : (z[:, idx] .= zero(eltype(y)))
+                            out isa Vector ? (out[idx] = back(z)[1]) :
+                            (out[:, idx] .= back(z)[1])
+                            z isa Vector ? (z[idx] = zero(y)) :
+                            (z[:, idx] .= zero(eltype(y)))
                         end
                         out
                     end
@@ -89,7 +94,13 @@ function ChainRulesCore.rrule(::typeof(Integrals.__solvebp), cache, alg, senseal
             cache.kwargs...)
 
         project_p = ProjectTo(p)
-        dp = project_p(Integrals.__solvebp_call(dp_cache, alg, sensealg, lb, ub, p; kwargs...).u)
+        dp = project_p(Integrals.__solvebp_call(dp_cache,
+            alg,
+            sensealg,
+            lb,
+            ub,
+            p;
+            kwargs...).u)
 
         if lb isa Number
             dlb = cache.batch > 0 ? -_f([lb]) : -_f(lb)

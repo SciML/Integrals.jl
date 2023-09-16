@@ -29,7 +29,8 @@ function Integrals.__solvebp(cache, alg, sensealg, lb, ub,
         dfdp = function (out, x, p)
             dualp = reinterpret(ForwardDiff.Dual{T, V, P}, p)
             if cache.batch > 0
-                dx = cache.nout == 1 ? similar(dualp, size(x, ndims(x))) : similar(dualp, cache.nout, size(x, ndims(x)))
+                dx = cache.nout == 1 ? similar(dualp, size(x, ndims(x))) :
+                     similar(dualp, cache.nout, size(x, ndims(x)))
             else
                 dx = similar(dualp, cache.nout)
             end

@@ -85,7 +85,6 @@ function Integrals.__solvebp_call(prob::IntegralProblem,
                         reltol = reltol, abstol = abstol,
                         maxevals = maxiters)
                 end
-
             end
         else
             if isinplace(prob)
