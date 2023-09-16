@@ -124,64 +124,9 @@ function GaussLegendre(; n = 250, subintervals = 1, nodes = nothing, weights = n
 end
 
 """
-    Trapezoidal{S, DIM}
+    TrapezoidalRule
 
-Struct for evaluating an integral via Trapezoidal rule.
-The field `spec` contains either the number of gridpoints or an array of specified gridpoints
-
-The Trapezoidal rule supports integration of pre-sampled data, stored in an array, as well as integration of 
-functions. It does not support batching or integration over multidimensional spaces.
-
-To use the Trapezoidal rule to integrate a function on a regular grid with `n` points:
-
-```@example trapz1
-using Integrals
-f = (x, p) -> x^9
-n = 1000
-method = Trapezoidal(n)
-problem = IntegralProblem(f, 0.0, 1.0)
-solve(problem, method)
-```
-
-To use the Trapezoidal rule to integrate a function on an predefined irregular grid, see the following example.
-Note that the lower and upper bound of integration must coincide with the first and last element of the grid. 
-
-```@example trapz2
-using Integrals
-f = (x, p) -> x^9
-x = sort(rand(1000))
-x = [0.0; x; 1.0]
-method = Trapezoidal(x)
-problem = IntegralProblem(f, 0.0, 1.0)
-solve(problem, method)
-```
-
-To use the Trapezoidal rule to integrate a set of sampled data, see the following example.
-By default, the integration occurs over the first dimension of the input array.
-```@example trapz3
-using Integrals
-x = sort(rand(1000))
-x = [0.0; x; 1.0]
-y1 = x' .^ 4
-y2 = x' .^ 9
-y = [y1; y2]
-method = Trapezoidal(x; dim=2)
-problem = IntegralProblem(y, 0.0, 1.0)
-solve(problem, method)
-```
+Struct for evaluating an integral via the trapezoidal rule.
 """
-struct Trapezoidal{S, DIM} <: SciMLBase.AbstractIntegralAlgorithm
-    spec::S
-    function Trapezoidal(npoints::I; dim=1) where I<:Integer
-        @assert npoints > 1 
-        return new{I, Val(dim)}(npoints)
-    end
-    function Trapezoidal(grid::V; dim=1) where V<:AbstractVector
-        npoints = length(grid)
-        @assert npoints > 1
-        @assert isfinite(first(grid))
-        @assert isfinite(last(grid))
-        return new{V, Val(dim)}(grid)
-    end
+struct TrapezoidalRule <: SciMLBase.AbstractIntegralAlgorithm
 end
-

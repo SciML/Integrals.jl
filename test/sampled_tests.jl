@@ -1,45 +1,30 @@
 using Integrals, Test
 @testset "Sampled Integration" begin
-    lb = 0.0
-    ub = 1.0
+    lb = 0.4
+    ub = 1.1
     npoints = 1000
-    for method = [Trapezoidal] # Simpson's later
-        nouts = [1,2,1,2]
-        for (i,f) = enumerate([(x,p) -> x^5, (x,p) -> [x^5, x^5], (out, x,p) -> (out[1] = x^5; out),  (out, x, p) -> (out[1] = x^5; out[2] = x^5; out)])
 
-            exact = 1/6
-            prob = IntegralProblem(f, lb, ub, nout=nouts[i])
+    grid1 = range(lb, ub, length = npoints)
+    grid2 = rand(npoints).*(ub-lb) .+ lb
+    grid2 = [lb; sort(grid2); ub]
 
-            # AbstractRange
-            error1 = solve(prob, method(npoints)).u .- exact
-            @test all(error1 .< 10^-4)
+    exact_sols = [1 / 6 * (ub^6 - lb^6), sin(ub) - sin(lb)]
+    for method in [TrapezoidalRule] # Simpson's later
+        for grid in [grid1, grid2]
+            for (i, f) in enumerate([x -> x^5, x -> cos(x)])
+                exact = exact_sols[i]
+                # single dimensional y
+                y = f.(grid)
+                prob = SampledIntegralProblem(y, grid)
+                error = solve(prob, method()).u .- exact
+                @test all(error .< 10^-4)
 
-            # AbstractVector equidistant
-            error2 = solve(prob, method(collect(range(lb, ub, length=npoints)))).u .- exact
-            @test all(error2 .< 10^-4)
-
-            # AbstractVector irregular
-            grid = rand(npoints)
-            grid = [lb; sort(grid); ub]
-            error3 = solve(prob, method(grid)).u .- exact
-            @test all(error3 .< 10^-4)
-
-
+                # along dim=2
+                y = f.([grid grid]')
+                prob = SampledIntegralProblem(y, grid; dim=2)
+                error = solve(prob, method()).u .- exact
+                @test all(error .< 10^-4)
+            end
         end
-        exact = 1/6
-
-        grid = rand(npoints)
-        grid = [lb; sort(grid); ub]
-        # single dimensional y
-        y = grid .^ 5
-        prob = IntegralProblem(y, lb, ub)
-        error4 = solve(prob, method(grid, dim=1)).u .- exact
-        @test all(error4 .< 10^-4) 
-
-        # along dim=2
-        y = ([grid grid]') .^ 5
-        prob = IntegralProblem(y, lb, ub)
-        error5 = solve(prob, method(grid, dim=2)).u .- exact 
-        @test all(error5 .< 10^-4) 
     end
 end

@@ -8,10 +8,29 @@ using Reexport, MonteCarloIntegration, QuadGK, HCubature
 @reexport using SciMLBase
 using LinearAlgebra
 
+############ should be removed once PR in SciMLBase is merged
+struct SampledIntegralProblem{Y, X, D, K} <: SciMLBase.AbstractIntegralProblem{false}
+    y::Y
+    x::X
+    dim::D
+    kwargs::K
+    function SampledIntegralProblem(y::AbstractArray, x::AbstractVector;
+        dim = 1,
+        kwargs...)
+        @assert dim<=ndims(y) "The integration dimension `dim` is larger than the number of dimensions of the integrand `y`"
+        @assert length(x)==size(y, dim) "The integrand `y` must have the same length as the sampling points `x` along the integrated dimension."
+        @assert axes(x, 1)==axes(y, dim) "The integrand `y` must obey the same indexing as the sampling points `x` along the integrated dimension."
+        new{typeof(y), typeof(x), Val{dim}, typeof(kwargs)}(y, x, Val(dim), kwargs)
+    end
+end
+export SampledIntegralProblem
+#############
+
 include("common.jl")
 include("init.jl")
 include("algorithms.jl")
 include("infinity_handling.jl")
+include("trapezoidal.jl")
 
 abstract type QuadSensitivityAlg end
 struct ReCallVJP{V}
@@ -147,107 +166,5 @@ function __solvebp_call(prob::IntegralProblem, alg::VEGAS, sensealg, lb, ub, p;
     SciMLBase.build_solution(prob, alg, val, err, chi = chi, retcode = ReturnCode.Success)
 end
 
-is_sampled_problem(prob::IntegralProblem) = prob.f isa AbstractArray
-import SciMLBase.IntegralProblem # this is type piracy, and belongs in SciMLBase
-function IntegralProblem(y::AbstractArray, lb, ub, args...; kwargs...)
-    IntegralProblem{false}(y, lb, ub, args...; kwargs...)
-end
-function construct_grid(prob, alg, lb, ub, dim)
-    x = alg.spec
-    @assert length(ub) == length(lb) == 1 "Multidimensional integration is not supported with the Trapezoidal method"
-    if x isa Integer
-        grid = range(lb[1], ub[1], length=x)
-    else 
-        grid = x
-        @assert ndims(grid) == 1 "Multidimensional integration is not supported with the Trapezoidal method"
-    end
-
-    @assert lb[1] ≈ grid[begin] "Lower bound in `IntegralProblem` must coincide with that of the grid"
-    @assert ub[1] ≈ grid[end] "Upper bound in `IntegralProblem` must coincide with that of the grid"
-    if is_sampled_problem(prob)
-        @assert size(prob.f, dim) == length(grid) "Integrand and grid must be of equal length along the integrated dimension"
-        @assert axes(prob.f, dim) == axes(grid,1) "Grid and integrand array must use same indexing along integrated dimension" 
-    end
-    return grid
-end
-
-@inline myselectdim(y::AbstractArray{T,dims}, d, i) where {T,dims} = selectdim(y, d, i)
-@inline myselectdim(y::AbstractArray{T,1}, _, i) where {T} = @inbounds y[i]
-
-@inline dimension(::Val{D}) where D = D
-function __solvebp_call(prob::IntegralProblem, alg::Trapezoidal{S, D}, sensealg, lb, ub, p; kwargs...) where {S,D}
-    # since all AbstractRange types are equidistant by design, we can rely on that
-    @assert prob.batch == 0
-    # using `Val`s for dimensionality is required to make `selectdim` not allocate
-    dim = dimension(D) 
-    p = p
-    if is_sampled_problem(prob)
-        @assert alg.spec isa AbstractArray "For pre-sampled problems where the integrand is an array, the integration grid must also be specified by an array."
-    end
-
-    grid = construct_grid(prob, alg, lb, ub, dim)
-    
-    err = Inf64
-    if is_sampled_problem(prob)
-        data = prob.f
-        # inlining is required in order to not allocate
-        @inline function integrand(i) 
-            # integrate along dimension `dim`, returning a n-1 dimensional array, or scalar if n=1
-            myselectdim(data, dim, i) 
-        end 
-    else
-        if isinplace(prob)
-            y = zeros(eltype(lb), prob.nout)
-            integrand = i -> @inbounds (prob.f(y, grid[i], p); y)
-        else
-            integrand = i -> @inbounds prob.f(grid[i], p)
-        end
-    end
-
-    firstidx, lastidx = firstindex(grid), lastindex(grid)
-
-    out = integrand(firstidx)
-
-    if isbits(out) 
-        # fast path for equidistant grids
-        if grid isa AbstractRange 
-            dx = grid[begin+1] - grid[begin]
-            out /= 2
-            for i in (firstidx+1):(lastidx-1)
-                out += integrand(i)
-            end
-            out += integrand(lastidx)/2
-            out *= dx
-        # irregular grids:
-        else 
-            out *= (grid[firstidx + 1] - grid[firstidx])
-            for i in (firstidx+1):(lastidx-1)
-                @inbounds out += integrand(i) * (grid[i + 1] - grid[i-1])
-            end
-            out += integrand(lastidx) * (grid[lastidx] - grid[lastidx-1])
-            out /= 2
-        end
-    else # same, but inplace, broadcasted
-        out = copy(out) # to prevent aliasing
-        if grid isa AbstractRange 
-            dx = grid[begin+1] - grid[begin]
-            out ./= 2
-            for i in (firstidx+1):(lastidx-1)
-                out .+= integrand(i)
-            end
-            out .+= integrand(lastidx) ./ 2
-            out .*= dx
-        else 
-            out .*= (grid[firstidx + 1] - grid[firstidx])
-            for i in (firstidx+1):(lastidx-1)
-                @inbounds out .+= integrand(i) .* (grid[i + 1] - grid[i-1])
-            end
-            out .+= integrand(lastidx) .* (grid[lastidx] - grid[lastidx-1])
-            out ./= 2
-        end
-    end
-    return SciMLBase.build_solution(prob, alg, out, err, retcode = ReturnCode.Success)
-end
-
-export QuadGKJL, HCubatureJL, VEGAS, GaussLegendre, Trapezoidal
+export QuadGKJL, HCubatureJL, VEGAS, GaussLegendre, TrapezoidalRule
 end # module
