@@ -80,8 +80,7 @@ p = (1.0, 1.3)
 
 prob = IntegralProblem(g2, lb, ub, p)
 
-@test solve(prob, alg).u≈[pi,pi] rtol=1e-4
-
+@test solve(prob, alg).u≈[pi, pi] rtol=1e-4
 
 #= derivative tests
 
