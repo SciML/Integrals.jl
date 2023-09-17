@@ -124,8 +124,8 @@ function ChainRulesCore.rrule(::typeof(Integrals.__solvebp), cache, alg, senseal
     out, quadrature_adjoint
 end
 
-# Zygote.@adjoint function Zygote.literal_getproperty(sol::SciMLBase.IntegralSolution,
-#     ::Val{:u})
-#     sol.u, Δ -> (SciMLBase.build_solution(sol.prob, sol.alg, Δ, sol.resid),)
-# end
+Zygote.@adjoint function Zygote.literal_getproperty(sol::SciMLBase.IntegralSolution,
+    ::Val{:u})
+    sol.u, Δ -> (SciMLBase.build_solution(sol.prob, sol.alg, Δ, sol.resid),)
+end
 end
