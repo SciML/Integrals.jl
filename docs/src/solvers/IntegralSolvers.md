@@ -12,7 +12,7 @@ The following algorithms are available:
   - `CubaDivonne`: Divonne from Cuba.jl. Requires `using IntegralsCuba`. Works only for `>1`-dimensional integrations.
   - `CubaCuhre`: Cuhre from Cuba.jl. Requires `using IntegralsCuba`. Works only for `>1`-dimensional integrations.
   - `GaussLegendre`: Uses Gauss-Legendre quadrature with nodes and weights from FastGaussQuadrature.jl.
-  - `QuadratureFunction`: Accepts a user-defined function that returns nodes and weights.
+  - `QuadratureRule`: Accepts a user-defined function that returns nodes and weights.
 
 ```@docs
 QuadGKJL

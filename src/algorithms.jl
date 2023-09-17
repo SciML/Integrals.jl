@@ -124,7 +124,7 @@ function GaussLegendre(; n = 250, subintervals = 1, nodes = nothing, weights = n
 end
 
 """
-    QuadratureFunction(q; n=250)
+    QuadratureRule(q; n=250)
 
 Algorithm to construct and evaluate a quadrature rule `q` of `n` points computed from the
 inputs as `x, w = q(n)`. It assumes the nodes and weights are for the standard interval
@@ -133,13 +133,13 @@ solved. The nodes `x` may be scalars in 1d or vectors in arbitrary dimensions, a
 weights `w` must be scalar. The algorithm computes the quadrature rule `sum(w .* f.(x))` and
 the caller must check that the result is converged with respect to `n`.
 """
-struct QuadratureFunction{Q} <: SciMLBase.AbstractIntegralAlgorithm
+struct QuadratureRule{Q} <: SciMLBase.AbstractIntegralAlgorithm
     q::Q
     n::Int
-    function QuadratureFunction(q::Q, n::Integer) where {Q}
+    function QuadratureRule(q::Q, n::Integer) where {Q}
         n > 0 ||
             throw(ArgumentError("Cannot use a nonpositive number of quadrature nodes."))
         return new{Q}(q, n)
     end
 end
-QuadratureFunction(q; n = 250) = QuadratureFunction(q, n)
+QuadratureRule(q; n = 250) = QuadratureRule(q, n)

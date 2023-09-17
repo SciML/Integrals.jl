@@ -24,7 +24,7 @@ function trapz(n::Integer)
     return (x, w)
 end
 
-alg = QuadratureFunction(trapz, n = 1000)
+alg = QuadratureRule(trapz, n = 1000)
 
 lb = -1.2
 ub = 3.5
@@ -43,7 +43,7 @@ function trapz2(n)
     return [SVector(y, z) for (y, z) in Iterators.product(x, x)], w .* w'
 end
 
-alg = QuadratureFunction(trapz2, n = 100)
+alg = QuadratureRule(trapz2, n = 100)
 
 lb = SVector(-1.2, -1.0)
 ub = SVector(3.5, 3.7)
@@ -58,7 +58,7 @@ u = solve(prob, alg).u
 
 g = (x, p) -> p / (x^2 + p^2)
 
-alg = QuadratureFunction(gausslegendre, n = 1000)
+alg = QuadratureRule(gausslegendre, n = 1000)
 
 lb = -Inf
 ub = Inf
@@ -68,13 +68,28 @@ prob = IntegralProblem(g, lb, ub, p)
 
 @test solve(prob, alg).u≈pi rtol=1e-4
 
+# 1d with nout
+
+g2 = (x, p) -> [p[1] / (x^2 + p[1]^2), p[2] / (x^2 + p[2]^2)]
+
+alg = QuadratureRule(gausslegendre, n = 1000)
+
+lb = -Inf
+ub = Inf
+p = (1.0, 1.3)
+
+prob = IntegralProblem(g2, lb, ub, p)
+
+@test solve(prob, alg).u≈[pi,pi] rtol=1e-4
+
+
 #= derivative tests
 
 using Zygote
 
 function testf(lb, ub, p, f = f)
     prob = IntegralProblem(f, lb, ub, p)
-    solve(prob, QuadratureFunction(trapz, n=200))[1]
+    solve(prob, QuadratureRule(trapz, n=200))[1]
 end
 
 lb = -1.2

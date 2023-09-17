@@ -18,20 +18,19 @@ function evalrule(f, p, lb, ub, nodes, weights)
     return prod(scale) * I
 end
 
-function init_cacheval(alg::QuadratureFunction, ::IntegralProblem)
+function init_cacheval(alg::QuadratureRule, ::IntegralProblem)
     return alg.q(alg.n)
 end
 
-function Integrals.__solvebp_call(cache::IntegralCache, alg::QuadratureFunction,
+function Integrals.__solvebp_call(cache::IntegralCache, alg::QuadratureRule,
     sensealg, lb, ub, p;
     reltol = nothing, abstol = nothing,
     maxiters = nothing)
     prob = build_problem(cache)
     if isinplace(prob)
-        error("QuadratureFunction does not support inplace integrandss.")
+        error("QuadratureRule does not support inplace integrandss.")
     end
     @assert prob.batch == 0
-    @assert prob.nout == 1
 
     val = evalrule(cache.f, cache.p, lb, ub, cache.cacheval...)
 
