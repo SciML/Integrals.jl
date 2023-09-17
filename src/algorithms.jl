@@ -122,3 +122,24 @@ function GaussLegendre(; n = 250, subintervals = 1, nodes = nothing, weights = n
     end
     return GaussLegendre(nodes, weights, subintervals)
 end
+
+"""
+    QuadratureRule(q; n=250)
+
+Algorithm to construct and evaluate a quadrature rule `q` of `n` points computed from the
+inputs as `x, w = q(n)`. It assumes the nodes and weights are for the standard interval
+`[-1, 1]^d` in `d` dimensions, and rescales the nodes to the specific hypercube being
+solved. The nodes `x` may be scalars in 1d or vectors in arbitrary dimensions, and the
+weights `w` must be scalar. The algorithm computes the quadrature rule `sum(w .* f.(x))` and
+the caller must check that the result is converged with respect to `n`.
+"""
+struct QuadratureRule{Q} <: SciMLBase.AbstractIntegralAlgorithm
+    q::Q
+    n::Int
+    function QuadratureRule(q::Q, n::Integer) where {Q}
+        n > 0 ||
+            throw(ArgumentError("Cannot use a nonpositive number of quadrature nodes."))
+        return new{Q}(q, n)
+    end
+end
+QuadratureRule(q; n = 250) = QuadratureRule(q, n)
