@@ -8,28 +8,11 @@ using Reexport, MonteCarloIntegration, QuadGK, HCubature
 @reexport using SciMLBase
 using LinearAlgebra
 
-############ should be removed once PR in SciMLBase is merged
-struct SampledIntegralProblem{Y, X, D, K} <: SciMLBase.AbstractIntegralProblem{false}
-    y::Y
-    x::X
-    dim::D
-    kwargs::K
-    function SampledIntegralProblem(y::AbstractArray, x::AbstractVector;
-        dim = 1,
-        kwargs...)
-        @assert dim<=ndims(y) "The integration dimension `dim` is larger than the number of dimensions of the integrand `y`"
-        @assert length(x)==size(y, dim) "The integrand `y` must have the same length as the sampling points `x` along the integrated dimension."
-        @assert axes(x, 1)==axes(y, dim) "The integrand `y` must obey the same indexing as the sampling points `x` along the integrated dimension."
-        new{typeof(y), typeof(x), Val{dim}, typeof(kwargs)}(y, x, Val(dim), kwargs)
-    end
-end
-export SampledIntegralProblem
-#############
-
 include("common.jl")
 include("init.jl")
 include("algorithms.jl")
 include("infinity_handling.jl")
+include("quadrules.jl")
 include("trapezoidal.jl")
 
 abstract type QuadSensitivityAlg end
@@ -166,5 +149,5 @@ function __solvebp_call(prob::IntegralProblem, alg::VEGAS, sensealg, lb, ub, p;
     SciMLBase.build_solution(prob, alg, val, err, chi = chi, retcode = ReturnCode.Success)
 end
 
-export QuadGKJL, HCubatureJL, VEGAS, GaussLegendre, TrapezoidalRule
+export QuadGKJL, HCubatureJL, VEGAS, GaussLegendre, QuadratureRule, TrapezoidalRule
 end # module
