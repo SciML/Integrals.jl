@@ -50,14 +50,15 @@ exact_sol_v = [
 ]
 
 batch_f(f) = (pts, p) -> begin
-    fevals = zeros(size(pts, 2))
-    for i in 1:size(pts, 2)
-        x = pts[:, i]
+    fevals = zeros(size(pts, ndims(pts)))
+    for i in axes(pts, ndims(pts))
+        x = pts isa Vector ? pts[i] : pts[:, i]
         fevals[i] = f(x, p)
     end
     fevals
 end
 
+# TODO ? check if pts is a vector or matrix
 batch_iip_f(f) = (fevals, pts, p) -> begin
     for i in 1:size(pts, 2)
         x = pts[:, i]
@@ -67,18 +68,19 @@ batch_iip_f(f) = (fevals, pts, p) -> begin
 end
 
 batch_f_v(f, nout) = (pts, p) -> begin
-    fevals = zeros(nout, size(pts, 2))
-    for i in 1:size(pts, 2)
-        x = pts[:, i]
-        fevals[:, i] = f(x, p, nout)
+    fevals = zeros(nout, size(pts, ndims(pts)))
+    for i in axes(pts, ndims(pts))
+        x = pts isa Vector ? pts[i] : pts[:, i]
+        fevals[:, i] .= f(x, p, nout)
     end
     fevals
 end
 
+# TODO ? check if pts is a vector or matrix
 batch_iip_f_v(f, nout) = (fevals, pts, p) -> begin
     for i in 1:size(pts, 2)
         x = pts[:, i]
-        fevals[:, i] = f(x, p, nout)
+        fevals[:, i] .= f(x, p, nout)
     end
     nothing
 end
@@ -158,7 +160,7 @@ end
             end
             @info "Alg = $alg, Integrand = $i, Dimension = $dim, Output Dimension = $nout"
             sol = solve(prob, alg, reltol = reltol, abstol = abstol)
-            @test sol.u≈[exact_sol[i](dim, nout, lb, ub)] rtol=1e-2
+            @test sol.u[1]≈exact_sol[i](dim, nout, lb, ub) rtol=1e-2
         end
     end
 end
@@ -225,7 +227,11 @@ end
                 end
                 @info "Alg = $alg, Integrand = $i, Dimension = $dim, Output Dimension = $nout"
                 sol = solve(prob, alg, reltol = reltol, abstol = abstol)
-                @test sol.u≈exact_sol_v[i](dim, nout, lb, ub) rtol=1e-2
+                if nout == 1
+                    @test sol.u[1]≈exact_sol_v[i](dim, nout, lb, ub)[1] rtol=1e-2
+                else
+                    @test sol.u≈exact_sol_v[i](dim, nout, lb, ub) rtol=1e-2
+                end
             end
         end
     end
@@ -247,8 +253,8 @@ end
                         nout = nout)
                     @info "Alg = $alg, Integrand = $i, Dimension = $dim, Output Dimension = $nout"
                     sol = solve(prob, alg, reltol = reltol, abstol = abstol)
-                    if sol.u isa Number
-                        @test sol.u≈exact_sol_v[i](dim, nout, lb, ub)[1] rtol=1e-2
+                    if nout == 1
+                        @test sol.u[1]≈exact_sol_v[i](dim, nout, lb, ub)[1] rtol=1e-2
                     else
                         @test sol.u≈exact_sol_v[i](dim, nout, lb, ub) rtol=1e-2
                     end
@@ -277,8 +283,8 @@ end
                     else
                         sol = solve(prob, alg, reltol = reltol, abstol = abstol)
                     end
-                    if sol.u isa Number
-                        @test sol.u≈exact_sol_v[i](dim, nout, lb, ub)[1] rtol=1e-2
+                    if nout == 1
+                        @test sol.u[1]≈exact_sol_v[i](dim, nout, lb, ub)[1] rtol=1e-2
                     else
                         @test sol.u≈exact_sol_v[i](dim, nout, lb, ub) rtol=1e-2
                     end

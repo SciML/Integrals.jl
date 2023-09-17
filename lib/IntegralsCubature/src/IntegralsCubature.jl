@@ -54,6 +54,10 @@ function Integrals.__solvebp_call(prob::IntegralProblem,
     maxiters = typemax(Int))
     nout = prob.nout
     if nout == 1
+        # the output of prob.f could be either scalar or a vector of length 1, however
+        # the behavior of the output of the integration routine is undefined (could differ
+        # across algorithms)
+        # Cubature will output a real number in when called without nout/fdim
         if prob.batch == 0
             if isinplace(prob)
                 dx = zeros(eltype(lb), prob.nout)
@@ -63,74 +67,52 @@ function Integrals.__solvebp_call(prob::IntegralProblem,
             end
             if lb isa Number
                 if alg isa CubatureJLh
-                    _val, err = Cubature.hquadrature(f, lb, ub;
+                    val, err = Cubature.hquadrature(f, lb, ub;
                         reltol = reltol, abstol = abstol,
                         maxevals = maxiters)
                 else
-                    _val, err = Cubature.pquadrature(f, lb, ub;
+                    val, err = Cubature.pquadrature(f, lb, ub;
                         reltol = reltol, abstol = abstol,
                         maxevals = maxiters)
                 end
-                val = prob.f(lb, p) isa Number ? _val : [_val]
             else
                 if alg isa CubatureJLh
-                    _val, err = Cubature.hcubature(f, lb, ub;
+                    val, err = Cubature.hcubature(f, lb, ub;
                         reltol = reltol, abstol = abstol,
                         maxevals = maxiters)
                 else
-                    _val, err = Cubature.pcubature(f, lb, ub;
+                    val, err = Cubature.pcubature(f, lb, ub;
                         reltol = reltol, abstol = abstol,
                         maxevals = maxiters)
-                end
-
-                if isinplace(prob) || !isa(prob.f(lb, p), Number)
-                    val = [_val]
-                else
-                    val = _val
                 end
             end
         else
             if isinplace(prob)
-                f = (x, dx) -> prob.f(dx', x, p)
-            elseif lb isa Number
-                if prob.f([lb ub], p) isa Vector
-                    f = (x, dx) -> (dx .= prob.f(x', p))
-                else
-                    f = function (x, dx)
-                        dx[:] = prob.f(x', p)
-                    end
-                end
+                f = (x, dx) -> prob.f(dx, x, p)
             else
-                if prob.f([lb ub], p) isa Vector
-                    f = (x, dx) -> (dx .= prob.f(x, p))
-                else
-                    f = function (x, dx)
-                        dx .= prob.f(x, p)[:]
-                    end
-                end
+                f = (x, dx) -> (dx .= prob.f(x, p))
             end
             if lb isa Number
                 if alg isa CubatureJLh
-                    _val, err = Cubature.hquadrature_v(f, lb, ub;
+                    val, err = Cubature.hquadrature_v(f, lb, ub;
                         reltol = reltol, abstol = abstol,
                         maxevals = maxiters)
                 else
-                    _val, err = Cubature.pquadrature_v(f, lb, ub;
+                    val, err = Cubature.pquadrature_v(f, lb, ub;
                         reltol = reltol, abstol = abstol,
                         maxevals = maxiters)
                 end
             else
                 if alg isa CubatureJLh
-                    _val, err = Cubature.hcubature_v(f, lb, ub;
+                    val, err = Cubature.hcubature_v(f, lb, ub;
                         reltol = reltol, abstol = abstol,
                         maxevals = maxiters)
                 else
-                    _val, err = Cubature.pcubature_v(f, lb, ub;
+                    val, err = Cubature.pcubature_v(f, lb, ub;
                         reltol = reltol, abstol = abstol,
                         maxevals = maxiters)
                 end
             end
-            val = _val isa Number ? [_val] : _val
         end
     else
         if prob.batch == 0
@@ -166,13 +148,9 @@ function Integrals.__solvebp_call(prob::IntegralProblem,
             end
         else
             if isinplace(prob)
-                f = (x, dx) -> prob.f(dx, x, p)
+                f = (x, dx) -> (prob.f(dx, x, p); dx)
             else
-                if lb isa Number
-                    f = (x, dx) -> (dx .= prob.f(x', p))
-                else
-                    f = (x, dx) -> (dx .= prob.f(x, p))
-                end
+                f = (x, dx) -> (dx .= prob.f(x, p))
             end
 
             if lb isa Number
