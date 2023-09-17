@@ -28,7 +28,7 @@ function Integrals.__solvebp_call(cache::IntegralCache, alg::QuadratureRule,
     maxiters = nothing)
     prob = build_problem(cache)
     if isinplace(prob)
-        error("QuadratureRule does not support inplace integrandss.")
+        error("QuadratureRule does not support inplace integrands.")
     end
     @assert prob.batch == 0
 
