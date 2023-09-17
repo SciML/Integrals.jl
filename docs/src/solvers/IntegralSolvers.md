@@ -19,5 +19,5 @@ QuadGKJL
 HCubatureJL
 VEGAS
 GaussLegendre
-QuadratureFunction
+QuadratureRule
 ```
