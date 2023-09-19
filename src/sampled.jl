@@ -27,19 +27,29 @@ dimension(D::Int) = D
 
 function evalrule(data::AbstractArray, weights, dim)
     f = _eachslice(data, dims=dim)
-    firstidx, lastidx = firstindex(f), lastindex(f)
-    out = f[firstidx]*weights[firstidx]
+    f1, statef = iterate(f)
+    w1, statew = iterate(weights)
+    out = w1 * f1
+    nextf = iterate(f, statef)
+    nextw = iterate(weights, statew)
     if isbits(out)
-        for i in firstidx+1:lastidx
-            @inbounds out += f[i]*weights[i]
+        while nextf !== nothing
+            fi, statef = nextf
+            wi, statew = nextw
+            out += wi * fi
+            nextf = iterate(f, statef)
+            nextw = iterate(weights, statew)
         end
-    else
-        for i in firstidx+1:lastidx
-            @inbounds out .+= f[i] .* weights[i]
+    else 
+        while nextf !== nothing
+            fi, statef = nextf
+            wi, statew = nextw
+            out .+= wi .* fi
+            nextf = iterate(f, statef)
+            nextw = iterate(weights, statew)
         end
     end
-    return out
-
+    return out 
 end
 
 
