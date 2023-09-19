@@ -101,6 +101,3 @@ function __solvebp_call(cache::IntegralCache, args...; kwargs...)
     __solvebp_call(build_problem(cache), args...; kwargs...)
 end
 
-@inline _selectdim(y::AbstractArray{T, dims}, d, i) where {T, dims} = selectdim(y, d, i)
-@inline _selectdim(y::AbstractArray{T, 1}, _, i) where {T} = @inbounds y[i]
-@inline dimension(::Val{D}) where {D} = D

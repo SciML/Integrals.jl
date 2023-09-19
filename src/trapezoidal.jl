@@ -1,55 +1,23 @@
-function __solvebp_call(prob::SampledIntegralProblem, alg::TrapezoidalRule; kwargs...)
-    dim = dimension(prob.dim)
-    err = Inf64
-    data = prob.y
-    grid = prob.x
-    # inlining is required in order to not allocate
-    integrand = @inline function (i)
-        # integrate along dimension `dim`, returning a n-1 dimensional array, or scalar if n=1
-        _selectdim(data, dim, i)
-    end
+struct TrapezoidalUniformWeights <: UniformWeights
+    n::Int
+    h::Float64
+end
 
-    firstidx, lastidx = firstindex(grid), lastindex(grid)
+@inline Base.getindex(w::TrapezoidalUniformWeights, i) = ifelse((i == 1) || (i == w.n), w.h*0.5 , w.h)
 
-    out = integrand(firstidx)
 
-    if isbits(out)
-        # fast path for equidistant grids
-        if grid isa AbstractRange
-            dx = step(grid)
-            out /= 2
-            for i in (firstidx + 1):(lastidx - 1)
-                out += integrand(i)
-            end
-            out += integrand(lastidx) / 2
-            out *= dx
-            # irregular grids:
-        else
-            out *= (grid[firstidx + 1] - grid[firstidx])
-            for i in (firstidx + 1):(lastidx - 1)
-                @inbounds out += integrand(i) * (grid[i + 1] - grid[i - 1])
-            end
-            out += integrand(lastidx) * (grid[lastidx] - grid[lastidx - 1])
-            out /= 2
-        end
-    else # same, but inplace, broadcasted
-        out = copy(out) # to prevent aliasing
-        if grid isa AbstractRange
-            dx = grid[begin + 1] - grid[begin]
-            out ./= 2
-            for i in (firstidx + 1):(lastidx - 1)
-                out .+= integrand(i)
-            end
-            out .+= integrand(lastidx) ./ 2
-            out .*= dx
-        else
-            out .*= (grid[firstidx + 1] - grid[firstidx])
-            for i in (firstidx + 1):(lastidx - 1)
-                @inbounds out .+= integrand(i) .* (grid[i + 1] - grid[i - 1])
-            end
-            out .+= integrand(lastidx) .* (grid[lastidx] - grid[lastidx - 1])
-            out ./= 2
-        end
-    end
-    return SciMLBase.build_solution(prob, alg, out, err, retcode = ReturnCode.Success)
+struct TrapezoidalNonuniformWeights{X<:AbstractArray} <: NonuniformWeights
+    x::X
+end
+
+@inline function Base.getindex(w::TrapezoidalNonuniformWeights, i) 
+    x = w.x
+    (i == firstindex(x)) && return (x[i + 1] - x[i])*0.5
+    (i == lastindex(x)) && return (x[i] - x[i - 1])*0.5
+    return (x[i + 1] - x[i - 1])*0.5
+end
+
+function find_weights(x::AbstractVector, ::TrapezoidalRule)
+    x isa AbstractRange && return TrapezoidalUniformWeights(length(x), step(x))
+    return TrapezoidalNonuniformWeights(x)
 end

@@ -16,12 +16,14 @@ using Integrals, Test
                 # single dimensional y
                 y = f.(grid)
                 prob = SampledIntegralProblem(y, grid)
+                @show solve(prob, method()).u, exact
                 error = solve(prob, method()).u .- exact
                 @test all(error .< 10^-4)
 
                 # along dim=2
                 y = f.([grid grid]')
                 prob = SampledIntegralProblem(y, grid; dim=2)
+                @show solve(prob, method()).u, exact
                 error = solve(prob, method()).u .- exact
                 @test all(error .< 10^-4)
             end

@@ -13,6 +13,7 @@ include("init.jl")
 include("algorithms.jl")
 include("infinity_handling.jl")
 include("quadrules.jl")
+include("sampled.jl")
 include("trapezoidal.jl")
 
 abstract type QuadSensitivityAlg end
