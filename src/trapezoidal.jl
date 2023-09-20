@@ -10,7 +10,7 @@ struct TrapezoidalNonuniformWeights{X<:AbstractArray} <: NonuniformWeights
     x::X
 end
 
-@inline function Base.getindex(w::TrapezoidalNonuniformWeights, i) 
+@inline function Base.getindex(w::TrapezoidalNonuniformWeights, i)
     x = w.x
     (i == firstindex(x)) && return (x[i + 1] - x[i])*0.5
     (i == lastindex(x)) && return (x[i] - x[i - 1])*0.5
