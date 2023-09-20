@@ -26,27 +26,23 @@ dimension(D::Int) = D
 
 
 function evalrule(data::AbstractArray, weights, dim)
-    f = _eachslice(data, dims=dim)
-    f1, statef = iterate(f)
-    w1, statew = iterate(weights)
+    fw = zip(_eachslice(data, dims=dim), weights)
+    next = iterate(fw)
+    next === nothing && throw(ArgumentError("No points to integrate"))
+    (f1, w1), state = next
     out = w1 * f1
-    nextf = iterate(f, statef)
-    nextw = iterate(weights, statew)
+    next = iterate(fw, state)
     if isbits(out)
-        while nextf !== nothing
-            fi, statef = nextf
-            wi, statew = nextw
+        while next !== nothing
+            (fi, wi), state = next
             out += wi * fi
-            nextf = iterate(f, statef)
-            nextw = iterate(weights, statew)
+            next = iterate(fw, state)
         end
     else
-        while nextf !== nothing
-            fi, statef = nextf
-            wi, statew = nextw
+        while next !== nothing
+            (fi, wi), state = next
             out .+= wi .* fi
-            nextf = iterate(f, statef)
-            nextw = iterate(weights, statew)
+            next = iterate(fw, state)
         end
     end
     return out
