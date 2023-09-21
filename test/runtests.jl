@@ -22,6 +22,11 @@ end
 @time @safetestset "Gaussian Quadrature Tests" begin
     include("gaussian_quadrature_tests.jl")
 end
+
+@time @safetestset "Sampled Integration Tests" begin
+    include("sampled_tests.jl")
+end
+
 @time @safetestset "QuadratureFunction Tests" begin
     include("quadrule_tests.jl")
 end

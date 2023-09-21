@@ -124,7 +124,28 @@ function GaussLegendre(; n = 250, subintervals = 1, nodes = nothing, weights = n
 end
 
 """
-    QuadratureRule(q; n=250)
+    TrapezoidalRule
+
+Struct for evaluating an integral via the trapezoidal rule.
+
+
+Example with sampled data:
+
+```
+using Integrals 
+f = x -> x^2
+x = range(0, 1, length=20)
+y = f.(x)
+problem = SampledIntegralProblem(y, x)
+method = TrapezoidalRul()
+solve(problem, method)
+```
+"""
+struct TrapezoidalRule <: SciMLBase.AbstractIntegralAlgorithm
+end
+
+"""
+  QuadratureRule(q; n=250)
 
 Algorithm to construct and evaluate a quadrature rule `q` of `n` points computed from the
 inputs as `x, w = q(n)`. It assumes the nodes and weights are for the standard interval

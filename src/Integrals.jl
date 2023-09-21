@@ -13,6 +13,8 @@ include("init.jl")
 include("algorithms.jl")
 include("infinity_handling.jl")
 include("quadrules.jl")
+include("sampled.jl")
+include("trapezoidal.jl")
 
 abstract type QuadSensitivityAlg end
 struct ReCallVJP{V}
@@ -148,5 +150,5 @@ function __solvebp_call(prob::IntegralProblem, alg::VEGAS, sensealg, lb, ub, p;
     SciMLBase.build_solution(prob, alg, val, err, chi = chi, retcode = ReturnCode.Success)
 end
 
-export QuadGKJL, HCubatureJL, VEGAS, GaussLegendre, QuadratureRule
+export QuadGKJL, HCubatureJL, VEGAS, GaussLegendre, QuadratureRule, TrapezoidalRule
 end # module

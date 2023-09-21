@@ -94,3 +94,65 @@ end
 function __solvebp_call(cache::IntegralCache, args...; kwargs...)
     __solvebp_call(build_problem(cache), args...; kwargs...)
 end
+
+
+mutable struct SampledIntegralCache{Y, X, D, PK, A, K, Tc}
+    y::Y
+    x::X
+    dim::D
+    prob_kwargs::PK
+    alg::A
+    kwargs::K
+    isfresh::Bool   # state of whether weights have been calculated
+    cacheval::Tc    # store alg weights here
+end
+
+function Base.setproperty!(cache::SampledIntegralCache, name::Symbol, x)
+    if name === :x
+        setfield!(cache, :isfresh, true)
+    end
+    setfield!(cache, name, x)
+end
+
+function SciMLBase.init(prob::SampledIntegralProblem,
+    alg::SciMLBase.AbstractIntegralAlgorithm;
+    kwargs...)
+    NamedTuple(kwargs) == NamedTuple() || throw(ArgumentError("There are no keyword arguments allowed to `solve`"))
+
+    cacheval = init_cacheval(alg, prob)
+    isfresh = true
+
+    SampledIntegralCache(
+        prob.y,
+        prob.x,
+        prob.dim,
+        prob.kwargs,
+        alg,
+        kwargs,
+        isfresh,
+        cacheval)
+end
+
+
+"""
+```julia
+solve(prob::SampledIntegralProblem, alg::SciMLBase.AbstractIntegralAlgorithm; kwargs...)
+```
+
+## Keyword Arguments
+
+There are no keyword arguments used to solve `SampledIntegralProblem`s
+"""
+function SciMLBase.solve(prob::SampledIntegralProblem,
+    alg::SciMLBase.AbstractIntegralAlgorithm;
+    kwargs...)
+    solve!(init(prob, alg; kwargs...))
+end
+
+function SciMLBase.solve!(cache::SampledIntegralCache)
+    __solvebp(cache, cache.alg; cache.kwargs...)
+end
+
+function build_problem(cache::SampledIntegralCache)
+    SampledIntegralProblem(cache.y, cache.x; dim = dimension(cache.dim), cache.prob_kwargs...)
+end
