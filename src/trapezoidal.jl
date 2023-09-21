@@ -3,7 +3,7 @@ struct TrapezoidalUniformWeights{T} <: UniformWeights
     h::T
 end
 
-@inline Base.getindex(w::TrapezoidalUniformWeights, i) = ifelse((i == 1) || (i == w.n), w.h*0.5 , w.h)
+@inline Base.getindex(w::TrapezoidalUniformWeights, i) = ifelse((i == 1) || (i == w.n), w.h/2 , w.h)
 
 
 struct TrapezoidalNonuniformWeights{X<:AbstractArray} <: NonuniformWeights
