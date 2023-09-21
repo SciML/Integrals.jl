@@ -1,6 +1,6 @@
-struct TrapezoidalUniformWeights <: UniformWeights
+struct TrapezoidalUniformWeights{T} <: UniformWeights
     n::Int
-    h::Float64
+    h::T
 end
 
 @inline Base.getindex(w::TrapezoidalUniformWeights, i) = ifelse((i == 1) || (i == w.n), w.h*0.5 , w.h)
