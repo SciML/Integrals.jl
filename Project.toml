@@ -35,7 +35,7 @@ MonteCarloIntegration = "0.0.1, 0.0.2, 0.0.3"
 QuadGK = "2.5"
 Reexport = "0.2, 1.0"
 Requires = "1"
-SciMLBase = "1.98, 2"
+SciMLBase = "1.98"
 Zygote = "0.4.22, 0.5, 0.6"
 julia = "1.6"
 
