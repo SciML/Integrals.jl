@@ -55,6 +55,7 @@ If it is necessary to change the integrand `f` instead of defining a new
 
 For sampled integral problems, it is possible to cache the weights and reuse
 them for multiple data sets.
+
 ```@example cache2
 using Integrals
 
@@ -72,7 +73,9 @@ sol1 = solve!(cache)
 cache.y = cos.(x)   # use .= to update in-place
 sol2 = solve!(cache)
 ```
+
 If the grid is modified, the weights are recomputed.
+
 ```@example cache2
 cache.x = 0.0:0.2:2.0
 cache.y = sin.(cache.x)
@@ -80,6 +83,7 @@ sol3 = solve!(cache)
 ```
 
 For multi-dimensional datasets, the integration dimension can also be changed
+
 ```@example cache3
 using Integrals
 

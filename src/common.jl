@@ -95,7 +95,6 @@ function __solvebp_call(cache::IntegralCache, args...; kwargs...)
     __solvebp_call(build_problem(cache), args...; kwargs...)
 end
 
-
 mutable struct SampledIntegralCache{Y, X, D, PK, A, K, Tc}
     y::Y
     x::X
@@ -117,13 +116,13 @@ end
 function SciMLBase.init(prob::SampledIntegralProblem,
     alg::SciMLBase.AbstractIntegralAlgorithm;
     kwargs...)
-    NamedTuple(kwargs) == NamedTuple() || throw(ArgumentError("There are no keyword arguments allowed to `solve`"))
+    NamedTuple(kwargs) == NamedTuple() ||
+        throw(ArgumentError("There are no keyword arguments allowed to `solve`"))
 
     cacheval = init_cacheval(alg, prob)
     isfresh = true
 
-    SampledIntegralCache(
-        prob.y,
+    SampledIntegralCache(prob.y,
         prob.x,
         prob.dim,
         prob.kwargs,
@@ -132,7 +131,6 @@ function SciMLBase.init(prob::SampledIntegralProblem,
         isfresh,
         cacheval)
 end
-
 
 """
 ```julia
@@ -154,5 +152,8 @@ function SciMLBase.solve!(cache::SampledIntegralCache)
 end
 
 function build_problem(cache::SampledIntegralCache)
-    SampledIntegralProblem(cache.y, cache.x; dim = dimension(cache.dim), cache.prob_kwargs...)
+    SampledIntegralProblem(cache.y,
+        cache.x;
+        dim = dimension(cache.dim),
+        cache.prob_kwargs...)
 end
