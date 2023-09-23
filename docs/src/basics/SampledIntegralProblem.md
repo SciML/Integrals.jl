@@ -1,13 +1,14 @@
 # Integrating pre-sampled data
 
-In some cases, instead of a function that acts as integrand, 
-one only possesses a list of data points `y` at a set of sampling 
+In some cases, instead of a function that acts as integrand,
+one only possesses a list of data points `y` at a set of sampling
 locations `x`, that must be integrated. This package contains functionality
-for doing that. 
+for doing that.
 
 ## Example
 
 Say, by some means we have generated a dataset `x` and `y`:
+
 ```example 1
 using Integrals # hide
 f = x -> x^2
@@ -29,9 +30,9 @@ The exact aswer is of course \$ 1/3 \$.
 
 ### Non-equidistant grids
 
-If the sampling points `x` are provided as an `AbstractRange` 
+If the sampling points `x` are provided as an `AbstractRange`
 (constructed with the `range` function for example), faster methods are used that take advantage of
-the fact that the points are equidistantly spaced. Otherwise, general methods are used for 
+the fact that the points are equidistantly spaced. Otherwise, general methods are used for
 non-uniform grids.
 
 Example:

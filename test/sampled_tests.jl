@@ -5,7 +5,7 @@ using Integrals, Test
     npoints = 1000
 
     grid1 = range(lb, ub, length = npoints)
-    grid2 = rand(npoints).*(ub-lb) .+ lb
+    grid2 = rand(npoints) .* (ub - lb) .+ lb
     grid2 = [lb; sort(grid2); ub]
 
     exact_sols = [1 / 6 * (ub^6 - lb^6), sin(ub) - sin(lb)]
@@ -21,7 +21,7 @@ using Integrals, Test
 
                 # along dim=2
                 y = f.([grid grid]')
-                prob = SampledIntegralProblem(y, grid; dim=2)
+                prob = SampledIntegralProblem(y, grid; dim = 2)
                 error = solve(prob, method()).u .- exact
                 @test all(error .< 10^-4)
             end
@@ -30,7 +30,6 @@ using Integrals, Test
 end
 
 @testset "Caching interface" begin
-
     x = 0.0:0.1:1.0
     y = sin.(x)
 
@@ -67,5 +66,5 @@ end
     cache.dim = 1
     sol2 = solve!(cache)
 
-    @test sol2 == solve(SampledIntegralProblem(y, x, dim=1), alg)
+    @test sol2 == solve(SampledIntegralProblem(y, x, dim = 1), alg)
 end
