@@ -2,7 +2,7 @@
 
 julia_version = "1.9.3"
 manifest_format = "2.0"
-project_hash = "99baf40c7dd0f3408e9f3a63cff4a47e46652afb"
+project_hash = "70ba255ceb6ceebe728ee00a3cc43c6309098c53"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "5d2e21d7b0d8c22f67483ef95ebdc39c0e6b6003"
@@ -357,9 +357,9 @@ version = "3.9.0"
 
 [[deps.IntegralsCuba]]
 deps = ["Cuba", "Integrals"]
-git-tree-sha1 = "8e12f8f28f53abaf370efb957328d4f5ffb0976f"
+git-tree-sha1 = "dced02165f61703510f4498c15698e6ac007f6e5"
 uuid = "e00cd5f1-6337-4131-8b37-28b2fe4cd6cb"
-version = "0.2.2"
+version = "0.3.0"
 
 [[deps.IntegralsCubature]]
 deps = ["Cubature", "Integrals"]
