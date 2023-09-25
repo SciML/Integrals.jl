@@ -25,27 +25,49 @@ _eachslice(data::AbstractArray{T, 1}; dims = ndims(data)) where {T} = data
 dimension(::Val{D}) where {D} = D
 dimension(D::Int) = D
 
-function evalrule(data::AbstractArray, weights, dim)
+function update_outs!(outs, out, idx)
+    if typeof(outs) <: AbstractVector
+        outs[idx] = out
+    elseif typeof(outs) <: AbstractMatrix
+        @views outs[:, idx] = out
+    end
+end
+
+function evalrule(data::AbstractArray, weights, dim, cumulative)
     fw = zip(_eachslice(data, dims = dim), weights)
     next = iterate(fw)
     next === nothing && throw(ArgumentError("No points to integrate"))
     (f1, w1), state = next
     out = w1 * f1
+    cumulative && begin
+        outs = zeros(eltype(out), size(data))
+        idx = 1
+        update_outs!(outs, out, idx)
+        idx += 1
+    end
     next = iterate(fw, state)
     if isbits(out)
         while next !== nothing
             (fi, wi), state = next
             out += wi * fi
+            cumulative && begin
+                update_outs!(outs, out, idx)
+                idx += 1
+            end
             next = iterate(fw, state)
         end
     else
         while next !== nothing
             (fi, wi), state = next
             out .+= wi .* fi
+            cumulative && begin
+                update_outs!(outs, out, idx)
+                idx += 1
+            end
             next = iterate(fw, state)
         end
     end
-    return out
+    return cumulative ? outs : out
 end
 
 # can be reused for other sampled rules, which should implement find_weights(x, alg)
@@ -67,7 +89,7 @@ function __solvebp_call(cache::SampledIntegralCache,
         cache.isfresh = false
     end
     weights = cache.cacheval
-    I = evalrule(data, weights, dim)
+    I = evalrule(data, weights, dim, cache.cumulative; kwargs...)
     prob = build_problem(cache)
     return SciMLBase.build_solution(prob, alg, I, err, retcode = ReturnCode.Success)
 end

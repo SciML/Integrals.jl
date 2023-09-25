@@ -102,6 +102,7 @@ mutable struct SampledIntegralCache{Y, X, D, PK, A, K, Tc}
     prob_kwargs::PK
     alg::A
     kwargs::K
+    cumulative::Bool
     isfresh::Bool   # state of whether weights have been calculated
     cacheval::Tc    # store alg weights here
 end
@@ -114,10 +115,10 @@ function Base.setproperty!(cache::SampledIntegralCache, name::Symbol, x)
 end
 
 function SciMLBase.init(prob::SampledIntegralProblem,
-    alg::SciMLBase.AbstractIntegralAlgorithm;
+    alg::SciMLBase.AbstractIntegralAlgorithm; cumulative = false,
     kwargs...)
     NamedTuple(kwargs) == NamedTuple() ||
-        throw(ArgumentError("There are no keyword arguments allowed to `solve`"))
+        throw(ArgumentError("There are no keyword arguments allowed to `solve` except `cumulative`"))
 
     cacheval = init_cacheval(alg, prob)
     isfresh = true
@@ -128,6 +129,7 @@ function SciMLBase.init(prob::SampledIntegralProblem,
         prob.kwargs,
         alg,
         kwargs,
+        cumulative,
         isfresh,
         cacheval)
 end
@@ -139,12 +141,13 @@ solve(prob::SampledIntegralProblem, alg::SciMLBase.AbstractIntegralAlgorithm; kw
 
 ## Keyword Arguments
 
-There are no keyword arguments used to solve `SampledIntegralProblem`s
+- cumulative: Boolean value to indicate if it should return cumulative integral, i.e., a vector of integral values where at every sampled point, it corresponds to the integral from the beginning to that point.
+Default value is `false`.
 """
 function SciMLBase.solve(prob::SampledIntegralProblem,
-    alg::SciMLBase.AbstractIntegralAlgorithm;
+    alg::SciMLBase.AbstractIntegralAlgorithm; cumulative = false,
     kwargs...)
-    solve!(init(prob, alg; kwargs...))
+    solve!(init(prob, alg; cumulative, kwargs...))
 end
 
 function SciMLBase.solve!(cache::SampledIntegralCache)
