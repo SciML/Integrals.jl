@@ -29,7 +29,7 @@ publisher={Elsevier}
 struct CubatureJLh <: AbstractCubatureJLAlgorithm
     error_norm::Int32
 end
-CubatureJLh() = CubatureJLh(Cubature.INDIVIDUAL)
+CubatureJLh(; error_norm = Cubature.INDIVIDUAL) = CubatureJLh(error_norm)
 
 """
     CubatureJLp()
@@ -45,7 +45,7 @@ Defaults to `Cubature.INDIVIDUAL`, other options are
 struct CubatureJLp <: AbstractCubatureJLAlgorithm
     error_norm::Int32
 end
-CubatureJLp() = CubatureJLp(Cubature.INDIVIDUAL)
+CubatureJLp(; error_norm = Cubature.INDIVIDUAL) = CubatureJLp(error_norm)
 
 function Integrals.__solvebp_call(prob::IntegralProblem,
     alg::AbstractCubatureJLAlgorithm,
@@ -183,6 +183,9 @@ function Integrals.__solvebp_call(prob::IntegralProblem,
     SciMLBase.build_solution(prob, alg, val, err, retcode = ReturnCode.Success)
 end
 
+
+
 export CubatureJLh, CubatureJLp
+export Cubature.INDIVIDUAL, Cubature.PAIRED, Cubature.L1, Cubature.L2, Cubature.LINF
 
 end
