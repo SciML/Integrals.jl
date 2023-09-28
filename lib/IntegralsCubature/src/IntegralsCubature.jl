@@ -3,6 +3,7 @@ module IntegralsCubature
 using Integrals, Cubature
 
 import Integrals: transformation_if_inf, scale_x, scale_x!
+import Cubature: INDIVIDUAL, PAIRED, L1, L2, LINF
 
 abstract type AbstractCubatureJLAlgorithm <: SciMLBase.AbstractIntegralAlgorithm end
 """
@@ -10,8 +11,8 @@ abstract type AbstractCubatureJLAlgorithm <: SciMLBase.AbstractIntegralAlgorithm
 
 Multidimensional h-adaptive integration from Cubature.jl.
 `error_norm` specifies the convergence criterion  for vector valued integrands.
-Defaults to `Cubature.INDIVIDUAL`, other options are
-`Cubature.PAIRED`, `Cubature.L1`, `Cubature.L2`, or `Cubature.LINF`.
+Defaults to `IntegralsCubature.INDIVIDUAL`, other options are
+`IntegralsCubature.PAIRED`, `IntegralsCubature.L1`, `IntegralsCubature.L2`, or `IntegralsCubature.LINF`.
 
 ## References
 
@@ -29,7 +30,7 @@ publisher={Elsevier}
 struct CubatureJLh <: AbstractCubatureJLAlgorithm
     error_norm::Int32
 end
-CubatureJLh() = CubatureJLh(Cubature.INDIVIDUAL)
+CubatureJLh(; error_norm = Cubature.INDIVIDUAL) = CubatureJLh(error_norm)
 
 """
     CubatureJLp()
@@ -39,13 +40,13 @@ This method is based on repeatedly doubling the degree of the cubature rules,
 until convergence is achieved.
 The used cubature rule is a tensor product of Clenshaw–Curtis quadrature rules.
 `error_norm` specifies the convergence criterion  for vector valued integrands.
-Defaults to `Cubature.INDIVIDUAL`, other options are
-`Cubature.PAIRED`, `Cubature.L1`, `Cubature.L2`, or `Cubature.LINF`.
+Defaults to `IntegralsCubature.INDIVIDUAL`, other options are
+`IntegralsCubature.PAIRED`, `IntegralsCubature.L1`, `IntegralsCubature.L2`, or `IntegralsCubature.LINF`.
 """
 struct CubatureJLp <: AbstractCubatureJLAlgorithm
     error_norm::Int32
 end
-CubatureJLp() = CubatureJLp(Cubature.INDIVIDUAL)
+CubatureJLp(; error_norm = Cubature.INDIVIDUAL) = CubatureJLp(error_norm)
 
 function Integrals.__solvebp_call(prob::IntegralProblem,
     alg::AbstractCubatureJLAlgorithm,
