@@ -363,9 +363,9 @@ version = "0.3.0"
 
 [[deps.IntegralsCubature]]
 deps = ["Cubature", "Integrals"]
-git-tree-sha1 = "c5faf13b838ca8935cce0286e3dc6c8a705818fb"
+git-tree-sha1 = "2124372650ff7443d35c475a9cb83d283906a030"
 uuid = "c31f79ba-6e32-46d4-a52f-182a8ac42a54"
-version = "0.2.2"
+version = "0.2.3"
 
 [[deps.InteractiveUtils]]
 deps = ["Markdown"]
@@ -824,9 +824,9 @@ version = "1.2.13+0"
 
 [[deps.Zygote]]
 deps = ["AbstractFFTs", "ChainRules", "ChainRulesCore", "DiffRules", "Distributed", "FillArrays", "ForwardDiff", "GPUArrays", "GPUArraysCore", "IRTools", "InteractiveUtils", "LinearAlgebra", "LogExpFunctions", "MacroTools", "NaNMath", "PrecompileTools", "Random", "Requires", "SparseArrays", "SpecialFunctions", "Statistics", "ZygoteRules"]
-git-tree-sha1 = "b97c927497c1de55a78dc9030f6068be5d83ef80"
+git-tree-sha1 = "16848c23e7961e099a4152ba0d10db887f412ee9"
 uuid = "e88e6eb3-aa80-5325-afca-941959d7151f"
-version = "0.6.64"
+version = "0.6.65"
 
     [deps.Zygote.extensions]
     ZygoteColorsExt = "Colors"
