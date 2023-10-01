@@ -22,7 +22,7 @@ using Integrals, Test
                 y = f.(grid)
                 prob = SampledIntegralProblem(y, grid)
                 error = solve(prob, method()).u .- exact
-                error_cum = solve(prob, method(); cumulative = true).u .- exact_cum[i]
+                error_cum = solve(prob, method(); cumulative = Val(true)).u .- exact_cum[i]
                 @test error < 10^-4
                 @test all(error_cum .< 10^-2)
 
@@ -30,7 +30,7 @@ using Integrals, Test
                 y = f.([grid grid]')
                 prob = SampledIntegralProblem(y, grid; dim = 2)
                 error = solve(prob, method()).u .- exact
-                error_cum = solve(prob, method(); cumulative = true).u .-
+                error_cum = solve(prob, method(); cumulative = Val(true)).u .-
                             [exact_cum[i] exact_cum[i]]'
                 @test all(error .< 10^-4)
                 @test all(error_cum .< 10^-2)
@@ -75,9 +75,9 @@ end
         @test sol2 == solve(SampledIntegralProblem(y, x, dim = 1), alg; cumulative)
     end
     @testset "Total Integral" begin
-        test_interface(x, y, false)
+        test_interface(x, y, Val(false))
     end
     @testset "Cumulative Integral" begin
-        test_interface(x, y, true)
+        test_interface(x, y, Val(true))
     end
 end
