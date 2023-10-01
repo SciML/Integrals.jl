@@ -95,14 +95,14 @@ function __solvebp_call(cache::IntegralCache, args...; kwargs...)
     __solvebp_call(build_problem(cache), args...; kwargs...)
 end
 
-mutable struct SampledIntegralCache{Y, X, D, PK, A, K, Tc}
+mutable struct SampledIntegralCache{Y, X, D, PK, A, K, C, Tc}
     y::Y
     x::X
     dim::D
     prob_kwargs::PK
     alg::A
     kwargs::K
-    cumulative::Bool
+    cumulative::C
     isfresh::Bool   # state of whether weights have been calculated
     cacheval::Tc    # store alg weights here
 end
@@ -115,7 +115,7 @@ function Base.setproperty!(cache::SampledIntegralCache, name::Symbol, x)
 end
 
 function SciMLBase.init(prob::SampledIntegralProblem,
-    alg::SciMLBase.AbstractIntegralAlgorithm; cumulative = false,
+    alg::SciMLBase.AbstractIntegralAlgorithm; cumulative = Val(false),
     kwargs...)
     NamedTuple(kwargs) == NamedTuple() ||
         throw(ArgumentError("There are no keyword arguments allowed to `solve` except `cumulative`"))
@@ -145,7 +145,7 @@ solve(prob::SampledIntegralProblem, alg::SciMLBase.AbstractIntegralAlgorithm; kw
 Default value is `false`.
 """
 function SciMLBase.solve(prob::SampledIntegralProblem,
-    alg::SciMLBase.AbstractIntegralAlgorithm; cumulative = false,
+    alg::SciMLBase.AbstractIntegralAlgorithm; cumulative = Val(false),
     kwargs...)
     solve!(init(prob, alg; cumulative, kwargs...))
 end

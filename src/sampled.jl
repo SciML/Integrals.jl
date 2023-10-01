@@ -33,13 +33,13 @@ function update_outs!(outs, out, idx)
     end
 end
 
-function evalrule(data::AbstractArray, weights, dim, cumulative)
+function evalrule(data::AbstractArray, weights, dim, cumulative::Val{C}) where C
     fw = zip(_eachslice(data, dims = dim), weights)
     next = iterate(fw)
     next === nothing && throw(ArgumentError("No points to integrate"))
     (f1, w1), state = next
     out = w1 * f1
-    cumulative && begin
+    C && begin
         outs = zeros(eltype(out), size(data))
         idx = 1
         update_outs!(outs, out, idx)
@@ -50,7 +50,7 @@ function evalrule(data::AbstractArray, weights, dim, cumulative)
         while next !== nothing
             (fi, wi), state = next
             out += wi * fi
-            cumulative && begin
+            C && begin
                 update_outs!(outs, out, idx)
                 idx += 1
             end
@@ -60,14 +60,14 @@ function evalrule(data::AbstractArray, weights, dim, cumulative)
         while next !== nothing
             (fi, wi), state = next
             out .+= wi .* fi
-            cumulative && begin
+            C && begin
                 update_outs!(outs, out, idx)
                 idx += 1
             end
             next = iterate(fw, state)
         end
     end
-    return cumulative ? outs : out
+    return C ? outs : out
 end
 
 # can be reused for other sampled rules, which should implement find_weights(x, alg)
