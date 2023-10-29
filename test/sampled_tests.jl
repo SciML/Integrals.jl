@@ -9,21 +9,31 @@ using Integrals, Test
     grid2 = [lb; sort(grid2); ub]
 
     exact_sols = [1 / 6 * (ub^6 - lb^6), sin(ub) - sin(lb)]
+    exact_sols_cumulative = [[
+        [1 / 6 * (x^6 - lb^6) for x in grid],
+        [sin(x) - sin(lb) for x in grid],
+    ] for grid in [grid1, grid2]]
     for method in [TrapezoidalRule] # Simpson's later
-        for grid in [grid1, grid2]
+        for (j, grid) in enumerate([grid1, grid2])
             for (i, f) in enumerate([x -> x^5, x -> cos(x)])
                 exact = exact_sols[i]
+                exact_cum = exact_sols_cumulative[j]
                 # single dimensional y
                 y = f.(grid)
                 prob = SampledIntegralProblem(y, grid)
                 error = solve(prob, method()).u .- exact
-                @test all(error .< 10^-4)
+                error_cum = solve(prob, method(); cumulative = Val(true)).u .- exact_cum[i]
+                @test error < 10^-4
+                @test all(error_cum .< 10^-2)
 
                 # along dim=2
                 y = f.([grid grid]')
                 prob = SampledIntegralProblem(y, grid; dim = 2)
                 error = solve(prob, method()).u .- exact
+                error_cum = solve(prob, method(); cumulative = Val(true)).u .-
+                            [exact_cum[i] exact_cum[i]]'
                 @test all(error .< 10^-4)
+                @test all(error_cum .< 10^-2)
             end
         end
     end
@@ -33,38 +43,41 @@ end
     x = 0.0:0.1:1.0
     y = sin.(x)
 
-    prob = SampledIntegralProblem(y, x)
-    alg = TrapezoidalRule()
+    function test_interface(x, y, cumulative)
+        prob = SampledIntegralProblem(y, x)
+        alg = TrapezoidalRule()
 
-    cache = init(prob, alg)
-    sol1 = solve!(cache)
+        cache = init(prob, alg; cumulative)
+        sol1 = solve!(cache)
+        @test sol1 == solve(prob, alg; cumulative)
 
-    @test sol1 == solve(prob, alg)
+        cache.y = cos.(x)   # use .= to update in-place
+        sol2 = solve!(cache)
+        @test sol2 == solve(SampledIntegralProblem(cache.y, cache.x), alg; cumulative)
 
-    cache.y = cos.(x)   # use .= to update in-place
-    sol2 = solve!(cache)
+        cache.x = 0.0:0.2:2.0
+        cache.y = sin.(cache.x)
+        sol3 = solve!(cache)
+        @test sol3 == solve(SampledIntegralProblem(cache.y, cache.x), alg; cumulative)
 
-    @test sol2 == solve(SampledIntegralProblem(cache.y, cache.x), alg)
+        x = 0.0:0.1:1.0
+        y = sin.(x) .* cos.(x')
 
-    cache.x = 0.0:0.2:2.0
-    cache.y = sin.(cache.x)
-    sol3 = solve!(cache)
+        prob = SampledIntegralProblem(y, x)
+        alg = TrapezoidalRule()
 
-    @test sol3 == solve(SampledIntegralProblem(cache.y, cache.x), alg)
+        cache = init(prob, alg; cumulative)
+        sol1 = solve!(cache)
+        @test sol1 == solve(prob, alg; cumulative)
 
-    x = 0.0:0.1:1.0
-    y = sin.(x) .* cos.(x')
-
-    prob = SampledIntegralProblem(y, x)
-    alg = TrapezoidalRule()
-
-    cache = init(prob, alg)
-    sol1 = solve!(cache)
-
-    @test sol1 == solve(prob, alg)
-
-    cache.dim = 1
-    sol2 = solve!(cache)
-
-    @test sol2 == solve(SampledIntegralProblem(y, x, dim = 1), alg)
+        cache.dim = 1
+        sol2 = solve!(cache)
+        @test sol2 == solve(SampledIntegralProblem(y, x, dim = 1), alg; cumulative)
+    end
+    @testset "Total Integral" begin
+        test_interface(x, y, Val(false))
+    end
+    @testset "Cumulative Integral" begin
+        test_interface(x, y, Val(true))
+    end
 end
