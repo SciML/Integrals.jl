@@ -3,29 +3,81 @@ using Integrals
 if isdefined(Base, :get_extension)
     using Zygote
     import ChainRulesCore
-    import ChainRulesCore: NoTangent, ProjectTo
+    import ChainRulesCore: Tangent, NoTangent, ProjectTo
 else
     using ..Zygote
     import ..Zygote.ChainRulesCore
-    import ..Zygote.ChainRulesCore: NoTangent, ProjectTo
+    import ..Zygote.ChainRulesCore: Tangent, NoTangent, ProjectTo
 end
 ChainRulesCore.@non_differentiable Integrals.checkkwargs(kwargs...)
-ChainRulesCore.@non_differentiable Integrals.isinplace(f, n)    # fixes #99
+ChainRulesCore.@non_differentiable Integrals.isinplace(f, args...)    # fixes #99
 
-function ChainRulesCore.rrule(::typeof(Integrals.__solvebp), cache, alg, sensealg, lb, ub,
-    p;
-    kwargs...)
-    out = Integrals.__solvebp_call(cache, alg, sensealg, lb, ub, p; kwargs...)
+function ChainRulesCore.rrule(::typeof(Integrals.__solvebp), cache, alg, sensealg, domain,
+        p;
+        kwargs...)
+    # TODO: integrate the primal and dual in the same call to the quadrature library
+    out = Integrals.__solvebp_call(cache, alg, sensealg, domain, p; kwargs...)
 
     # the adjoint will be the integral of the input sensitivities, so it maps the
     # sensitivity of the output to an object of the type of the parameters
     function quadrature_adjoint(Δ)
         # https://juliadiff.org/ChainRulesCore.jl/dev/design/many_tangents.html#manytypes
-        y = cache.nout == 1 ? Δ[1] : Δ   # interpret the output as scalar
-        # this will not be type-stable, but I believe it is unavoidable due to two ambiguities:
-        # 1. Δ is the output of the algorithm, and when nout = 1 it is undefined whether the
-        #    output of the algorithm must be a scalar or a vector of length 1
-        # 2. when nout = 1 the integrand can either be a scalar or a vector of length 1
+        if isinplace(cache)
+            # zygote doesn't support mutation, so we build an oop pullback
+            dx = similar(cache.f.integrand_prototype)
+            _f = x -> cache.f(dx, x, p)
+            if sensealg.vjp isa Integrals.ZygoteVJP
+                if cache.f isa BatchIntegralFunction
+                    # TODO: let the user pass a batched jacobian so we can return a BatchIntegralFunction
+                    dfdp_ = function (x, p)
+                        x_ = x isa AbstractArray ? reshape(x, size(x)..., 1) : [x]
+                        z, back = Zygote.pullback(p) do p
+                            _dx = Zygote.Buffer(dx, size(dx)[begin:(end - 1)]..., 1)
+                            cache.f(_dx, x_, p)
+                            copy(_dx)
+                        end
+                        return back(z .= (Δ isa AbstractArray ? reshape(Δ, size(Δ)..., 1) :
+                                          [Δ]))[1]
+                    end
+                    dfdp = IntegralFunction{false}(dfdp_, nothing)
+                else
+                    dfdp_ = function (x, p)
+                        _, back = Zygote.pullback(p) do p
+                            _dx = Zygote.Buffer(dx)
+                            cache.f(_dx, x, p)
+                            copy(_dx)
+                        end
+                        back(Δ)[1]
+                    end
+                    dfdp = IntegralFunction{false}(dfdp_, nothing)
+                end
+            elseif sensealg.vjp isa Integrals.ReverseDiffVJP
+                error("TODO")
+            end
+        else
+            _f = x -> cache.f(x, p)
+            if sensealg.vjp isa Integrals.ZygoteVJP
+                if cache.f isa BatchIntegralFunction
+                    # TODO: let the user pass a batched jacobian so we can return a BatchIntegralFunction
+                    dfdp_ = function (x, p)
+                        x_ = x isa AbstractArray ? reshape(x, size(x)..., 1) : [x]
+                        z, back = Zygote.pullback(p -> cache.f(x_, p), p)
+                        return back(z .= (Δ isa AbstractArray ? reshape(Δ, size(Δ)..., 1) :
+                                          [Δ]))[1]
+                    end
+                    dfdp = IntegralFunction{false}(dfdp_, nothing)
+                else
+                    dfdp_ = function (x, p)
+                        z, back = Zygote.pullback(p -> cache.f(x, p), p)
+                        back(z isa Number ? only(Δ) : Δ)[1]
+                    end
+                    dfdp = IntegralFunction{false}(dfdp_, nothing)
+                end
+            elseif sensealg.vjp isa Integrals.ReverseDiffVJP
+                error("TODO")
+            end
+        end
+        #=
         if isinplace(cache)
             dx = zeros(cache.nout)
             _f = x -> cache.f(dx, x, p)
@@ -83,9 +135,10 @@ function ChainRulesCore.rrule(::typeof(Integrals.__solvebp), cache, alg, senseal
                 error("TODO")
             end
         end
-
+        =#
         prob = Integrals.build_problem(cache)
-        dp_prob = remake(prob, f = dfdp, nout = length(p))
+        # dp_prob = remake(prob, f = dfdp)  # fails because we change iip
+        dp_prob = IntegralProblem(dfdp, prob.domain, prob.p; prob.kwargs...)
         # the infinity transformation was already applied to f so we don't apply it to dfdp
         dp_cache = init(dp_prob,
             alg;
@@ -97,15 +150,20 @@ function ChainRulesCore.rrule(::typeof(Integrals.__solvebp), cache, alg, senseal
         dp = project_p(Integrals.__solvebp_call(dp_cache,
             alg,
             sensealg,
-            lb,
-            ub,
+            domain,
             p;
             kwargs...).u)
 
+        lb, ub = domain
         if lb isa Number
-            dlb = cache.batch > 0 ? -_f([lb]) : -_f(lb)
-            dub = cache.batch > 0 ? _f([ub]) : _f(ub)
-            return (NoTangent(), NoTangent(), NoTangent(), NoTangent(), dlb, dub, dp)
+            dlb = cache.f isa BatchIntegralFunction ? -_f([lb]) : -_f(lb)
+            dub = cache.f isa BatchIntegralFunction ? _f([ub]) : _f(ub)
+            return (NoTangent(),
+                NoTangent(),
+                NoTangent(),
+                NoTangent(),
+                Tangent{typeof(domain)}(dlb, dub),
+                dp)
         else
             # we need to compute 2*length(lb) integrals on the faces of the hypercube, as we
             # can see from writing the multidimensional integral as an iterated integral
@@ -117,15 +175,14 @@ function ChainRulesCore.rrule(::typeof(Integrals.__solvebp), cache, alg, senseal
             # other kinds of domains. The only question is to determine ω in terms of f and
             # the deformation of the surface (e.g. consider integral over an ellipse and
             # asking for the derivative of the result w.r.t. the semiaxes of the ellipse)
-            return (NoTangent(), NoTangent(), NoTangent(), NoTangent(), NoTangent(),
-                NoTangent(), dp)
+            return (NoTangent(), NoTangent(), NoTangent(), NoTangent(), NoTangent(), dp)
         end
     end
     out, quadrature_adjoint
 end
 
 Zygote.@adjoint function Zygote.literal_getproperty(sol::SciMLBase.IntegralSolution,
-    ::Val{:u})
+        ::Val{:u})
     sol.u, Δ -> (SciMLBase.build_solution(sol.prob, sol.alg, Δ, sol.resid),)
 end
 end
