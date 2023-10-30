@@ -198,7 +198,7 @@ dp3 = FiniteDiff.finite_difference_gradient(p -> testf3(lb, ub, p), p)
 
 ## iip Batch multi dim
 function g(dx, x, p)
-    dx .= dropdims(sum(x * p[1] .+ p[2] * p[3], dims = 1), dims = 1)
+    dx .= sum(x * p[1] .+ p[2] * p[3], dims = 1)
 end
 
 lb = [1.0, 1.0]
