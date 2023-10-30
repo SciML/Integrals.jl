@@ -63,6 +63,10 @@ each dimension of the integration domain is divided into,
 the number of function calls per iteration of the algorithm,
 and whether debug info should be printed, respectively.
 
+## Limitations
+
+This algorithm can only integrate `Float64`-valued functions
+
 ## References
 
 @article{lepage1978new,
@@ -132,7 +136,7 @@ Struct for evaluating an integral via the trapezoidal rule.
 Example with sampled data:
 
 ```
-using Integrals 
+using Integrals
 f = x -> x^2
 x = range(0, 1, length=20)
 y = f.(x)
