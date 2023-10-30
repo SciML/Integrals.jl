@@ -116,111 +116,99 @@ struct CubaCuhre <: AbstractCubaAlgorithm
 end
 
 function CubaVegas(; flags = 0, seed = 0, minevals = 0, nstart = 1000, nincrease = 500,
-    gridno = 0)
+        gridno = 0)
     CubaVegas(flags, seed, minevals, nstart, nincrease, gridno)
 end
 function CubaSUAVE(; flags = 0, seed = 0, minevals = 0, nnew = 1000, nmin = 2,
-    flatness = 25.0)
+        flatness = 25.0)
     CubaSUAVE(flags, seed, minevals, nnew, nmin, flatness)
 end
 function CubaDivonne(; flags = 0, seed = 0, minevals = 0,
-    key1 = 47, key2 = 1, key3 = 1, maxpass = 5, border = 0.0,
-    maxchisq = 10.0, mindeviation = 0.25)
+        key1 = 47, key2 = 1, key3 = 1, maxpass = 5, border = 0.0,
+        maxchisq = 10.0, mindeviation = 0.25)
     CubaDivonne(flags, seed, minevals, key1, key2, key3, maxpass, border, maxchisq,
         mindeviation)
 end
 CubaCuhre(; flags = 0, minevals = 0, key = 0) = CubaCuhre(flags, minevals, key)
 
 function Integrals.__solvebp_call(prob::IntegralProblem, alg::AbstractCubaAlgorithm,
-    sensealg,
-    lb, ub, p;
-    reltol = 1e-8, abstol = 1e-8,
-    maxiters = alg isa CubaSUAVE ? 1000000 : typemax(Int))
+        sensealg,
+        domain, p;
+        reltol = 1e-8, abstol = 1e-8,
+        maxiters = alg isa CubaSUAVE ? 1000000 : typemax(Int))
     @assert maxiters>=1000 "maxiters for $alg should be larger than 1000"
-    if lb isa Number && prob.batch == 0
-        _x = Float64[lb]
-    elseif lb isa Number
-        _x = zeros(eltype(lb), length(lb), prob.batch)
-    elseif prob.batch == 0
-        _x = zeros(eltype(lb), length(lb))
-    else
-        _x = zeros(eltype(lb), length(lb), prob.batch)
-    end
+    lb, ub = domain
+    mid = (lb + ub) / 2
+    ndim = length(mid)
+    (vol = prod(map(-, ub, lb))) isa Real ||
+        throw(ArgumentError("Cuba.jl only supports real-valued integrands"))
+    # we could support other types by multiplying by the jacobian determinant at the end
 
-    if prob.batch == 0
+    if prob.f isa BatchIntegralFunction
+        # nvec == 1 in Cuba will change vectors to matrices, so we won't support it when
+        # batching
+        (nvec = prob.f.max_batch) > 1 ||
+            throw(ArgumentError("BatchIntegralFunction must take multiple batch points"))
+
+        if mid isa Real
+            _x = zeros(typeof(mid), prob.f.max_batch)
+            scale = x -> scale_x!(resize!(_x, length(x)), ub, lb, vec(x))
+        else
+            _x = zeros(eltype(mid), length(mid), prob.f.max_batch)
+            scale = x -> scale_x!(view(_x, :, 1:size(x, 2)), ub, lb, x)
+        end
+
         if isinplace(prob)
+            fsize = size(prob.f.integrand_prototype)[begin:(end - 1)]
+            y = similar(prob.f.integrand_prototype, fsize..., nvec)
+            ax = map(_ -> (:), fsize)
             f = function (x, dx)
-                prob.f(dx, scale_x!(_x, ub, lb, x), p)
-                dx .*= prod((y) -> y[1] - y[2], zip(ub, lb))
+                dy = @view(y[ax..., begin:(begin + size(dx, 2) - 1)])
+                prob.f(dy, scale(x), p)
+                dx .= reshape(dy, :, size(dx, 2)) .* vol
             end
         else
-            f = function (x, dx)
-                dx .= prob.f(scale_x!(_x, ub, lb, x), p) .*
-                      prod((y) -> y[1] - y[2], zip(ub, lb))
-            end
+            y = mid isa Number ? prob.f(typeof(mid)[], p) :
+                prob.f(Matrix{typeof(mid)}(undef, length(mid), 0), p)
+            fsize = size(y)[begin:(end - 1)]
+            f = (x, dx) -> dx .= reshape(prob.f(scale(x), p), :, size(dx, 2)) .* vol
         end
+        ncomp = prod(fsize)
     else
-        if lb isa Number
-            if isinplace(prob)
-                f = function (x, dx)
-                    #todo check scale_x!
-                    prob.f(dx', scale_x!(view(_x, 1:length(x)), ub, lb, x), p)
-                    dx .*= prod((y) -> y[1] - y[2], zip(ub, lb))
-                end
-            else
-                if prob.f([lb ub], p) isa Vector
-                    f = function (x, dx)
-                        dx .= prob.f(scale_x(ub, lb, x), p)' .*
-                              prod((y) -> y[1] - y[2], zip(ub, lb))
-                    end
-                else
-                    f = function (x, dx)
-                        dx .= prob.f(scale_x(ub, lb, x), p) .*
-                              prod((y) -> y[1] - y[2], zip(ub, lb))
-                    end
-                end
-            end
+        nvec = 1
+
+        if mid isa Real
+            scale = x -> scale_x(ub, lb, only(x))
         else
-            if isinplace(prob)
-                f = function (x, dx)
-                    prob.f(dx, scale_x(ub, lb, x), p)
-                    dx .*= prod((y) -> y[1] - y[2], zip(ub, lb))
-                end
-            else
-                if prob.f([lb ub], p) isa Vector
-                    f = function (x, dx)
-                        dx .= prob.f(scale_x(ub, lb, x), p)' .*
-                              prod((y) -> y[1] - y[2], zip(ub, lb))
-                    end
-                else
-                    f = function (x, dx)
-                        dx .= prob.f(scale_x(ub, lb, x), p) .*
-                              prod((y) -> y[1] - y[2], zip(ub, lb))
-                    end
-                end
-            end
+            _x = zeros(eltype(mid), length(mid))
+            scale = x -> scale_x!(_x, ub, lb, x)
         end
+
+        if isinplace(prob)
+            y = similar(prob.f.integrand_prototype)
+            f = (x, dx) -> dx .= vec(prob.f(y, scale(x), p)) .* vol
+        else
+            y = prob.f(mid, p)
+            f = (x, dx) -> dx .= Iterators.flatten(prob.f(scale(x), p)) .* vol
+        end
+        ncomp = length(y)
     end
-
-    ndim = length(lb)
-
-    nvec = prob.batch == 0 ? 1 : prob.batch
 
     if alg isa CubaVegas
-        out = Cuba.vegas(f, ndim, prob.nout; rtol = reltol,
+        out = Cuba.vegas(f, ndim, ncomp; rtol = reltol,
             atol = abstol, nvec = nvec,
             maxevals = maxiters,
             flags = alg.flags, seed = alg.seed, minevals = alg.minevals,
             nstart = alg.nstart, nincrease = alg.nincrease,
             gridno = alg.gridno)
     elseif alg isa CubaSUAVE
-        out = Cuba.suave(f, ndim, prob.nout; rtol = reltol,
+        out = Cuba.suave(f, ndim, ncomp; rtol = reltol,
             atol = abstol, nvec = nvec,
             maxevals = maxiters,
             flags = alg.flags, seed = alg.seed, minevals = alg.minevals,
             nnew = alg.nnew, nmin = alg.nmin, flatness = alg.flatness)
     elseif alg isa CubaDivonne
-        out = Cuba.divonne(f, ndim, prob.nout; rtol = reltol,
+        out = Cuba.divonne(f, ndim, ncomp; rtol = reltol,
             atol = abstol, nvec = nvec,
             maxevals = maxiters,
             flags = alg.flags, seed = alg.seed, minevals = alg.minevals,
@@ -228,19 +216,26 @@ function Integrals.__solvebp_call(prob::IntegralProblem, alg::AbstractCubaAlgori
             maxpass = alg.maxpass, border = alg.border,
             maxchisq = alg.maxchisq, mindeviation = alg.mindeviation)
     elseif alg isa CubaCuhre
-        out = Cuba.cuhre(f, ndim, prob.nout; rtol = reltol,
+        out = Cuba.cuhre(f, ndim, ncomp; rtol = reltol,
             atol = abstol, nvec = nvec,
             maxevals = maxiters,
             flags = alg.flags, minevals = alg.minevals, key = alg.key)
     end
 
-    if isinplace(prob) || prob.batch != 0
-        val = out.integral
-    else
-        if prob.nout == 1 && prob.f(lb, p) isa Number
+    # out.integral is a Vector{Float64}, but we want to return it to the shape of the integrand
+    if prob.f isa BatchIntegralFunction
+        if y isa AbstractVector
             val = out.integral[1]
         else
+            val = reshape(out.integral, fsize)
+        end
+    else
+        if y isa Real
+            val = out.integral[1]
+        elseif y isa AbstractVector
             val = out.integral
+        else
+            val = reshape(out.integral, size(y))
         end
     end
 
