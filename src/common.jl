@@ -18,9 +18,9 @@ SciMLBase.isinplace(::IntegralCache{iip}) where {iip} = iip
 init_cacheval(::SciMLBase.AbstractIntegralAlgorithm, args...) = nothing
 
 function SciMLBase.init(prob::IntegralProblem{iip},
-    alg::SciMLBase.AbstractIntegralAlgorithm;
-    sensealg = ReCallVJP(ZygoteVJP()),
-    do_inf_transformation = nothing, kwargs...) where {iip}
+        alg::SciMLBase.AbstractIntegralAlgorithm;
+        sensealg = ReCallVJP(ZygoteVJP()),
+        do_inf_transformation = nothing, kwargs...) where {iip}
     checkkwargs(kwargs...)
     prob = transformation_if_inf(prob, do_inf_transformation)
     cacheval = init_cacheval(alg, prob)
@@ -75,8 +75,8 @@ These common arguments are:
   - `reltol` (relative tolerance  in changes of the objective value)
 """
 function SciMLBase.solve(prob::IntegralProblem,
-    alg::SciMLBase.AbstractIntegralAlgorithm;
-    kwargs...)
+        alg::SciMLBase.AbstractIntegralAlgorithm;
+        kwargs...)
     solve!(init(prob, alg; kwargs...))
 end
 
@@ -114,8 +114,8 @@ function Base.setproperty!(cache::SampledIntegralCache, name::Symbol, x)
 end
 
 function SciMLBase.init(prob::SampledIntegralProblem,
-    alg::SciMLBase.AbstractIntegralAlgorithm;
-    kwargs...)
+        alg::SciMLBase.AbstractIntegralAlgorithm;
+        kwargs...)
     NamedTuple(kwargs) == NamedTuple() ||
         throw(ArgumentError("There are no keyword arguments allowed to `solve`"))
 
@@ -142,8 +142,8 @@ solve(prob::SampledIntegralProblem, alg::SciMLBase.AbstractIntegralAlgorithm; kw
 There are no keyword arguments used to solve `SampledIntegralProblem`s
 """
 function SciMLBase.solve(prob::SampledIntegralProblem,
-    alg::SciMLBase.AbstractIntegralAlgorithm;
-    kwargs...)
+        alg::SciMLBase.AbstractIntegralAlgorithm;
+        kwargs...)
     solve!(init(prob, alg; kwargs...))
 end
 

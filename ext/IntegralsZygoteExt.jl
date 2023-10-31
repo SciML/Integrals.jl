@@ -13,8 +13,8 @@ ChainRulesCore.@non_differentiable Integrals.checkkwargs(kwargs...)
 ChainRulesCore.@non_differentiable Integrals.isinplace(f, n)    # fixes #99
 
 function ChainRulesCore.rrule(::typeof(Integrals.__solvebp), cache, alg, sensealg, lb, ub,
-    p;
-    kwargs...)
+        p;
+        kwargs...)
     out = Integrals.__solvebp_call(cache, alg, sensealg, lb, ub, p; kwargs...)
 
     # the adjoint will be the integral of the input sensitivities, so it maps the
@@ -125,7 +125,7 @@ function ChainRulesCore.rrule(::typeof(Integrals.__solvebp), cache, alg, senseal
 end
 
 Zygote.@adjoint function Zygote.literal_getproperty(sol::SciMLBase.IntegralSolution,
-    ::Val{:u})
+        ::Val{:u})
     sol.u, Δ -> (SciMLBase.build_solution(sol.prob, sol.alg, Δ, sol.resid),)
 end
 end

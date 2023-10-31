@@ -5,21 +5,21 @@ isdefined(Base, :get_extension) ? (using ForwardDiff) : (using ..ForwardDiff)
 
 # Direct AD on solvers with QuadGK and HCubature
 function Integrals.__solvebp(cache, alg::QuadGKJL, sensealg, lb, ub,
-    p::AbstractArray{<:ForwardDiff.Dual{T, V, P}, N};
-    kwargs...) where {T, V, P, N}
+        p::AbstractArray{<:ForwardDiff.Dual{T, V, P}, N};
+        kwargs...) where {T, V, P, N}
     Integrals.__solvebp_call(cache, alg, sensealg, lb, ub, p; kwargs...)
 end
 
 function Integrals.__solvebp(cache, alg::HCubatureJL, sensealg, lb, ub,
-    p::AbstractArray{<:ForwardDiff.Dual{T, V, P}, N};
-    kwargs...) where {T, V, P, N}
+        p::AbstractArray{<:ForwardDiff.Dual{T, V, P}, N};
+        kwargs...) where {T, V, P, N}
     Integrals.__solvebp_call(cache, alg, sensealg, lb, ub, p; kwargs...)
 end
 
 # Manually split for the pushforward
 function Integrals.__solvebp(cache, alg, sensealg, lb, ub,
-    p::AbstractArray{<:ForwardDiff.Dual{T, V, P}, N};
-    kwargs...) where {T, V, P, N}
+        p::AbstractArray{<:ForwardDiff.Dual{T, V, P}, N};
+        kwargs...) where {T, V, P, N}
     primal = Integrals.__solvebp_call(cache, alg, sensealg, lb, ub, ForwardDiff.value.(p);
         kwargs...)
 

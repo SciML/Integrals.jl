@@ -82,8 +82,8 @@ function refresh_cacheval(cacheval, alg::QuadGKJL, prob)
 end
 
 function __solvebp_call(cache::IntegralCache, alg::QuadGKJL, sensealg, lb, ub, p;
-    reltol = 1e-8, abstol = 1e-8,
-    maxiters = typemax(Int))
+        reltol = 1e-8, abstol = 1e-8,
+        maxiters = typemax(Int))
     prob = build_problem(cache)
     if isinplace(prob) || lb isa AbstractArray || ub isa AbstractArray
         error("QuadGKJL only accepts one-dimensional quadrature problems.")
@@ -99,8 +99,8 @@ function __solvebp_call(cache::IntegralCache, alg::QuadGKJL, sensealg, lb, ub, p
 end
 
 function __solvebp_call(prob::IntegralProblem, alg::HCubatureJL, sensealg, lb, ub, p;
-    reltol = 1e-8, abstol = 1e-8,
-    maxiters = typemax(Int))
+        reltol = 1e-8, abstol = 1e-8,
+        maxiters = typemax(Int))
     p = p
 
     if isinplace(prob)
@@ -124,8 +124,8 @@ function __solvebp_call(prob::IntegralProblem, alg::HCubatureJL, sensealg, lb, u
 end
 
 function __solvebp_call(prob::IntegralProblem, alg::VEGAS, sensealg, lb, ub, p;
-    reltol = 1e-8, abstol = 1e-8,
-    maxiters = typemax(Int))
+        reltol = 1e-8, abstol = 1e-8,
+        maxiters = typemax(Int))
     p = p
     @assert prob.nout == 1
     if prob.batch == 0

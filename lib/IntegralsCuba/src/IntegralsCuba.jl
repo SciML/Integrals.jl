@@ -119,28 +119,28 @@ struct CubaCuhre <: AbstractCubaAlgorithm
 end
 
 function CubaVegas(; flags = 0, seed = 0, minevals = 0, nstart = 1000, nincrease = 500,
-    gridno = 0)
+        gridno = 0)
     CubaVegas(flags, seed, minevals, nstart, nincrease, gridno)
 end
 function CubaSUAVE(; flags = 0, seed = 0, minevals = 0, nnew = 1000, nmin = 2,
-    flatness = 25.0)
+        flatness = 25.0)
     CubaSUAVE(flags, seed, minevals, nnew, nmin, flatness)
 end
 function CubaDivonne(; flags = 0, seed = 0, minevals = 0,
-    key1 = 47, key2 = 1, key3 = 1, maxpass = 5, border = 0.0,
-    maxchisq = 10.0, mindeviation = 0.25,
-    xgiven = zeros(Cdouble, 0, 0), 
-    nextra = 0, peakfinder = C_NULL)
+        key1 = 47, key2 = 1, key3 = 1, maxpass = 5, border = 0.0,
+        maxchisq = 10.0, mindeviation = 0.25,
+        xgiven = zeros(Cdouble, 0, 0),
+        nextra = 0, peakfinder = C_NULL)
     CubaDivonne(flags, seed, minevals, key1, key2, key3, maxpass, border, maxchisq,
         mindeviation, xgiven, nextra, peakfinder)
 end
 CubaCuhre(; flags = 0, minevals = 0, key = 0) = CubaCuhre(flags, minevals, key)
 
 function Integrals.__solvebp_call(prob::IntegralProblem, alg::AbstractCubaAlgorithm,
-    sensealg,
-    lb, ub, p;
-    reltol = 1e-8, abstol = 1e-8,
-    maxiters = alg isa CubaSUAVE ? 1000000 : typemax(Int))
+        sensealg,
+        lb, ub, p;
+        reltol = 1e-8, abstol = 1e-8,
+        maxiters = alg isa CubaSUAVE ? 1000000 : typemax(Int))
     @assert maxiters>=1000 "maxiters for $alg should be larger than 1000"
     if lb isa Number && prob.batch == 0
         _x = Float64[lb]
@@ -232,7 +232,8 @@ function Integrals.__solvebp_call(prob::IntegralProblem, alg::AbstractCubaAlgori
             key1 = alg.key1, key2 = alg.key2, key3 = alg.key3,
             maxpass = alg.maxpass, border = alg.border,
             maxchisq = alg.maxchisq, mindeviation = alg.mindeviation,
-            ngiven = size(alg.xgiven, 2), ldxgiven = size(alg.xgiven, 1), xgiven = alg.xgiven,
+            ngiven = size(alg.xgiven, 2), ldxgiven = size(alg.xgiven, 1),
+            xgiven = alg.xgiven,
             nextra = alg.nextra, peakfinder = alg.peakfinder)
     elseif alg isa CubaCuhre
         out = Cuba.cuhre(f, ndim, prob.nout; rtol = reltol,

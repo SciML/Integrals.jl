@@ -102,8 +102,6 @@ end
     end
 end
 
-
-
 @testset "Standard Integrands" begin
     nout = 1
     for alg in algs

@@ -48,10 +48,10 @@ end
 CubatureJLp() = CubatureJLp(Cubature.INDIVIDUAL)
 
 function Integrals.__solvebp_call(prob::IntegralProblem,
-    alg::AbstractCubatureJLAlgorithm,
-    sensealg, lb, ub, p;
-    reltol = 1e-8, abstol = 1e-8,
-    maxiters = typemax(Int))
+        alg::AbstractCubatureJLAlgorithm,
+        sensealg, lb, ub, p;
+        reltol = 1e-8, abstol = 1e-8,
+        maxiters = typemax(Int))
     nout = prob.nout
     if nout == 1
         # the output of prob.f could be either scalar or a vector of length 1, however
