@@ -129,7 +129,7 @@ end
 function CubaDivonne(; flags = 0, seed = 0, minevals = 0,
     key1 = 47, key2 = 1, key3 = 1, maxpass = 5, border = 0.0,
     maxchisq = 10.0, mindeviation = 0.25,
-    ngiven = 0, ldxgiven = 0, xgiven = zeros(Cdouble, ldxgiven, ngiven),
+    xgiven = zeros(Cdouble, 0, 0), 
     nextra = 0, peakfinder = C_NULL)
     CubaDivonne(flags, seed, minevals, key1, key2, key3, maxpass, border, maxchisq,
         mindeviation, xgiven, nextra, peakfinder)
