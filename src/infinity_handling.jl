@@ -88,16 +88,10 @@ function transformation_if_inf(prob, ::Val{true})
     f = prob.f
     if lb isa Number
         lb_sub, ub_sub = substitute_bounds(lb, ub)
-        # f_sub = (t, p) -> substitute_f_scalar(t, p, f, lb, ub)
     else
         bounds = substitute_bounds.(lb, ub)
         lb_sub = first.(bounds)
         ub_sub = last.(bounds)
-        # if isinplace(prob)
-        #     f_sub = (dt, t, p) -> substitute_f_vector_iip(dt, t, p, f, lb, ub)
-        # else
-        #     f_sub = (t, p) -> substitute_f_vector(t, p, f, lb, ub)
-        # end
     end
     f_sub = if isinplace(prob)
         if f isa BatchIntegralFunction

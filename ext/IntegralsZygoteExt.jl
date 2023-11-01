@@ -77,65 +77,7 @@ function ChainRulesCore.rrule(::typeof(Integrals.__solvebp), cache, alg, senseal
                 error("TODO")
             end
         end
-        #=
-        if isinplace(cache)
-            dx = zeros(cache.nout)
-            _f = x -> cache.f(dx, x, p)
-            if sensealg.vjp isa Integrals.ZygoteVJP
-                dfdp = function (dx, x, p)
-                    z, back = Zygote.pullback(p) do p
-                        _dx = cache.nout == 1 ?
-                              Zygote.Buffer(dx, eltype(y), size(x, ndims(x))) :
-                              Zygote.Buffer(dx, eltype(y), cache.nout, size(x, ndims(x)))
-                        cache.f(_dx, x, p)
-                        copy(_dx)
-                    end
-                    z .= zero(eltype(z))
-                    for idx in 1:size(x, ndims(x))
-                        z isa Vector ? (z[idx] = y) : (z[:, idx] .= y)
-                        dx[:, idx] .= back(z)[1]
-                        z isa Vector ? (z[idx] = zero(eltype(z))) :
-                        (z[:, idx] .= zero(eltype(z)))
-                    end
-                end
-            elseif sensealg.vjp isa Integrals.ReverseDiffVJP
-                error("TODO")
-            end
-        else
-            _f = x -> cache.f(x, p)
-            if sensealg.vjp isa Integrals.ZygoteVJP
-                if cache.batch > 0
-                    dfdp = function (x, p)
-                        z, back = Zygote.pullback(p -> cache.f(x, p), p)
-                        # messy, there are 4 cases, some better in forward mode than reverse
-                        # 1: length(y) == 1 and length(p) == 1
-                        # 2: length(y) >  1 and length(p) == 1
-                        # 3: length(y) == 1 and length(p) >  1
-                        # 4: length(y) >  1 and length(p) >  1
 
-                        z .= zero(eltype(z))
-                        out = zeros(eltype(p), size(p)..., size(x, ndims(x)))
-                        for idx in 1:size(x, ndims(x))
-                            z isa Vector ? (z[idx] = y) : (z[:, idx] .= y)
-                            out isa Vector ? (out[idx] = back(z)[1]) :
-                            (out[:, idx] .= back(z)[1])
-                            z isa Vector ? (z[idx] = zero(y)) :
-                            (z[:, idx] .= zero(eltype(y)))
-                        end
-                        out
-                    end
-                else
-                    dfdp = function (x, p)
-                        _, back = Zygote.pullback(p -> cache.f(x, p), p)
-                        back(y)[1]
-                    end
-                end
-
-            elseif sensealg.vjp isa Integrals.ReverseDiffVJP
-                error("TODO")
-            end
-        end
-        =#
         prob = Integrals.build_problem(cache)
         # dp_prob = remake(prob, f = dfdp)  # fails because we change iip
         dp_prob = IntegralProblem(dfdp, prob.domain, prob.p; prob.kwargs...)
