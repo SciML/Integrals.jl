@@ -24,6 +24,7 @@ function Integrals.__solvebp(cache, alg, sensealg, domain,
     # we need the output type to avoid perturbation confusion while unwrapping nested duals
     # We compute a vector-valued integral of the primal and dual simultaneously
     if isinplace(cache)
+        y = cache.f.integrand_prototype
         elt = eltype(cache.f.integrand_prototype)
         DT = replace_dualvaltype(eltype(p), elt)
         len = duallen(p)
@@ -82,8 +83,9 @@ function Integrals.__solvebp(cache, alg, sensealg, domain,
     dual = Integrals.__solvebp_call(dp_cache, alg, sensealg, domain, rawp; kwargs...)
 
     res = reinterpret(reshape, DT, dual.u)
-    out = if (cache.f isa BatchIntegralFunction && cache.f.integrand_prototype isa AbstractVector) ||
-        (cache.f isa IntegralFunction && !(y isa AbstractArray))
+    # unwrap the dual when the primal would return a scalar
+    out = if (cache.f isa BatchIntegralFunction && y isa AbstractVector) ||
+        !(y isa AbstractArray)
         only(res)
     else
         res
