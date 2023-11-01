@@ -82,13 +82,13 @@ function Integrals.__solvebp(cache, alg, sensealg, domain,
     dual = Integrals.__solvebp_call(dp_cache, alg, sensealg, domain, rawp; kwargs...)
 
     res = reinterpret(reshape, DT, dual.u)
-    # TODO: if y is a Number/Dual, then return a Number/dual, not an array
-    # if y isa AbstractArray
-    #     reinterpret(reshape, ForwardDiff.Dual{T, DT, P}, dual.u)
-    # else
-    #     ForwardDiff.Dual
-    # end
-    SciMLBase.build_solution(prob, alg, res, dual.resid)
+    out = if (cache.f isa BatchIntegralFunction && cache.f.integrand_prototype isa AbstractVector) ||
+        (cache.f isa IntegralFunction && !(y isa AbstractArray))
+        only(res)
+    else
+        res
+    end
+    SciMLBase.build_solution(prob, alg, out, dual.resid)
 end
 
 duallen(::Type{T}) where {T} = 1
