@@ -2,11 +2,12 @@ module IntegralsCubatureExt
 
 using Integrals, Cubature
 
-import Integrals: transformation_if_inf, scale_x, scale_x!
+import Integrals: transformation_if_inf, scale_x, scale_x!, CubatureJLh, CubatureJLp,
+        AbstractCubatureJLAlgorithm
 import Cubature: INDIVIDUAL, PAIRED, L1, L2, LINF
 
-Integrals.CubatureJLh(; error_norm = Cubature.INDIVIDUAL) = CubatureJLh(error_norm)
-Integrals.CubatureJLp(; error_norm = Cubature.INDIVIDUAL) = CubatureJLp(error_norm)
+CubatureJLh(; error_norm = Cubature.INDIVIDUAL) = CubatureJLh(error_norm)
+CubatureJLp(; error_norm = Cubature.INDIVIDUAL) = CubatureJLp(error_norm)
 
 function Integrals.__solvebp_call(prob::IntegralProblem,
     alg::AbstractCubatureJLAlgorithm,
