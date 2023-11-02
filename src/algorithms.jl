@@ -324,7 +324,7 @@ publisher={Elsevier}
 struct CubatureJLh <: AbstractCubatureJLAlgorithm
     error_norm::Int32
 end
-CubatureJLh() = CubatureJLh(Cubature.INDIVIDUAL)
+CubatureJLh(; error_norm = Cubature.INDIVIDUAL) = CubatureJLh(error_norm)
 
 """
     CubatureJLp()
@@ -340,4 +340,4 @@ Defaults to `Cubature.INDIVIDUAL`, other options are
 struct CubatureJLp <: AbstractCubatureJLAlgorithm
     error_norm::Int32
 end
-CubatureJLp() = CubatureJLp(Cubature.INDIVIDUAL)
+CubatureJLp(; error_norm = Cubature.INDIVIDUAL) = CubatureJLp(error_norm)
