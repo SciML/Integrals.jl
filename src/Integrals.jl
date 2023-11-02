@@ -168,4 +168,7 @@ function __solvebp_call(prob::IntegralProblem, alg::VEGAS, sensealg, domain, p;
 end
 
 export QuadGKJL, HCubatureJL, VEGAS, GaussLegendre, QuadratureRule, TrapezoidalRule
+export CubaVegas, CubaSUAVE, CubaDivonne, CubaCuhre
+export CubatureJLh, CubatureJLp
+
 end # module

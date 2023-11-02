@@ -15,11 +15,15 @@ SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
 
 [weakdeps]
 ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
+Cuba = "8a292aeb-7a57-582c-b821-06e4c11590b1"
+Cubature = "667455a9-e2ce-5579-9412-b964f529a492"
 FastGaussQuadrature = "442a2c76-b920-505d-bb47-c5924d526838"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [extensions]
+IntegralsCubaExt = "Cuba"
+IntegralsCubatureExt = "Cubature"
 IntegralsFastGaussQuadratureExt = "FastGaussQuadrature"
 IntegralsForwardDiffExt = "ForwardDiff"
 IntegralsZygoteExt = ["Zygote", "ChainRulesCore"]
@@ -27,6 +31,8 @@ IntegralsZygoteExt = ["Zygote", "ChainRulesCore"]
 [compat]
 ChainRulesCore = "0.10.7, 1"
 CommonSolve = "0.2"
+Cuba = "2"
+Cubature = "1"
 Distributions = "0.23, 0.24, 0.25"
 FastGaussQuadrature = "0.5"
 ForwardDiff = "0.10"
@@ -41,6 +47,8 @@ julia = "1.6"
 
 [extras]
 ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
+Cuba = "8a292aeb-7a57-582c-b821-06e4c11590b1"
+Cubature = "667455a9-e2ce-5579-9412-b964f529a492"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 FastGaussQuadrature = "442a2c76-b920-505d-bb47-c5924d526838"
 FiniteDiff = "6a86dc24-6348-571c-b903-95158fe2bd41"
@@ -53,4 +61,4 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [targets]
-test = ["SciMLSensitivity", "StaticArrays", "FiniteDiff", "Pkg", "SafeTestsets", "Test", "Distributions", "ForwardDiff", "Zygote", "ChainRulesCore", "FastGaussQuadrature"]
+test = ["SciMLSensitivity", "StaticArrays", "FiniteDiff", "Pkg", "SafeTestsets", "Test", "Distributions", "ForwardDiff", "Zygote", "ChainRulesCore", "FastGaussQuadrature", "Cuba", "Cubature"]
