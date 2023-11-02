@@ -53,7 +53,7 @@ This means that a new output vector is created every time the function `f` is ca
 If we do not  want these allocations, we can also define `f` in-position.
 
 ```@example integrate3
-using Integrals, IntegralsCubature
+using Integrals, Cubature
 function f(y, u, p)
     y[1] = sum(sin.(u))
     y[2] = sum(cos.(u))
@@ -74,7 +74,7 @@ The batch interface allows us to compute multiple points at once.
 For example, here we do allocation-free multithreading with Cubature.jl:
 
 ```@example integrate4
-using Integrals, IntegralsCubature, Base.Threads
+using Integrals, Cubature, Base.Threads
 function f(y, u, p)
     Threads.@threads for i in 1:size(u, 2)
         y[1, i] = sum(sin.(@view(u[:, i])))
@@ -97,7 +97,7 @@ the change is a one-argument change:
 
 ```@example integrate5
 using Integrals
-using IntegralsCuba
+using Cuba
 f(u, p) = sum(sin.(u))
 prob = IntegralProblem(f, ones(3), 3ones(3))
 sol = solve(prob, CubaCuhre(); reltol = 1e-3, abstol = 1e-3)
