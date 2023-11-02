@@ -1,5 +1,5 @@
 using Integrals, Zygote, FiniteDiff, ForwardDiff#, SciMLSensitivity
-using IntegralsCuba, IntegralsCubature
+using Cuba, Cubature
 using Test
 
 ### One Dimensional

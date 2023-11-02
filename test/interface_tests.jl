@@ -1,5 +1,5 @@
 using Integrals
-using IntegralsCuba, IntegralsCubature
+using Cuba, Cubature
 using Test
 
 max_dim_test = 2
