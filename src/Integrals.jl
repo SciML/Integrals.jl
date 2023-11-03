@@ -127,7 +127,7 @@ end
 
 function __solvebp_call(prob::IntegralProblem, alg::VEGAS, sensealg, domain, p;
         reltol = 1e-8, abstol = 1e-8,
-        maxiters = typemax(Int))
+        maxiters = 1000)
     lb, ub = domain
     mid = (lb + ub) / 2
     if prob.f isa BatchIntegralFunction
