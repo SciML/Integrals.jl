@@ -23,15 +23,16 @@ function init_cacheval(alg::QuadratureRule, ::IntegralProblem)
 end
 
 function Integrals.__solvebp_call(cache::IntegralCache, alg::QuadratureRule,
-    sensealg, lb, ub, p;
-    reltol = nothing, abstol = nothing,
-    maxiters = nothing)
+        sensealg, domain, p;
+        reltol = nothing, abstol = nothing,
+        maxiters = nothing)
     prob = build_problem(cache)
     if isinplace(prob)
         error("QuadratureRule does not support inplace integrands.")
     end
-    @assert prob.batch == 0
+    @assert prob.f isa IntegralFunction
 
+    lb, ub = domain
     val = evalrule(cache.f, cache.p, lb, ub, cache.cacheval...)
 
     err = nothing

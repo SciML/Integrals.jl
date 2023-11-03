@@ -30,14 +30,16 @@ function composite_gauss_legendre(f, p, lb, ub, nodes, weights, subintervals)
 end
 
 function Integrals.__solvebp_call(prob::IntegralProblem, alg::Integrals.GaussLegendre{C},
-    sensealg, lb, ub, p;
-    reltol = nothing, abstol = nothing,
-    maxiters = nothing) where {C}
+        sensealg, domain, p;
+        reltol = nothing, abstol = nothing,
+        maxiters = nothing) where {C}
+    lb, ub = domain
+    mid = (lb + ub) / 2
     if isinplace(prob) || lb isa AbstractArray || ub isa AbstractArray
         error("GaussLegendre only accepts one-dimensional quadrature problems.")
     end
-    @assert prob.batch == 0
-    @assert prob.nout == 1
+    @assert prob.f isa IntegralFunction
+    @assert !isinplace(prob)
     if C
         val = composite_gauss_legendre(prob.f, prob.p, lb, ub,
             alg.nodes, alg.weights, alg.subintervals)

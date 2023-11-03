@@ -63,6 +63,10 @@ each dimension of the integration domain is divided into,
 the number of function calls per iteration of the algorithm,
 and whether debug info should be printed, respectively.
 
+## Limitations
+
+This algorithm can only integrate `Float64`-valued functions
+
 ## References
 
 @article{lepage1978new,
@@ -132,7 +136,7 @@ Struct for evaluating an integral via the trapezoidal rule.
 Example with sampled data:
 
 ```
-using Integrals 
+using Integrals
 f = x -> x^2
 x = range(0, 1, length=20)
 y = f.(x)
@@ -164,3 +168,175 @@ struct QuadratureRule{Q} <: SciMLBase.AbstractIntegralAlgorithm
     end
 end
 QuadratureRule(q; n = 250) = QuadratureRule(q, n)
+
+## Extension Algorithms
+
+abstract type AbstractCubaAlgorithm <: SciMLBase.AbstractIntegralAlgorithm end
+"""
+    CubaVegas()
+
+Multidimensional adaptive Monte Carlo integration from Cuba.jl.
+Importance sampling is used to reduce variance.
+
+## References
+
+@article{lepage1978new,
+title={A new algorithm for adaptive multidimensional integration},
+author={Lepage, G Peter},
+journal={Journal of Computational Physics},
+volume={27},
+number={2},
+pages={192--203},
+year={1978},
+publisher={Elsevier}
+}
+"""
+struct CubaVegas <: AbstractCubaAlgorithm
+    flags::Int
+    seed::Int
+    minevals::Int
+    nstart::Int
+    nincrease::Int
+    gridno::Int
+end
+"""
+    CubaSUAVE()
+
+Multidimensional adaptive Monte Carlo integration from Cuba.jl.
+Suave stands for subregion-adaptive VEGAS.
+Importance sampling and subdivision are thus used to reduce variance.
+
+## References
+
+@article{hahn2005cuba,
+title={Cuba—a library for multidimensional numerical integration},
+author={Hahn, Thomas},
+journal={Computer Physics Communications},
+volume={168},
+number={2},
+pages={78--95},
+year={2005},
+publisher={Elsevier}
+}
+"""
+struct CubaSUAVE{R} <: AbstractCubaAlgorithm where {R <: Real}
+    flags::Int
+    seed::Int
+    minevals::Int
+    nnew::Int
+    nmin::Int
+    flatness::R
+end
+"""
+    CubaDivonne()
+
+Multidimensional adaptive Monte Carlo integration from Cuba.jl.
+Stratified sampling is used to reduce variance.
+
+## References
+
+@article{friedman1981nested,
+title={A nested partitioning procedure for numerical multiple integration},
+author={Friedman, Jerome H and Wright, Margaret H},
+journal={ACM Transactions on Mathematical Software (TOMS)},
+volume={7},
+number={1},
+pages={76--92},
+year={1981},
+publisher={ACM New York, NY, USA}
+}
+"""
+struct CubaDivonne{R1, R2, R3} <:
+       AbstractCubaAlgorithm where {R1 <: Real, R2 <: Real, R3 <: Real}
+    flags::Int
+    seed::Int
+    minevals::Int
+    key1::Int
+    key2::Int
+    key3::Int
+    maxpass::Int
+    border::R1
+    maxchisq::R2
+    mindeviation::R3
+end
+"""
+    CubaCuhre()
+
+Multidimensional h-adaptive integration from Cuba.jl.
+
+## References
+
+@article{berntsen1991adaptive,
+title={An adaptive algorithm for the approximate calculation of multiple integrals},
+author={Berntsen, Jarle and Espelid, Terje O and Genz, Alan},
+journal={ACM Transactions on Mathematical Software (TOMS)},
+volume={17},
+number={4},
+pages={437--451},
+year={1991},
+publisher={ACM New York, NY, USA}
+}
+"""
+struct CubaCuhre <: AbstractCubaAlgorithm
+    flags::Int
+    minevals::Int
+    key::Int
+end
+
+function CubaVegas(; flags = 0, seed = 0, minevals = 0, nstart = 1000, nincrease = 500,
+        gridno = 0)
+    CubaVegas(flags, seed, minevals, nstart, nincrease, gridno)
+end
+function CubaSUAVE(; flags = 0, seed = 0, minevals = 0, nnew = 1000, nmin = 2,
+        flatness = 25.0)
+    CubaSUAVE(flags, seed, minevals, nnew, nmin, flatness)
+end
+function CubaDivonne(; flags = 0, seed = 0, minevals = 0,
+        key1 = 47, key2 = 1, key3 = 1, maxpass = 5, border = 0.0,
+        maxchisq = 10.0, mindeviation = 0.25)
+    CubaDivonne(flags, seed, minevals, key1, key2, key3, maxpass, border, maxchisq,
+        mindeviation)
+end
+CubaCuhre(; flags = 0, minevals = 0, key = 0) = CubaCuhre(flags, minevals, key)
+
+abstract type AbstractCubatureJLAlgorithm <: SciMLBase.AbstractIntegralAlgorithm end
+"""
+    CubatureJLh()
+
+Multidimensional h-adaptive integration from Cubature.jl.
+`error_norm` specifies the convergence criterion  for vector valued integrands.
+Defaults to `Cubature.INDIVIDUAL`, other options are
+`Cubature.PAIRED`, `Cubature.L1`, `Cubature.L2`, or `Cubature.LINF`.
+
+## References
+
+@article{genz1980remarks,
+title={Remarks on algorithm 006: An adaptive algorithm for numerical integration over an N-dimensional rectangular region},
+author={Genz, Alan C and Malik, Aftab Ahmad},
+journal={Journal of Computational and Applied mathematics},
+volume={6},
+number={4},
+pages={295--302},
+year={1980},
+publisher={Elsevier}
+}
+"""
+struct CubatureJLh <: AbstractCubatureJLAlgorithm
+    error_norm::Int32
+end
+
+
+"""
+    CubatureJLp()
+
+Multidimensional p-adaptive integration from Cubature.jl.
+This method is based on repeatedly doubling the degree of the cubature rules,
+until convergence is achieved.
+The used cubature rule is a tensor product of Clenshaw–Curtis quadrature rules.
+`error_norm` specifies the convergence criterion  for vector valued integrands.
+Defaults to `Cubature.INDIVIDUAL`, other options are
+`Cubature.PAIRED`, `Cubature.L1`, `Cubature.L2`, or `Cubature.LINF`.
+"""
+struct CubatureJLp <: AbstractCubatureJLAlgorithm
+    error_norm::Int32
+end

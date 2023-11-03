@@ -51,13 +51,13 @@ end
 # can be reused for other sampled rules, which should implement find_weights(x, alg)
 
 function init_cacheval(alg::SciMLBase.AbstractIntegralAlgorithm,
-    prob::SampledIntegralProblem)
+        prob::SampledIntegralProblem)
     find_weights(prob.x, alg)
 end
 
 function __solvebp_call(cache::SampledIntegralCache,
-    alg::SciMLBase.AbstractIntegralAlgorithm;
-    kwargs...)
+        alg::SciMLBase.AbstractIntegralAlgorithm;
+        kwargs...)
     dim = dimension(cache.dim)
     err = nothing
     data = cache.y

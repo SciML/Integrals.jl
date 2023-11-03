@@ -18,7 +18,7 @@ function substitute_bounds(lb, ub)
     end
     return lb_sub, ub_sub
 end
-function substitute_f_scalar(t, p, f, lb, ub)
+function substitute_f(t, p, f, lb::Number, ub::Number)
     if isinf(lb) && isinf(ub)
         return f(t / (1 - t^2), p) * (1 + t^2) / (1 - t^2)^2
     elseif isinf(lb)
@@ -29,7 +29,19 @@ function substitute_f_scalar(t, p, f, lb, ub)
         return f(t, p)
     end
 end
-function substitute_f_vector(t, p, f, lb, ub)
+function substitute_f_iip(dt, dy, t, p, f, lb::Number, ub::Number)
+    if isinf(lb) && isinf(ub)
+        f(dt, t / (1 - t^2), p)
+        dt .= dy .* ((1 + t^2) / (1 - t^2)^2)
+    elseif isinf(lb)
+        return f(ub + (t / (1 + t)), p) * 1 / ((1 + t)^2)
+    elseif isinf(ub)
+        return f(lb + (t / (1 - t)), p) * 1 / ((1 - t)^2)
+    else
+        return f(t, p)
+    end
+end
+function substitute_f(t, p, f, lb::AbstractVector, ub::AbstractVector)
     x = similar(t)
     jac_diag = similar(t)
     for i in eachindex(lb)
@@ -49,7 +61,7 @@ function substitute_f_vector(t, p, f, lb, ub)
     end
     f(x, p) * prod(jac_diag)
 end
-function substitute_f_vector_iip(dt, t, p, f, lb, ub)
+function substitute_f_iip(dt, t, p, f, lb, ub)
     x = similar(t)
     jac_diag = similar(t)
     for i in eachindex(lb)
@@ -72,28 +84,40 @@ function substitute_f_vector_iip(dt, t, p, f, lb, ub)
 end
 
 function transformation_if_inf(prob, ::Val{true})
-    lb = prob.lb
-    ub = prob.ub
+    lb, ub = prob.domain
     f = prob.f
     if lb isa Number
         lb_sub, ub_sub = substitute_bounds(lb, ub)
-        f_sub = (t, p) -> substitute_f_scalar(t, p, f, lb, ub)
     else
         bounds = substitute_bounds.(lb, ub)
         lb_sub = first.(bounds)
         ub_sub = last.(bounds)
-        if isinplace(prob)
-            f_sub = (dt, t, p) -> substitute_f_vector_iip(dt, t, p, f, lb, ub)
+    end
+    f_sub = if isinplace(prob)
+        if f isa BatchIntegralFunction
+            BatchIntegralFunction{true}((dt, t, p) -> substitute_f_iip(dt, t, p, f, lb, ub),
+                f.integrand_prototype,
+                max_batch = f.max_batch)
         else
-            f_sub = (t, p) -> substitute_f_vector(t, p, f, lb, ub)
+            IntegralFunction{true}((dt, t, p) -> substitute_f_iip(dt, t, p, f, lb, ub),
+                f.integrand_prototype)
+        end
+    else
+        if f isa BatchIntegralFunction
+            BatchIntegralFunction{false}((t, p) -> substitute_f(t, p, f, lb, ub),
+                f.integrand_prototype)
+        else
+            IntegralFunction{false}((t, p) -> substitute_f(t, p, f, lb, ub),
+                f.integrand_prototype)
         end
     end
-    return remake(prob, f = f_sub, lb = lb_sub, ub = ub_sub)
+    return remake(prob, f = f_sub, domain = (lb_sub, ub_sub))
 end
 
 function transformation_if_inf(prob, ::Nothing)
-    if (prob.lb isa Number && prob.ub isa Number && (prob.ub == Inf || prob.lb == -Inf)) ||
-       -Inf in prob.lb || Inf in prob.ub
+    lb, ub = prob.domain
+    if (lb isa Number && ub isa Number && (ub == Inf || lb == -Inf)) ||
+       -Inf in lb || Inf in ub
         return transformation_if_inf(prob, Val(true))
     else
         return transformation_if_inf(prob, Val(false))

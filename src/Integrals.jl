@@ -71,45 +71,47 @@ function quadgk_prob_types(f, lb::T, ub::T, p, nrm) where {T}
     return DT, RT, NT
 end
 function init_cacheval(alg::QuadGKJL, prob::IntegralProblem)
-    DT, RT, NT = quadgk_prob_types(prob.f, prob.lb, prob.ub, prob.p, alg.norm)
+    lb, ub = prob.domain
+    DT, RT, NT = quadgk_prob_types(prob.f, lb, ub, prob.p, alg.norm)
     return (isconcretetype(RT) ? QuadGK.alloc_segbuf(DT, RT, NT) : nothing)
 end
 function refresh_cacheval(cacheval, alg::QuadGKJL, prob)
-    DT, RT, NT = quadgk_prob_types(prob.f, prob.lb, prob.ub, prob.p, alg.norm)
+    lb, ub = prob.domain
+    DT, RT, NT = quadgk_prob_types(prob.f, lb, ub, prob.p, alg.norm)
     isconcretetype(RT) || return nothing
     T = QuadGK.Segment{DT, RT, NT}
     return (cacheval isa Vector{T} ? cacheval : QuadGK.alloc_segbuf(DT, RT, NT))
 end
 
-function __solvebp_call(cache::IntegralCache, alg::QuadGKJL, sensealg, lb, ub, p;
-    reltol = 1e-8, abstol = 1e-8,
-    maxiters = typemax(Int))
+function __solvebp_call(cache::IntegralCache, alg::QuadGKJL, sensealg, domain, p;
+        reltol = 1e-8, abstol = 1e-8,
+        maxiters = typemax(Int))
     prob = build_problem(cache)
+    lb, ub = domain
     if isinplace(prob) || lb isa AbstractArray || ub isa AbstractArray
         error("QuadGKJL only accepts one-dimensional quadrature problems.")
     end
-    @assert prob.batch == 0
-    @assert prob.nout == 1
+    @assert prob.f isa IntegralFunction
 
-    p = p
     f = x -> prob.f(x, p)
     val, err = quadgk(f, lb, ub, segbuf = cache.cacheval, maxevals = maxiters,
         rtol = reltol, atol = abstol, order = alg.order, norm = alg.norm)
     SciMLBase.build_solution(prob, QuadGKJL(), val, err, retcode = ReturnCode.Success)
 end
 
-function __solvebp_call(prob::IntegralProblem, alg::HCubatureJL, sensealg, lb, ub, p;
-    reltol = 1e-8, abstol = 1e-8,
-    maxiters = typemax(Int))
-    p = p
+function __solvebp_call(prob::IntegralProblem, alg::HCubatureJL, sensealg, domain, p;
+        reltol = 1e-8, abstol = 1e-8,
+        maxiters = typemax(Int))
+    lb, ub = domain
 
+    @assert prob.f isa IntegralFunction
     if isinplace(prob)
-        dx = zeros(eltype(lb), prob.nout)
-        f = x -> (prob.f(dx, x, prob.p); dx)
+        # allocate a new output array at each evaluation since HCubature.jl doesn't support
+        # inplace ops
+        f = x -> (dx = similar(prob.f.integrand_prototype); prob.f(dx, x, prob.p); dx)
     else
         f = x -> prob.f(x, prob.p)
     end
-    @assert prob.batch == 0
 
     if lb isa Number
         val, err = hquadrature(f, lb, ub;
@@ -123,32 +125,50 @@ function __solvebp_call(prob::IntegralProblem, alg::HCubatureJL, sensealg, lb, u
     SciMLBase.build_solution(prob, HCubatureJL(), val, err, retcode = ReturnCode.Success)
 end
 
-function __solvebp_call(prob::IntegralProblem, alg::VEGAS, sensealg, lb, ub, p;
-    reltol = 1e-8, abstol = 1e-8,
-    maxiters = typemax(Int))
-    p = p
-    @assert prob.nout == 1
-    if prob.batch == 0
+function __solvebp_call(prob::IntegralProblem, alg::VEGAS, sensealg, domain, p;
+        reltol = 1e-8, abstol = 1e-8,
+        maxiters = typemax(Int))
+    lb, ub = domain
+    mid = (lb + ub) / 2
+    if prob.f isa BatchIntegralFunction
         if isinplace(prob)
-            dx = zeros(eltype(lb), prob.nout)
-            f = x -> (prob.f(dx, x, p); dx[1])
+            y = similar(prob.f.integrand_prototype,
+                size(prob.f.integrand_prototype)[begin:(end - 1)]...,
+                prob.f.max_batch)
+            f = x -> (prob.f(y, x', p); vec(y))
         else
-            f = x -> prob.f(x, prob.p)
+            y = prob.f(mid isa Number ? typeof(mid)[] :
+                       Matrix{eltype(mid)}(undef, length(mid), 0),
+                p)
+            f = x -> prob.f(x', p)
         end
     else
         if isinplace(prob)
-            dx = zeros(eltype(lb), prob.batch)
-            f = x -> (prob.f(dx, x', p); dx)
+            @assert prob.f.integrand_prototype isa
+                    AbstractArray{<:Real}&&length(prob.f.integrand_prototype) == 1 "VEGAS only supports Float64-valued integrands"
+            y = similar(prob.f.integrand_prototype)
+            f = x -> (prob.f(y, x, p); only(y))
         else
-            f = x -> prob.f(x', p)
+            y = prob.f(mid, p)
+            f = x -> prob.f(x, prob.p)
         end
     end
-    ncalls = prob.batch == 0 ? alg.ncalls : prob.batch
+
+    if prob.f isa BatchIntegralFunction
+        @assert prod(size(y)[begin:(end - 1)]) == 1&&eltype(y) <: Real "VEGAS only supports Float64-valued scalar integrands"
+    else
+        @assert length(y) == 1&&eltype(y) <: Real "VEGAS only supports Float64-valued scalar integrands"
+    end
+
+    ncalls = prob.f isa BatchIntegralFunction ? prob.f.max_batch : alg.ncalls
     val, err, chi = vegas(f, lb, ub, rtol = reltol, atol = abstol,
         maxiter = maxiters, nbins = alg.nbins, debug = alg.debug,
-        ncalls = ncalls, batch = prob.batch != 0)
+        ncalls = ncalls, batch = prob.f isa BatchIntegralFunction)
     SciMLBase.build_solution(prob, alg, val, err, chi = chi, retcode = ReturnCode.Success)
 end
 
 export QuadGKJL, HCubatureJL, VEGAS, GaussLegendre, QuadratureRule, TrapezoidalRule
+export CubaVegas, CubaSUAVE, CubaDivonne, CubaCuhre
+export CubatureJLh, CubatureJLp
+
 end # module

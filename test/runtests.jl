@@ -2,14 +2,6 @@ using Pkg
 using SafeTestsets
 using Test
 
-function dev_subpkg(subpkg)
-    subpkg_path = joinpath(dirname(@__DIR__), "lib", subpkg)
-    Pkg.develop(PackageSpec(path = subpkg_path))
-end
-
-dev_subpkg("IntegralsCuba")
-dev_subpkg("IntegralsCubature")
-
 @time @safetestset "Interface Tests" begin
     include("interface_tests.jl")
 end
