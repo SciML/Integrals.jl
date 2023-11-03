@@ -1,4 +1,4 @@
-using Integrals, ForwardDiff, Cubature, Cuba, Test
+using Integrals, FiniteDiff, ForwardDiff, Cubature, Cuba, Test
 
 my_parameters = [1.0, 2.0]
 my_function(x, p) = x^2 + p[1]^3 * x + p[2]^2
