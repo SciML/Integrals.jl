@@ -2,7 +2,7 @@
 
 julia_version = "1.9.3"
 manifest_format = "2.0"
-project_hash = "0e71de2d5cea5c2e5fb8dfc2fa0c5b7cbcc970f9"
+project_hash = "18f1ce37e8641cc2905069e71cb945de741d37b9"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "5d2e21d7b0d8c22f67483ef95ebdc39c0e6b6003"
@@ -352,7 +352,7 @@ version = "0.4.11"
 deps = ["CommonSolve", "HCubature", "LinearAlgebra", "MonteCarloIntegration", "QuadGK", "Reexport", "Requires", "SciMLBase"]
 path = "/home/runner/work/Integrals.jl/Integrals.jl"
 uuid = "de52edbc-65ea-441a-8357-d3a637375a31"
-version = "3.9.0"
+version = "4.0.0"
 
     [deps.Integrals.extensions]
     IntegralsCubaExt = "Cuba"
@@ -679,12 +679,13 @@ uuid = "ea8e919c-243c-51af-8825-aaa63cd721ce"
 version = "0.7.0"
 
 [[deps.SciMLBase]]
-deps = ["ADTypes", "ArrayInterface", "ChainRulesCore", "CommonSolve", "ConstructionBase", "Distributed", "DocStringExtensions", "EnumX", "FillArrays", "FunctionWrappersWrappers", "IteratorInterfaceExtensions", "LinearAlgebra", "Logging", "Markdown", "PrecompileTools", "Preferences", "Printf", "RecipesBase", "RecursiveArrayTools", "Reexport", "RuntimeGeneratedFunctions", "SciMLOperators", "StaticArraysCore", "Statistics", "SymbolicIndexingInterface", "Tables", "TruncatedStacktraces", "ZygoteRules"]
-git-tree-sha1 = "9e4c2902c2e8675c3b67eb24fd7f89defcbde9af"
+deps = ["ADTypes", "ArrayInterface", "CommonSolve", "ConstructionBase", "Distributed", "DocStringExtensions", "EnumX", "FillArrays", "FunctionWrappersWrappers", "IteratorInterfaceExtensions", "LinearAlgebra", "Logging", "Markdown", "PrecompileTools", "Preferences", "Printf", "RecipesBase", "RecursiveArrayTools", "Reexport", "RuntimeGeneratedFunctions", "SciMLOperators", "StaticArraysCore", "Statistics", "SymbolicIndexingInterface", "Tables", "TruncatedStacktraces"]
+git-tree-sha1 = "f8a590b90adcbceba2fbdc8a67da9c6ddc6011d1"
 uuid = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
-version = "2.6.0"
+version = "2.7.1"
 
     [deps.SciMLBase.extensions]
+    SciMLBaseChainRulesCoreExt = "ChainRulesCore"
     SciMLBasePartialFunctionsExt = "PartialFunctions"
     SciMLBasePyCallExt = "PyCall"
     SciMLBasePythonCallExt = "PythonCall"
@@ -692,6 +693,7 @@ version = "2.6.0"
     SciMLBaseZygoteExt = "Zygote"
 
     [deps.SciMLBase.weakdeps]
+    ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
     PartialFunctions = "570af359-4316-4cb7-8c74-252c00c2016b"
     PyCall = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0"
     PythonCall = "6099a3de-0909-46bc-b1f4-468b9a2dfc0d"
