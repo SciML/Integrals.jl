@@ -2,6 +2,29 @@ using Integrals, Zygote, FiniteDiff, ForwardDiff#, SciMLSensitivity
 using Cuba, Cubature
 using Test
 
+algs = [QuadGKJL(), HCubatureJL(), CubatureJLh(), CubatureJLp(), #VEGAS(), #CubaVegas(),
+    CubaSUAVE(), CubaDivonne(), CubaCuhre()]
+
+alg_req = Dict(QuadGKJL() => (nout = 1, allows_batch = false, min_dim = 1, max_dim = 1,
+        allows_iip = false),
+    HCubatureJL() => (nout = Inf, allows_batch = false, min_dim = 1,
+        max_dim = Inf, allows_iip = true),
+    VEGAS() => (nout = 1, allows_batch = true, min_dim = 2, max_dim = Inf,
+        allows_iip = true),
+    CubatureJLh() => (nout = Inf, allows_batch = true, min_dim = 1,
+        max_dim = Inf, allows_iip = true),
+    CubatureJLp() => (nout = Inf, allows_batch = true, min_dim = 1,
+        max_dim = Inf, allows_iip = true),
+    CubaVegas() => (nout = Inf, allows_batch = true, min_dim = 1, max_dim = Inf,
+        allows_iip = true),
+    CubaSUAVE() => (nout = Inf, allows_batch = true, min_dim = 1, max_dim = Inf,
+        allows_iip = true),
+    CubaDivonne() => (nout = Inf, allows_batch = true, min_dim = 2,
+        max_dim = Inf, allows_iip = true),
+    CubaCuhre() => (nout = Inf, allows_batch = true, min_dim = 2, max_dim = Inf,
+        allows_iip = true))
+
+
 ### One Dimensional
 
 f(x, p) = sum(sin.(p[1] * x))
