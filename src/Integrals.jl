@@ -135,9 +135,9 @@ function __solvebp_call(prob::IntegralProblem, alg::VEGAS, sensealg, domain, p;
             y = similar(prob.f.integrand_prototype,
                 size(prob.f.integrand_prototype)[begin:(end - 1)]...,
                 prob.f.max_batch)
-            # MonteCarloIntegration v0.0.x passes batches as columns of a matrix
+            # MonteCarloIntegration v0.0.x passes points as rows of a matrix
             # MonteCarloIntegration v0.1 passes batches as a vector of views of
-            # a matrix with batches as rows of a matrix
+            # a matrix with points as columns of a matrix
             # see https://github.com/ranjanan/MonteCarloIntegration.jl/issues/16
             # This is an ugly hack that is compatible with both
             f = x -> (prob.f(y, eltype(x) <: SubArray ? parent(first(x)) : x', p); vec(y))
