@@ -20,12 +20,12 @@ dlb2 = FiniteDiff.finite_difference_derivative(lb -> testf(lb, ub, p), lb)
 dub2 = FiniteDiff.finite_difference_derivative(ub -> testf(lb, ub, p), ub)
 dp2 = FiniteDiff.finite_difference_derivative(p -> testf(lb, ub, p), p)
 
-# dlb3 = ForwardDiff.derivative(lb->testf(lb,ub,p),lb)
-# dub3 = ForwardDiff.derivative(ub->testf(lb,ub,p),ub)
+dlb3 = ForwardDiff.derivative(lb->testf(lb,ub,p),lb)
+dub3 = ForwardDiff.derivative(ub->testf(lb,ub,p),ub)
 dp3 = ForwardDiff.derivative(p -> testf(lb, ub, p), p)
 
-#@test dlb1 ≈ dlb3
-#@test dub1 ≈ dub3
+@test dlb1 ≈ dlb3
+@test dub1 ≈ dub3
 @test dp1 ≈ dp3
 
 ### N-dimensional
@@ -56,20 +56,20 @@ dp2 = FiniteDiff.finite_difference_gradient(p -> testf(lb, ub, p), p)
 @test_broken dub1 ≈ dub2
 @test dp1 ≈ dp2
 
-# dlb3 = ForwardDiff.gradient(lb->testf(lb,ub,p),lb)
-# dub3 = ForwardDiff.gradient(ub->testf(lb,ub,p),ub)
+dlb3 = ForwardDiff.gradient(lb->testf(lb,ub,p),lb)
+dub3 = ForwardDiff.gradient(ub->testf(lb,ub,p),ub)
 dp3 = ForwardDiff.gradient(p -> testf2(lb, ub, p), p)
 
-#@test dlb1 ≈ dlb3
-#@test dub1 ≈ dub3
+@test dlb1 ≈ dlb3
+@test dub1 ≈ dub3
 @test dp1 ≈ dp3
 
-# dlb4 = ForwardDiff.gradient(lb->testf(lb,ub,p),lb)
-# dub4 = ForwardDiff.gradient(ub->testf(lb,ub,p),ub)
+dlb4 = ForwardDiff.gradient(lb->testf(lb,ub,p),lb)
+dub4 = ForwardDiff.gradient(ub->testf(lb,ub,p),ub)
 dp4 = ForwardDiff.gradient(p -> testf(lb, ub, p), p)
 
-#@test dlb1 ≈ dlb4
-#@test dub1 ≈ dub4
+@test dlb1 ≈ dlb4
+@test dub1 ≈ dub4
 @test dp1 ≈ dp4
 
 ### N-dimensional N-out
@@ -100,20 +100,20 @@ dp2 = FiniteDiff.finite_difference_gradient(p -> testf(lb, ub, p), p)
 @test_broken dub1 ≈ dub2
 @test dp1 ≈ dp2
 
-# dlb3 = ForwardDiff.gradient(lb->testf(lb,ub,p),lb)
-# dub3 = ForwardDiff.gradient(ub->testf(lb,ub,p),ub)
+dlb3 = ForwardDiff.gradient(lb->testf(lb,ub,p),lb)
+dub3 = ForwardDiff.gradient(ub->testf(lb,ub,p),ub)
 dp3 = ForwardDiff.gradient(p -> testf2(lb, ub, p), p)
 
-#@test dlb1 ≈ dlb3
-#@test dub1 ≈ dub3
+@test dlb1 ≈ dlb3
+@test dub1 ≈ dub3
 @test dp1 ≈ dp3
 
-# dlb4 = ForwardDiff.gradient(lb->testf(lb,ub,p),lb)
-# dub4 = ForwardDiff.gradient(ub->testf(lb,ub,p),ub)
+dlb4 = ForwardDiff.gradient(lb->testf(lb,ub,p),lb)
+dub4 = ForwardDiff.gradient(ub->testf(lb,ub,p),ub)
 dp4 = ForwardDiff.gradient(p -> testf(lb, ub, p), p)
 
-#@test dlb1 ≈ dlb4
-#@test dub1 ≈ dub4
+@test dlb1 ≈ dlb4
+@test dub1 ≈ dub4
 @test dp1 ≈ dp4
 
 ### Batch Single dim
