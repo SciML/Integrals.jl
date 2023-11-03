@@ -161,9 +161,10 @@ function __solvebp_call(prob::IntegralProblem, alg::VEGAS, sensealg, domain, p;
     end
 
     ncalls = prob.f isa BatchIntegralFunction ? prob.f.max_batch : alg.ncalls
-    val, err, chi = vegas(f, lb, ub, rtol = reltol, atol = abstol,
+    out = vegas(f, lb, ub, rtol = reltol, atol = abstol,
         maxiter = maxiters, nbins = alg.nbins, debug = alg.debug,
         ncalls = ncalls, batch = prob.f isa BatchIntegralFunction)
+    val, err, chi = out isa Tuple ? out : (out.integral_estimate, out.standard_deviation, out.chi_squared_average)
     SciMLBase.build_solution(prob, alg, val, err, chi = chi, retcode = ReturnCode.Success)
 end
 
