@@ -330,7 +330,6 @@ struct CubatureJLh <: AbstractCubatureJLAlgorithm
     error_norm::Int32
 end
 
-
 """
     CubatureJLp()
 

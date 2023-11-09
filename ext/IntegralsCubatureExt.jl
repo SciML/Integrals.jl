@@ -2,23 +2,23 @@ module IntegralsCubatureExt
 
 using Integrals, Cubature
 
-import Integrals: transformation_if_inf, scale_x, scale_x!, CubatureJLh, CubatureJLp,
-        AbstractCubatureJLAlgorithm
+import Integrals: transformation_if_inf,
+    scale_x, scale_x!, CubatureJLh, CubatureJLp,
+    AbstractCubatureJLAlgorithm
 import Cubature: INDIVIDUAL, PAIRED, L1, L2, LINF
 
 Integrals.CubatureJLh(; error_norm = Cubature.INDIVIDUAL) = CubatureJLh(error_norm)
 Integrals.CubatureJLp(; error_norm = Cubature.INDIVIDUAL) = CubatureJLp(error_norm)
 
 function Integrals.__solvebp_call(prob::IntegralProblem,
-    alg::AbstractCubatureJLAlgorithm,
-    sensealg, domain, p;
-    reltol = 1e-8, abstol = 1e-8,
-    maxiters = typemax(Int))
-
+        alg::AbstractCubatureJLAlgorithm,
+        sensealg, domain, p;
+        reltol = 1e-8, abstol = 1e-8,
+        maxiters = typemax(Int))
     lb, ub = domain
     mid = (lb + ub) / 2
 
-       # we get to pick fdim or not based on the IntegralFunction and its output dimensions
+    # we get to pick fdim or not based on the IntegralFunction and its output dimensions
     y = if prob.f isa BatchIntegralFunction
         isinplace(prob.f) ? prob.f.integrand_prototype :
         mid isa Number ? prob.f(eltype(mid)[], p) :
@@ -176,7 +176,7 @@ function Integrals.__solvebp_call(prob::IntegralProblem,
         if prob.batch == 0
             if isinplace(prob)
                 dx = zeros(eltype(lb), prob.nout)
-@@ -181,6 +334,7 @@ function Integrals.__solvebp_call(prob::IntegralProblem,
+    @@ -181,6 +334,7 @@ function Integrals.__solvebp_call(prob::IntegralProblem,
             end
         end
     end
