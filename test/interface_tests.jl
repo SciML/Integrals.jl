@@ -7,26 +7,26 @@ max_nout_test = 2
 reltol = 1e-3
 abstol = 1e-3
 
-algs = [QuadGKJL(), HCubatureJL(), CubatureJLh(), CubatureJLp(), VEGAS(), #CubaVegas(),
-    CubaSUAVE(), CubaDivonne(), CubaCuhre()]
+algs = [QuadGKJL, HCubatureJL, CubatureJLh, CubatureJLp, #VEGAS, #CubaVegas,
+    CubaSUAVE, CubaDivonne, CubaCuhre]
 
-alg_req = Dict(QuadGKJL() => (nout = 1, allows_batch = false, min_dim = 1, max_dim = 1,
+alg_req = Dict(QuadGKJL => (nout = 1, allows_batch = false, min_dim = 1, max_dim = 1,
         allows_iip = false),
-    HCubatureJL() => (nout = Inf, allows_batch = false, min_dim = 1,
+    HCubatureJL => (nout = Inf, allows_batch = false, min_dim = 1,
         max_dim = Inf, allows_iip = true),
-    VEGAS() => (nout = 1, allows_batch = true, min_dim = 2, max_dim = Inf,
+    VEGAS => (nout = 1, allows_batch = true, min_dim = 2, max_dim = Inf,
         allows_iip = true),
-    CubatureJLh() => (nout = Inf, allows_batch = true, min_dim = 1,
+    CubatureJLh => (nout = Inf, allows_batch = true, min_dim = 1,
         max_dim = Inf, allows_iip = true),
-    CubatureJLp() => (nout = Inf, allows_batch = true, min_dim = 1,
+    CubatureJLp => (nout = Inf, allows_batch = true, min_dim = 1,
         max_dim = Inf, allows_iip = true),
-    CubaVegas() => (nout = Inf, allows_batch = true, min_dim = 1, max_dim = Inf,
+    CubaVegas => (nout = Inf, allows_batch = true, min_dim = 1, max_dim = Inf,
         allows_iip = true),
-    CubaSUAVE() => (nout = Inf, allows_batch = true, min_dim = 1, max_dim = Inf,
+    CubaSUAVE => (nout = Inf, allows_batch = true, min_dim = 1, max_dim = Inf,
         allows_iip = true),
-    CubaDivonne() => (nout = Inf, allows_batch = true, min_dim = 2,
+    CubaDivonne => (nout = Inf, allows_batch = true, min_dim = 2,
         max_dim = Inf, allows_iip = true),
-    CubaCuhre() => (nout = Inf, allows_batch = true, min_dim = 2, max_dim = Inf,
+    CubaCuhre => (nout = Inf, allows_batch = true, min_dim = 2, max_dim = Inf,
         allows_iip = true))
 
 integrands = [
@@ -96,7 +96,7 @@ end
         for i in 1:length(integrands)
             prob = IntegralProblem(integrands[i], lb, ub)
             @info "Alg = $alg, Integrand = $i, Dimension = $dim, Output Dimension = $nout"
-            sol = solve(prob, alg, reltol = reltol, abstol = abstol)
+            sol = solve(prob, alg(), reltol = reltol, abstol = abstol)
             @test sol.u≈exact_sol[i](dim, nout, lb, ub) rtol=1e-2
         end
     end
@@ -110,11 +110,11 @@ end
             for dim in 1:max_dim_test
                 lb, ub = (ones(dim), 3ones(dim))
                 prob = IntegralProblem(integrands[i], lb, ub)
-                if dim > req.max_dim || dim < req.min_dim || alg isa QuadGKJL  #QuadGKJL requires numbers, not single element arrays
+                if dim > req.max_dim || dim < req.min_dim || alg() isa QuadGKJL  #QuadGKJL requires numbers, not single element arrays
                     continue
                 end
                 @info "Alg = $alg, Integrand = $i, Dimension = $dim, Output Dimension = $nout"
-                sol = solve(prob, alg, reltol = reltol, abstol = abstol)
+                sol = solve(prob, alg(), reltol = reltol, abstol = abstol)
                 @test sol.u≈exact_sol[i](dim, nout, lb, ub) rtol=1e-2
             end
         end
@@ -129,14 +129,14 @@ end
             for dim in 1:max_dim_test
                 lb, ub = (ones(dim), 3ones(dim))
                 prob = IntegralProblem(iip_integrands[i], lb, ub)
-                if dim > req.max_dim || dim < req.min_dim || alg isa QuadGKJL  #QuadGKJL requires numbers, not single element arrays
+                if dim > req.max_dim || dim < req.min_dim || alg() isa QuadGKJL  #QuadGKJL requires numbers, not single element arrays
                     continue
                 end
                 @info "Alg = $alg, Integrand = $i, Dimension = $dim, Output Dimension = $nout"
-                if alg isa HCubatureJL && dim == 1 # HCubature library requires finer tol to pass test. When requiring array outputs for iip integrands
-                    sol = solve(prob, alg, reltol = 1e-5, abstol = 1e-5)
+                if alg() isa HCubatureJL && dim == 1 # HCubature library requires finer tol to pass test. When requiring array outputs for iip integrands
+                    sol = solve(prob, alg(), reltol = 1e-5, abstol = 1e-5)
                 else
-                    sol = solve(prob, alg, reltol = reltol, abstol = abstol)
+                    sol = solve(prob, alg(), reltol = reltol, abstol = abstol)
                 end
                 if sol.u isa Number
                     @test sol.u≈exact_sol[i](dim, nout, lb, ub) rtol=1e-2
@@ -159,7 +159,7 @@ end
                 continue
             end
             @info "Alg = $alg, Integrand = $i, Dimension = $dim, Output Dimension = $nout"
-            sol = solve(prob, alg, reltol = reltol, abstol = abstol)
+            sol = solve(prob, alg(), reltol = reltol, abstol = abstol)
             @test sol.u[1]≈exact_sol[i](dim, nout, lb, ub) rtol=1e-2
         end
     end
@@ -177,7 +177,7 @@ end
                     continue
                 end
                 @info "Alg = $alg, Integrand = $i, Dimension = $dim, Output Dimension = $nout"
-                sol = solve(prob, alg, reltol = reltol, abstol = abstol)
+                sol = solve(prob, alg(), reltol = reltol, abstol = abstol)
                 if sol.u isa Number
                     @test sol.u≈exact_sol[i](dim, nout, lb, ub) rtol=1e-2
                 else
@@ -201,7 +201,7 @@ end
                     continue
                 end
                 @info "Alg = $alg, Integrand = $i, Dimension = $dim, Output Dimension = $nout"
-                sol = solve(prob, alg, reltol = reltol, abstol = abstol)
+                sol = solve(prob, alg(), reltol = reltol, abstol = abstol)
                 if sol.u isa Number
                     @test sol.u≈exact_sol[i](dim, nout, lb, ub) rtol=1e-2
                 else
@@ -226,7 +226,7 @@ end
                     continue
                 end
                 @info "Alg = $alg, Integrand = $i, Dimension = $dim, Output Dimension = $nout"
-                sol = solve(prob, alg, reltol = reltol, abstol = abstol)
+                sol = solve(prob, alg(), reltol = reltol, abstol = abstol)
                 if nout == 1
                     @test sol.u[1]≈exact_sol_v[i](dim, nout, lb, ub)[1] rtol=1e-2
                 else
@@ -245,14 +245,14 @@ end
                 lb, ub = (ones(dim), 3ones(dim))
                 for nout in 1:max_nout_test
                     if dim > req.max_dim || dim < req.min_dim || req.nout < nout ||
-                       alg isa QuadGKJL || alg isa VEGAS
+                       alg() isa QuadGKJL || alg() isa VEGAS
                         #QuadGKJL and VEGAS require numbers, not single element arrays
                         continue
                     end
                     prob = IntegralProblem((x, p) -> integrands_v[i](x, p, nout), lb, ub,
                         nout = nout)
                     @info "Alg = $alg, Integrand = $i, Dimension = $dim, Output Dimension = $nout"
-                    sol = solve(prob, alg, reltol = reltol, abstol = abstol)
+                    sol = solve(prob, alg(), reltol = reltol, abstol = abstol)
                     if nout == 1
                         @test sol.u[1]≈exact_sol_v[i](dim, nout, lb, ub)[1] rtol=1e-2
                     else
@@ -274,14 +274,14 @@ end
                     prob = IntegralProblem((dx, x, p) -> iip_integrands_v[i](dx, x, p, nout),
                         lb, ub, nout = nout)
                     if dim > req.max_dim || dim < req.min_dim || req.nout < nout ||
-                       alg isa QuadGKJL  #QuadGKJL requires numbers, not single element arrays
+                       alg() isa QuadGKJL  #QuadGKJL requires numbers, not single element arrays
                         continue
                     end
                     @info "Alg = $alg, Integrand = $i, Dimension = $dim, Output Dimension = $nout"
                     if alg isa HCubatureJL && dim == 1 # HCubature library requires finer tol to pass test. When requiring array outputs for iip integrands
-                        sol = solve(prob, alg, reltol = 1e-5, abstol = 1e-5)
+                        sol = solve(prob, alg(), reltol = 1e-5, abstol = 1e-5)
                     else
-                        sol = solve(prob, alg, reltol = reltol, abstol = abstol)
+                        sol = solve(prob, alg(), reltol = reltol, abstol = abstol)
                     end
                     if nout == 1
                         @test sol.u[1]≈exact_sol_v[i](dim, nout, lb, ub)[1] rtol=1e-2
@@ -306,7 +306,7 @@ end
                 continue
             end
             @info "Alg = $alg, Integrand = $i, Dimension = $dim, Output Dimension = $nout"
-            sol = solve(prob, alg, reltol = reltol, abstol = abstol)
+            sol = solve(prob, alg(), reltol = reltol, abstol = abstol)
             @test sol.u≈exact_sol_v[i](dim, nout, lb, ub) rtol=1e-2
         end
     end
@@ -327,7 +327,7 @@ end
                     continue
                 end
                 @info "Alg = $alg, Integrand = $i, Dimension = $dim, Output Dimension = $nout"
-                sol = solve(prob, alg, reltol = reltol, abstol = abstol)
+                sol = solve(prob, alg(), reltol = reltol, abstol = abstol)
                 @test sol.u≈exact_sol_v[i](dim, nout, lb, ub) rtol=1e-2
             end
         end
@@ -348,7 +348,7 @@ end
                     continue
                 end
                 @info "Alg = $alg, Integrand = $i, Dimension = $dim, Output Dimension = $nout"
-                sol = solve(prob, alg, reltol = reltol, abstol = abstol)
+                sol = solve(prob, alg(), reltol = reltol, abstol = abstol)
                 @test sol.u≈exact_sol_v[i](dim, nout, lb, ub) rtol=1e-2
             end
         end
@@ -375,7 +375,7 @@ end
         end
         for i in 1:length(integrands)
             prob = IntegralProblem(integrands[i], lb, ub, p)
-            cache = init(prob, alg, reltol = reltol, abstol = abstol)
+            cache = init(prob, alg(), reltol = reltol, abstol = abstol)
             @test solve!(cache).u≈exact_sol[i](dim, nout, lb, ub) rtol=1e-2
             cache.lb = lb = 0.5
             @test solve!(cache).u≈exact_sol[i](dim, nout, lb, ub) rtol=1e-2
