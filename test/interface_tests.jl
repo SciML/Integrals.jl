@@ -7,7 +7,7 @@ max_nout_test = 2
 reltol = 1e-3
 abstol = 1e-3
 
-algs = [QuadGKJL, HCubatureJL, CubatureJLh, CubatureJLp, #VEGAS, #CubaVegas,
+algs = [QuadGKJL, HCubatureJL, CubatureJLh, CubatureJLp, VEGAS, #CubaVegas,
     CubaSUAVE, CubaDivonne, CubaCuhre]
 
 alg_req = Dict(QuadGKJL => (nout = 1, allows_batch = false, min_dim = 1, max_dim = 1,
