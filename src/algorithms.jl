@@ -246,8 +246,8 @@ year={1981},
 publisher={ACM New York, NY, USA}
 }
 """
-struct CubaDivonne{R1, R2, R3} <:
-       AbstractCubaAlgorithm where {R1 <: Real, R2 <: Real, R3 <: Real}
+struct CubaDivonne{R1, R2, R3, R4} <:
+       AbstractCubaAlgorithm where {R1 <: Real, R2 <: Real, R3 <: Real, R4 <: Real}
     flags::Int
     seed::Int
     minevals::Int
@@ -258,6 +258,9 @@ struct CubaDivonne{R1, R2, R3} <:
     border::R1
     maxchisq::R2
     mindeviation::R3
+    xgiven::Matrix{R4}
+    nextra::Int
+    peakfinder::Ptr{Cvoid}
 end
 """
     CubaCuhre()
@@ -293,9 +296,11 @@ function CubaSUAVE(; flags = 0, seed = 0, minevals = 0, nnew = 1000, nmin = 2,
 end
 function CubaDivonne(; flags = 0, seed = 0, minevals = 0,
         key1 = 47, key2 = 1, key3 = 1, maxpass = 5, border = 0.0,
-        maxchisq = 10.0, mindeviation = 0.25)
+        maxchisq = 10.0, mindeviation = 0.25,
+        xgiven = zeros(Cdouble, 0, 0),
+        nextra = 0, peakfinder = C_NULL)
     CubaDivonne(flags, seed, minevals, key1, key2, key3, maxpass, border, maxchisq,
-        mindeviation)
+        mindeviation, xgiven, nextra, peakfinder)
 end
 CubaCuhre(; flags = 0, minevals = 0, key = 0) = CubaCuhre(flags, minevals, key)
 
@@ -324,7 +329,6 @@ publisher={Elsevier}
 struct CubatureJLh <: AbstractCubatureJLAlgorithm
     error_norm::Int32
 end
-
 
 """
     CubatureJLp()

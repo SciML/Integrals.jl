@@ -85,7 +85,7 @@ function Integrals.__solvebp(cache, alg, sensealg, domain,
     res = reinterpret(reshape, DT, dual.u)
     # unwrap the dual when the primal would return a scalar
     out = if (cache.f isa BatchIntegralFunction && y isa AbstractVector) ||
-        !(y isa AbstractArray)
+             !(y isa AbstractArray)
         only(res)
     else
         res
