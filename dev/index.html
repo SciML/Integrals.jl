@@ -7,9 +7,9 @@ Pkg.add(&quot;Integrals&quot;)</code></pre><h2 id="Contributing"><a class="docs-
   [e30172f5] Documenter v1.1.2
   [6a86dc24] FiniteDiff v2.21.1
   [f6369f11] ForwardDiff v0.10.36
-  [de52edbc] Integrals v4.0.0 `~/work/Integrals.jl/Integrals.jl`
-  [e88e6eb3] Zygote v0.6.67</code></pre></details><details><summary>and using this machine and Julia version.</summary><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Julia Version 1.9.3
-Commit bed2cd540a1 (2023-08-24 14:43 UTC)
+  [de52edbc] Integrals v4.1.0 `~/work/Integrals.jl/Integrals.jl`
+  [e88e6eb3] Zygote v0.6.67</code></pre></details><details><summary>and using this machine and Julia version.</summary><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Julia Version 1.9.4
+Commit 8e5136fa297 (2023-11-14 08:46 UTC)
 Build Info:
   Official https://julialang.org/ release
 Platform Info:
@@ -19,7 +19,7 @@ Platform Info:
   LIBM: libopenlibm
   LLVM: libLLVM-14.0.6 (ORCJIT, znver3)
   Threads: 1 on 4 virtual cores</code></pre></details><details><summary>A more complete overview of all dependencies and their versions is also provided.</summary><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Status `~/work/Integrals.jl/Integrals.jl/docs/Manifest.toml`
-  [47edcb42] ADTypes v0.2.4
+  [47edcb42] ADTypes v0.2.5
   [a4c015fc] ANSIColoredPrinters v0.0.1
   [621f4979] AbstractFFTs v1.5.0
   [1520ce14] AbstractTrees v0.4.4
@@ -63,7 +63,7 @@ Platform Info:
   [b5f81e59] IOCapture v0.2.3
   [7869d1d1] IRTools v0.4.11
   [18e54dd8] IntegerMathUtils v0.1.2
-  [de52edbc] Integrals v4.0.0 `~/work/Integrals.jl/Integrals.jl`
+  [de52edbc] Integrals v4.1.0 `~/work/Integrals.jl/Integrals.jl`
   [3587e190] InverseFunctions v0.1.12
   [92d709cd] IrrationalConstants v0.2.2
   [82899510] IteratorInterfaceExtensions v1.0.0
@@ -71,7 +71,7 @@ Platform Info:
   [682c06a0] JSON v0.21.4
   [929cbde3] LLVM v6.4.0
   [73f95e8e] LatticeRules v0.0.1
-  [0e77f7df] LazilyInitializedFields v1.2.1
+  [0e77f7df] LazilyInitializedFields v1.2.2
   [50d2b5c4] Lazy v0.15.1
   [2ab3a3ac] LogExpFunctions v0.3.26
   [1914dd2f] MacroTools v0.5.11
@@ -84,7 +84,7 @@ Platform Info:
   [69de0a69] Parsers v2.8.0
   [aea7be01] PrecompileTools v1.2.0
   [21216c6a] Preferences v1.4.1
-  [27ebfcd6] Primes v0.5.4
+  [27ebfcd6] Primes v0.5.5
   [1fd47b50] QuadGK v2.9.1
   [8a4e6c94] QuasiMonteCarlo v0.3.2
   [c1ae055f] RealDot v0.1.0
@@ -95,7 +95,7 @@ Platform Info:
   [ae029012] Requires v1.3.0
   [79098fc4] Rmath v0.7.1
   [7e49a35a] RuntimeGeneratedFunctions v0.5.12
-  [0bca4576] SciMLBase v2.8.0
+  [0bca4576] SciMLBase v2.8.1
   [c0aeaf25] SciMLOperators v0.3.7
   [efcf1570] Setfield v1.1.1
   [ed01d8cd] Sobol v1.5.0
@@ -117,7 +117,7 @@ Platform Info:
   [700de1a5] ZygoteRules v0.2.4
   [3bed1096] Cuba_jll v4.2.2+1
   [7bc98958] Cubature_jll v1.0.5+0
-  [dad2f222] LLVMExtra_jll v0.0.27+0
+  [dad2f222] LLVMExtra_jll v0.0.27+1
   [efe28fd5] OpenSpecFun_jll v0.5.5+0
   [f50d1b31] Rmath_jll v0.4.0+0
   [0dad84c5] ArgTools v1.1.1
@@ -130,7 +130,7 @@ Platform Info:
   [9fa8497b] Future
   [b77e0a4c] InteractiveUtils
   [4af54fe1] LazyArtifacts
-  [b27032c2] LibCURL v0.6.3
+  [b27032c2] LibCURL v0.6.4
   [76f85450] LibGit2
   [8f399da3] Libdl
   [37e2e46d] LinearAlgebra
@@ -154,8 +154,8 @@ Platform Info:
   [cf7118a7] UUIDs
   [4ec0a83e] Unicode
   [e66e0078] CompilerSupportLibraries_jll v1.0.5+0
-  [deac9b47] LibCURL_jll v7.84.0+0
-  [29816b5a] LibSSH2_jll v1.10.2+0
+  [deac9b47] LibCURL_jll v8.4.0+0
+  [29816b5a] LibSSH2_jll v1.11.0+1
   [c8ffd9c3] MbedTLS_jll v2.28.2+0
   [14a3606d] MozillaCACerts_jll v2022.10.11
   [4536629a] OpenBLAS_jll v0.3.21+4
@@ -163,6 +163,6 @@ Platform Info:
   [bea87d4a] SuiteSparse_jll v5.10.1+6
   [83775a58] Zlib_jll v1.2.13+0
   [8e850b90] libblastrampoline_jll v5.8.0+0
-  [8e850ede] nghttp2_jll v1.48.0+0
+  [8e850ede] nghttp2_jll v1.52.0+1
   [3f19e933] p7zip_jll v17.4.0+0
-Info Packages marked with ⌃ and ⌅ have new versions available, but those with ⌅ are restricted by compatibility constraints from upgrading. To see why use `status --outdated -m`</code></pre></details><p>You can also download the <a href="https://github.com/SciML/Integrals.jl/tree/gh-pages/v4.0.0/assets/Manifest.toml">manifest</a> file and the <a href="https://github.com/SciML/Integrals.jl/tree/gh-pages/v4.0.0/assets/Project.toml">project</a> file.</p></article><nav class="docs-footer"><a class="docs-footer-nextpage" href="tutorials/numerical_integrals/">Numerically Solving Integrals »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="auto">Automatic (OS)</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.1.2 on <span class="colophon-date" title="Sunday 12 November 2023 14:19">Sunday 12 November 2023</span>. Using Julia version 1.9.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+Info Packages marked with ⌃ and ⌅ have new versions available. Those with ⌃ may be upgradable, but those with ⌅ are restricted by compatibility constraints from upgrading. To see why use `status --outdated -m`</code></pre></details><p>You can also download the <a href="https://github.com/SciML/Integrals.jl/tree/gh-pages/v4.1.0/assets/Manifest.toml">manifest</a> file and the <a href="https://github.com/SciML/Integrals.jl/tree/gh-pages/v4.1.0/assets/Project.toml">project</a> file.</p></article><nav class="docs-footer"><a class="docs-footer-nextpage" href="tutorials/numerical_integrals/">Numerically Solving Integrals »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="auto">Automatic (OS)</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.1.2 on <span class="colophon-date" title="Wednesday 15 November 2023 17:29">Wednesday 15 November 2023</span>. Using Julia version 1.9.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
