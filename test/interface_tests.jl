@@ -8,7 +8,7 @@ reltol = 1e-3
 abstol = 1e-3
 
 algs = [QuadGKJL, HCubatureJL, CubatureJLh, CubatureJLp, VEGAS, #CubaVegas,
-    CubaSUAVE, CubaDivonne, CubaCuhre]
+    CubaSUAVE, CubaDivonne, CubaCuhre, Arblib]
 
 alg_req = Dict(QuadGKJL => (nout = 1, allows_batch = false, min_dim = 1, max_dim = 1,
         allows_iip = false),
@@ -27,7 +27,8 @@ alg_req = Dict(QuadGKJL => (nout = 1, allows_batch = false, min_dim = 1, max_dim
     CubaDivonne => (nout = Inf, allows_batch = true, min_dim = 2,
         max_dim = Inf, allows_iip = true),
     CubaCuhre => (nout = Inf, allows_batch = true, min_dim = 2, max_dim = Inf,
-        allows_iip = true))
+        allows_iip = true),
+    Arblib => (nout=1, allows_batch=false, min_dim=1, max_dim=1, allows_iip=true))
 
 integrands = [
     (x, p) -> 1.0,
