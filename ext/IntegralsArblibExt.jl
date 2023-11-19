@@ -14,13 +14,14 @@ function Integrals.__solvebp_call(prob::IntegralProblem, alg::ArblibJL, sensealg
     @assert prob.f isa IntegralFunction
 
     if isinplace(prob)
-        f_ = (y, x; kws...) -> prob.f(y, x, p; kws...)
-        val = Arblib.integrate!(f_, lb, ub, atol=abstol, rtol=reltol,
+        y_ = similar(prob.f.integrand_prototype, typeof(Acb(0)))
+        f_ = (y, x; kws...) -> Arblib.set!(y, only(prob.f(y_, x, p; kws...)))
+        val = Arblib.integrate!(f_, Acb(0), lb, ub, atol=abstol, rtol=reltol,
             check_analytic=alg.check_analytic, take_prec=alg.take_prec,
             warn_on_no_convergence=alg.warn_on_no_convergence, opts=alg.opts)
         SciMLBase.build_solution(prob, alg, val, nothing, retcode = ReturnCode.Success)
     else
-        f_ = (x; kws...) -> prob.f(x, p; kws...)
+        f_ = (x; kws...) -> only(prob.f(x, p; kws...))
         val = Arblib.integrate(f_, lb, ub, atol=abstol, rtol=reltol,
             check_analytic=alg.check_analytic, take_prec=alg.take_prec,
             warn_on_no_convergence=alg.warn_on_no_convergence, opts=alg.opts)
