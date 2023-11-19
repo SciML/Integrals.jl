@@ -1,10 +1,10 @@
-module IntegralsArblib
+module IntegralsArblibExt
 
 using Arblib
 using Integrals
 
-function __solvebp_call(prob::IntegralProblem, alg::ArblibJL, sensealg, domain, p;
-    reltol = 1e-8, abstol = 1e-8, maxiters = typemax(Int))
+function Integrals.__solvebp_call(prob::IntegralProblem, alg::ArblibJL, sensealg, domain, p;
+    reltol = 1e-8, abstol = 1e-8, maxiters = nothing)
 
     lb, ub = domain
     if lb isa AbstractArray || ub isa AbstractArray
