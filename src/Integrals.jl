@@ -177,5 +177,6 @@ end
 export QuadGKJL, HCubatureJL, VEGAS, GaussLegendre, QuadratureRule, TrapezoidalRule
 export CubaVegas, CubaSUAVE, CubaDivonne, CubaCuhre
 export CubatureJLh, CubatureJLp
+export ArblibJL
 
 end # module

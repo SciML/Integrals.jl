@@ -14,6 +14,7 @@ Requires = "ae029012-a4dd-5104-9daa-d747884805df"
 SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
 
 [weakdeps]
+Arblib = "fb37089c-8514-4489-9461-98f9c8763369"
 ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
 Cuba = "8a292aeb-7a57-582c-b821-06e4c11590b1"
 Cubature = "667455a9-e2ce-5579-9412-b964f529a492"
@@ -22,6 +23,7 @@ ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [extensions]
+IntegralsArblibExt = "Arblib"
 IntegralsCubaExt = "Cuba"
 IntegralsCubatureExt = "Cubature"
 IntegralsFastGaussQuadratureExt = "FastGaussQuadrature"
@@ -29,6 +31,7 @@ IntegralsForwardDiffExt = "ForwardDiff"
 IntegralsZygoteExt = ["Zygote", "ChainRulesCore"]
 
 [compat]
+Arblib = "1"
 ChainRulesCore = "0.10.7, 1"
 CommonSolve = "0.2"
 Cuba = "2"
@@ -47,6 +50,7 @@ Zygote = "0.4.22, 0.5, 0.6"
 julia = "1.9"
 
 [extras]
+Arblib = "fb37089c-8514-4489-9461-98f9c8763369"
 ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
 Cuba = "8a292aeb-7a57-582c-b821-06e4c11590b1"
 Cubature = "667455a9-e2ce-5579-9412-b964f529a492"
@@ -62,4 +66,4 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [targets]
-test = ["SciMLSensitivity", "StaticArrays", "FiniteDiff", "Pkg", "SafeTestsets", "Test", "Distributions", "ForwardDiff", "Zygote", "ChainRulesCore", "FastGaussQuadrature", "Cuba", "Cubature"]
+test = ["Arblib", "SciMLSensitivity", "StaticArrays", "FiniteDiff", "Pkg", "SafeTestsets", "Test", "Distributions", "ForwardDiff", "Zygote", "ChainRulesCore", "FastGaussQuadrature", "Cuba", "Cubature"]
