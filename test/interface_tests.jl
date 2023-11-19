@@ -1,5 +1,5 @@
 using Integrals
-using Cuba, Cubature
+using Cuba, Cubature, Arblib
 using Test
 
 max_dim_test = 2
@@ -8,7 +8,7 @@ reltol = 1e-3
 abstol = 1e-3
 
 algs = [QuadGKJL, HCubatureJL, CubatureJLh, CubatureJLp, VEGAS, #CubaVegas,
-    CubaSUAVE, CubaDivonne, CubaCuhre, Arblib]
+    CubaSUAVE, CubaDivonne, CubaCuhre, ArblibJL]
 
 alg_req = Dict(QuadGKJL => (nout = 1, allows_batch = false, min_dim = 1, max_dim = 1,
         allows_iip = false),
@@ -28,7 +28,7 @@ alg_req = Dict(QuadGKJL => (nout = 1, allows_batch = false, min_dim = 1, max_dim
         max_dim = Inf, allows_iip = true),
     CubaCuhre => (nout = Inf, allows_batch = true, min_dim = 2, max_dim = Inf,
         allows_iip = true),
-    Arblib => (nout=1, allows_batch=false, min_dim=1, max_dim=1, allows_iip=true))
+    ArblibJL => (nout=1, allows_batch=false, min_dim=1, max_dim=1, allows_iip=true))
 
 integrands = [
     (x, p) -> 1.0,

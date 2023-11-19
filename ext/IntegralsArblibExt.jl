@@ -6,9 +6,10 @@ using Integrals
 function Integrals.__solvebp_call(prob::IntegralProblem, alg::ArblibJL, sensealg, domain, p;
     reltol = 1e-8, abstol = 1e-8, maxiters = nothing)
 
-    lb, ub = domain
-    if lb isa AbstractArray || ub isa AbstractArray
-        error("QuadGKJL only accepts one-dimensional quadrature problems.")
+    lb_, ub_ = domain
+    lb, ub = map(first, domain)
+    if !isone(length(lb_)) || !isone(length(ub_))
+        error("ArblibJL only accepts one-dimensional quadrature problems.")
     end
     @assert prob.f isa IntegralFunction
 
