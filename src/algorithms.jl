@@ -87,6 +87,24 @@ struct VEGAS <: SciMLBase.AbstractIntegralAlgorithm
 end
 VEGAS(; nbins = 100, ncalls = 1000, debug = false) = VEGAS(nbins, ncalls, debug)
 
+
+"""
+    VEGASMC()
+
+Markov-chain based Vegas algorithm from MCIntegration.jl
+"""
+struct VEGASMC <: SciMLBase.AbstractIntegralAlgorithm
+    neval::Int
+    niter::Int
+    block::Int
+    adapt::Bool
+    gamma::Float64
+    verbose::Int
+    debug::Bool
+end
+VEGASMC(; neval=10^4, niter=20, block=16, adapt=true, gamma=1.0, verbose=-2, debug=false) =
+    VEGASMC(neval, niter, block, adapt, gamma, verbose, debug)
+
 """
     GaussLegendre{C, N, W}
 
