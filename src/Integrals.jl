@@ -71,12 +71,12 @@ function quadgk_prob_types(f, lb::T, ub::T, p, nrm) where {T}
     return DT, RT, NT
 end
 function init_cacheval(alg::QuadGKJL, prob::IntegralProblem)
-    lb, ub = prob.domain
+    lb, ub = map(first, prob.domain)
     DT, RT, NT = quadgk_prob_types(prob.f, lb, ub, prob.p, alg.norm)
     return (isconcretetype(RT) ? QuadGK.alloc_segbuf(DT, RT, NT) : nothing)
 end
 function refresh_cacheval(cacheval, alg::QuadGKJL, prob)
-    lb, ub = prob.domain
+    lb, ub = map(first, prob.domain)
     DT, RT, NT = quadgk_prob_types(prob.f, lb, ub, prob.p, alg.norm)
     isconcretetype(RT) || return nothing
     T = QuadGK.Segment{DT, RT, NT}
@@ -87,16 +87,60 @@ function __solvebp_call(cache::IntegralCache, alg::QuadGKJL, sensealg, domain, p
         reltol = 1e-8, abstol = 1e-8,
         maxiters = typemax(Int))
     prob = build_problem(cache)
-    lb, ub = domain
-    if isinplace(prob) || lb isa AbstractArray || ub isa AbstractArray
+    lb_, ub_ = domain
+    lb, ub = map(first, domain)
+    if !isone(length(lb_)) || !isone(length(ub_))
         error("QuadGKJL only accepts one-dimensional quadrature problems.")
     end
-    @assert prob.f isa IntegralFunction
 
-    f = x -> prob.f(x, p)
-    val, err = quadgk(f, lb, ub, segbuf = cache.cacheval, maxevals = maxiters,
-        rtol = reltol, atol = abstol, order = alg.order, norm = alg.norm)
-    SciMLBase.build_solution(prob, QuadGKJL(), val, err, retcode = ReturnCode.Success)
+    mid = ((lb + ub) / 2)
+    if prob.f isa BatchIntegralFunction
+        if isinplace(prob)
+            # quadgk only works with vector buffers. If the buffer is an array, we have to
+            # turn it into a vector of arrays
+            u = prob.f.integrand_prototype
+            f = if u isa AbstractVector
+                BatchIntegrand((y, x) -> prob.f(y, x, p), similar(u))
+            else
+                fsize = size(u)[begin:(end - 1)]
+                BatchIntegrand{Array{eltype(u),ndims(u)-1}}() do y, x
+                    y_ = similar(u, fsize..., length(y))
+                    prob.f(y_, x, p)
+                    map!(collect, y, eachslice(y_; dims=ndims(u)))
+                    return nothing
+                end
+            end
+            val, err = quadgk(f, lb, ub, segbuf = cache.cacheval, maxevals = maxiters,
+                rtol = reltol, atol = abstol, order = alg.order, norm = alg.norm)
+            SciMLBase.build_solution(prob, QuadGKJL(), val, err, retcode = ReturnCode.Success)
+        else
+            u = prob.f(typeof(mid)[], p)
+            f = if u isa AbstractVector
+                BatchIntegrand((y, x) -> y .= prob.f(x, p), u)
+            else
+                BatchIntegrand{Array{eltype(u),ndims(u)-1}}() do y, x
+                    map!(collect, y, eachslice(prob.f(x, p); dims=ndims(u)))
+                    return nothing
+                end
+            end
+            val, err = quadgk(f, lb, ub, segbuf = cache.cacheval, maxevals = maxiters,
+                rtol = reltol, atol = abstol, order = alg.order, norm = alg.norm)
+            SciMLBase.build_solution(prob, QuadGKJL(), val, err, retcode = ReturnCode.Success)
+        end
+    else
+        if isinplace(prob)
+            result = prob.f.integrand_prototype * mid   # result may have different units than prototype
+            f = (y, x) -> prob.f(y, x, p)
+            val, err = quadgk!(f, result, lb, ub, segbuf = cache.cacheval, maxevals = maxiters,
+                rtol = reltol, atol = abstol, order = alg.order, norm = alg.norm)
+            SciMLBase.build_solution(prob, QuadGKJL(), val, err, retcode = ReturnCode.Success)
+        else
+            f = x -> prob.f(x, p)
+            val, err = quadgk(f, lb, ub, segbuf = cache.cacheval, maxevals = maxiters,
+                rtol = reltol, atol = abstol, order = alg.order, norm = alg.norm)
+            SciMLBase.build_solution(prob, QuadGKJL(), val, err, retcode = ReturnCode.Success)
+        end
+    end
 end
 
 function __solvebp_call(prob::IntegralProblem, alg::HCubatureJL, sensealg, domain, p;
@@ -155,7 +199,7 @@ function __solvebp_call(prob::IntegralProblem, alg::VEGAS, sensealg, domain, p;
             f = x -> (prob.f(y, x, p); only(y))
         else
             y = prob.f(mid, p)
-            f = x -> prob.f(x, prob.p)
+            f = x -> only(prob.f(x, prob.p))
         end
     end
 
