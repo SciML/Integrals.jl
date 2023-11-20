@@ -13,11 +13,18 @@ The following algorithms are available:
   - `CubaCuhre`: Cuhre from Cuba.jl. Requires `using Cuba`. Works only for `>1`-dimensional integrations.
   - `GaussLegendre`: Uses Gauss-Legendre quadrature with nodes and weights from FastGaussQuadrature.jl.
   - `QuadratureRule`: Accepts a user-defined function that returns nodes and weights.
+  - `ArblibJL`: real- and complex-valued univariate integration of holomorphic
+    and meromorphic functions from Arblib.jl. Requires `using Arblib`.
 
 ```@docs
 QuadGKJL
 HCubatureJL
 VEGAS
+CubaVegas
+CubaSUAVE
+CubaDivonne
+CubaCuhre
 GaussLegendre
 QuadratureRule
+ArblibJL
 ```
