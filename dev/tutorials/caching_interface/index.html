@@ -16,8 +16,10 @@ prob = IntegralProblem((x, p) -&gt; sin(x * p), 0, 1, 14.0)
 alg = QuadGKJL()
 
 cache = init(prob, alg)
-sol1 = solve!(cache)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">u: 0.061661627270869046</code></pre><pre><code class="language-julia hljs">cache.p = 15.0
-sol2 = solve!(cache)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">u: 0.1173125275239214</code></pre><p>The caching interface is intended for updating <code>p</code>, <code>lb</code>, <code>ub</code>, <code>nout</code>, and <code>batch</code>. Note that the types of these variables is not allowed to change. If it is necessary to change the integrand <code>f</code> instead of defining a new <code>IntegralProblem</code>, consider using <a href="https://github.com/yuyichao/FunctionWrappers.jl">FunctionWrappers.jl</a>.</p><h2 id="Caching-for-sampled-integral-problems"><a class="docs-heading-anchor" href="#Caching-for-sampled-integral-problems">Caching for sampled integral problems</a><a id="Caching-for-sampled-integral-problems-1"></a><a class="docs-heading-anchor-permalink" href="#Caching-for-sampled-integral-problems" title="Permalink"></a></h2><p>For sampled integral problems, it is possible to cache the weights and reuse them for multiple data sets.</p><pre><code class="language-julia hljs">using Integrals
+sol1 = solve!(cache)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">retcode: Success
+u: 0.061661627270869046</code></pre><pre><code class="language-julia hljs">cache.p = 15.0
+sol2 = solve!(cache)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">retcode: Success
+u: 0.1173125275239214</code></pre><p>The caching interface is intended for updating <code>p</code>, <code>lb</code>, <code>ub</code>, <code>nout</code>, and <code>batch</code>. Note that the types of these variables is not allowed to change. If it is necessary to change the integrand <code>f</code> instead of defining a new <code>IntegralProblem</code>, consider using <a href="https://github.com/yuyichao/FunctionWrappers.jl">FunctionWrappers.jl</a>.</p><h2 id="Caching-for-sampled-integral-problems"><a class="docs-heading-anchor" href="#Caching-for-sampled-integral-problems">Caching for sampled integral problems</a><a id="Caching-for-sampled-integral-problems-1"></a><a class="docs-heading-anchor-permalink" href="#Caching-for-sampled-integral-problems" title="Permalink"></a></h2><p>For sampled integral problems, it is possible to cache the weights and reuse them for multiple data sets.</p><pre><code class="language-julia hljs">using Integrals
 
 x = 0.0:0.1:1.0
 y = sin.(x)
@@ -26,10 +28,13 @@ prob = SampledIntegralProblem(y, x)
 alg = TrapezoidalRule()
 
 cache = init(prob, alg)
-sol1 = solve!(cache)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">u: 0.4593145488579764</code></pre><pre><code class="language-julia hljs">cache.y = cos.(x)   # use .= to update in-place
-sol2 = solve!(cache)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">u: 0.8407696420884198</code></pre><p>If the grid is modified, the weights are recomputed.</p><pre><code class="language-julia hljs">cache.x = 0.0:0.2:2.0
+sol1 = solve!(cache)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">retcode: Success
+u: 0.4593145488579764</code></pre><pre><code class="language-julia hljs">cache.y = cos.(x)   # use .= to update in-place
+sol2 = solve!(cache)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">retcode: Success
+u: 0.8407696420884198</code></pre><p>If the grid is modified, the weights are recomputed.</p><pre><code class="language-julia hljs">cache.x = 0.0:0.2:2.0
 cache.y = sin.(cache.x)
-sol3 = solve!(cache)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">u: 1.4114231970988789</code></pre><p>For multi-dimensional datasets, the integration dimension can also be changed</p><pre><code class="language-julia hljs">using Integrals
+sol3 = solve!(cache)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">retcode: Success
+u: 1.4114231970988789</code></pre><p>For multi-dimensional datasets, the integration dimension can also be changed</p><pre><code class="language-julia hljs">using Integrals
 
 x = 0.0:0.1:1.0
 y = sin.(x) .* cos.(x&#39;)
@@ -38,7 +43,8 @@ prob = SampledIntegralProblem(y, x)
 alg = TrapezoidalRule()
 
 cache = init(prob, alg)
-sol1 = solve!(cache)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">u: 11-element Vector{Float64}:
+sol1 = solve!(cache)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">retcode: Success
+u: 11-element Vector{Float64}:
  0.0
  0.08393690598261781
  0.16703514214650947
@@ -50,7 +56,8 @@ sol1 = solve!(cache)</code></pre><pre class="documenter-example-output"><code cl
  0.6031312237955397
  0.6585974854457273
  0.7074832587247253</code></pre><pre><code class="language-julia hljs">cache.dim = 1
-sol2 = solve!(cache)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">u: 11-element Vector{Float64}:
+sol2 = solve!(cache)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">retcode: Success
+u: 11-element Vector{Float64}:
  0.4593145488579764
  0.4570198892864838
  0.4501588380519307
@@ -61,4 +68,4 @@ sol2 = solve!(cache)</code></pre><pre class="documenter-example-output"><code cl
  0.35130314420012265
  0.32000752789011855
  0.28551450214186125
- 0.24816870986674897</code></pre></article><nav class="docs-footer"><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="auto">Automatic (OS)</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.1.2 on <span class="colophon-date" title="Monday 20 November 2023 03:56">Monday 20 November 2023</span>. Using Julia version 1.9.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+ 0.24816870986674897</code></pre></article><nav class="docs-footer"><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="auto">Automatic (OS)</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.2.0 on <span class="colophon-date" title="Wednesday 29 November 2023 13:12">Wednesday 29 November 2023</span>. Using Julia version 1.9.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
