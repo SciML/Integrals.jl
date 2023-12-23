@@ -9,7 +9,6 @@ using Reexport, MonteCarloIntegration, QuadGK, HCubature
 using LinearAlgebra
 
 include("common.jl")
-include("init.jl")
 include("algorithms.jl")
 include("infinity_handling.jl")
 include("quadrules.jl")
