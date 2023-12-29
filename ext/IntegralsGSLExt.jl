@@ -36,7 +36,7 @@ function Integrals.__solvebp_call(cache::IntegralCache, alg::GSLIntegration{type
     else
         x -> Cdouble(only(prob.f(x, p)))
     end
-    # gslf = @gsl_function(f) # broken, see: https://github.com/JuliaMath/GSL.jl/issues/110
+    # gslf = @gsl_function(f) # broken, see: https://github.com/JuliaMath/GSL.jl/pull/128
     ptr = @cfunction($((x,p) -> f(x)), Cdouble, (Cdouble, Ptr{Cvoid}))
     gslf = gsl_function(Base.unsafe_convert(Ptr{Cvoid},ptr), 0)
     a, b = map(Cdouble∘only, domain)
