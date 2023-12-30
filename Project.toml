@@ -7,7 +7,6 @@ version = "4.1.0"
 CommonSolve = "38540f10-b2f7-11e9-35d8-d573e4eb0ff2"
 HCubature = "19dc6840-f33b-545b-b366-655c7e3ffd49"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
-MCIntegration = "ea1e2de9-7db7-4b42-91ee-0cd1bf6df167"
 MonteCarloIntegration = "4886b29c-78c9-11e9-0a6e-41e1f4161f7b"
 QuadGK = "1fd47b50-473d-5c70-9696-f719f8f3bcdc"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
@@ -20,6 +19,7 @@ Cuba = "8a292aeb-7a57-582c-b821-06e4c11590b1"
 Cubature = "667455a9-e2ce-5579-9412-b964f529a492"
 FastGaussQuadrature = "442a2c76-b920-505d-bb47-c5924d526838"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+MCIntegration = "ea1e2de9-7db7-4b42-91ee-0cd1bf6df167"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [extensions]
@@ -28,6 +28,7 @@ IntegralsCubaExt = "Cuba"
 IntegralsCubatureExt = "Cubature"
 IntegralsFastGaussQuadratureExt = "FastGaussQuadrature"
 IntegralsForwardDiffExt = "ForwardDiff"
+IntegralsMCIntegrationExt = "MCIntegration"
 IntegralsZygoteExt = ["Zygote", "ChainRulesCore"]
 
 [compat]
@@ -65,6 +66,7 @@ Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 FastGaussQuadrature = "442a2c76-b920-505d-bb47-c5924d526838"
 FiniteDiff = "6a86dc24-6348-571c-b903-95158fe2bd41"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+MCIntegration = "ea1e2de9-7db7-4b42-91ee-0cd1bf6df167"
 Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
 SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
@@ -72,4 +74,4 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [targets]
-test = ["Aqua", "Arblib", "StaticArrays", "FiniteDiff", "Pkg", "SafeTestsets", "Test", "Distributions", "ForwardDiff", "Zygote", "ChainRulesCore", "FastGaussQuadrature", "Cuba", "Cubature"]
+test = ["Aqua", "Arblib", "StaticArrays", "FiniteDiff", "Pkg", "SafeTestsets", "Test", "Distributions", "ForwardDiff", "Zygote", "ChainRulesCore", "FastGaussQuadrature", "Cuba", "Cubature", "MCIntegration"]

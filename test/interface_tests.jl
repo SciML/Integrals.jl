@@ -1,5 +1,5 @@
 using Integrals
-using Cuba, Cubature, Arblib
+using Cuba, Cubature, Arblib, MCIntegration
 using Test
 
 max_dim_test = 2
