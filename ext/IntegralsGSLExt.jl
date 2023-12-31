@@ -38,7 +38,7 @@ function Integrals.__solvebp_call(cache::IntegralCache, alg::GSLIntegration{type
     end
     # gslf = @gsl_function(f) # broken, see: https://github.com/JuliaMath/GSL.jl/pull/128
     ptr = @cfunction($((x,p) -> f(x)), Cdouble, (Cdouble, Ptr{Cvoid}))
-    gslf = gsl_function(Base.unsafe_convert(Ptr{Cvoid},ptr), 0)
+    gslf = GC.@preserve ptr gsl_function(Base.unsafe_convert(Ptr{Cvoid},ptr), 0)
     a, b = map(Cdouble∘only, domain)
     (; gslcache, result, abserr, nevals) = cache.cacheval
     integration_cquad(gslf, a, b, abstol, reltol, getvalue(gslcache), result, abserr, nevals)
