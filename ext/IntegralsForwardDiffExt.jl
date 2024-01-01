@@ -3,7 +3,8 @@ using Integrals
 isdefined(Base, :get_extension) ? (using ForwardDiff) : (using ..ForwardDiff)
 ### Forward-Mode AD Intercepts
 
-# Direct AD on solvers with QuadGK and HCubature
+#= Direct AD on solvers with QuadGK and HCubature
+# incompatible with iip since types must change
 function Integrals.__solvebp(cache, alg::QuadGKJL, sensealg, domain,
         p::AbstractArray{<:ForwardDiff.Dual{T, V, P}, N};
         kwargs...) where {T, V, P, N}
@@ -15,11 +16,14 @@ function Integrals.__solvebp(cache, alg::HCubatureJL, sensealg, domain,
         kwargs...) where {T, V, P, N}
     Integrals.__solvebp_call(cache, alg, sensealg, domain, p; kwargs...)
 end
+=#
+
+# TODO: add the pushforward for derivative w.r.t lb, and ub (and then combinations?)
 
 # Manually split for the pushforward
 function Integrals.__solvebp(cache, alg, sensealg, domain,
-        p::AbstractArray{<:ForwardDiff.Dual{T, V, P}, N};
-        kwargs...) where {T, V, P, N}
+        p::Union{D,AbstractArray{<:D}};
+        kwargs...) where {T, V, P, D<:ForwardDiff.Dual{T, V, P}}
 
     # we need the output type to avoid perturbation confusion while unwrapping nested duals
     # We compute a vector-valued integral of the primal and dual simultaneously
@@ -32,11 +36,11 @@ function Integrals.__solvebp(cache, alg, sensealg, domain,
             len,
             size(cache.f.integrand_prototype)...)
 
-        dfdp_ = function (out, x, p)
-            dualp = reinterpret(ForwardDiff.Dual{T, V, P}, p)
+        dfdp_ = function (out, x, _p)
+            dualp = reinterpret(ForwardDiff.Dual{T, V, P}, _p)
             dout = reinterpret(reshape, DT, out)
-            cache.f(dout, x, dualp)
-            return out
+            cache.f(dout, x, p isa D ? only(dualp) : reshape(dualp, size(p)))
+            return
         end
         dfdp = if cache.f isa BatchIntegralFunction
             BatchIntegralFunction{true}(dfdp_, dual_prototype)
@@ -55,9 +59,9 @@ function Integrals.__solvebp(cache, alg, sensealg, domain,
         DT = y isa AbstractArray ? eltype(y) : typeof(y)
         elt = unwrap_dualvaltype(DT)
 
-        dfdp_ = function (x, p)
-            dualp = reinterpret(ForwardDiff.Dual{T, V, P}, p)
-            ys = cache.f(x, dualp)
+        dfdp_ = function (x, _p)
+            dualp = reinterpret(ForwardDiff.Dual{T, V, P}, _p)
+            ys = cache.f(x, p isa D ? only(dualp) : reshape(dualp, size(p)))
             ys_ = ys isa AbstractArray ? ys : [ys]
             # we need to reshape in order for batching to be consistent
             return reinterpret(reshape, elt, ys_)
@@ -70,7 +74,7 @@ function Integrals.__solvebp(cache, alg, sensealg, domain,
     end
 
     ForwardDiff.can_dual(elt) || ForwardDiff.throw_cannot_dual(elt)
-    rawp = copy(reinterpret(V, p))
+    rawp = p isa D ? reinterpret(V, [p]) : copy(reinterpret(V, vec(p)))
 
     prob = Integrals.build_problem(cache)
     dp_prob = remake(prob, f = dfdp, p = rawp)
