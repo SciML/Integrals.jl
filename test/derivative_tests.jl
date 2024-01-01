@@ -116,7 +116,7 @@ bf_nd_nout_iip = (y, x, p) -> y .= bf_nd_nout(x, p)
 ### One Dimensional
 for (alg, req) in pairs(alg_req), (i, scalarize) in enumerate(scalarize_solution)
     req.nout > 1 || continue
-    req.min_dim > 0 || continue
+    req.min_dim == 1 || continue
 
     @info "One-dimensional, scalar, oop derivative test" alg scalarize=i
     do_tests(; f=f_1d_scalar, scalarize, lb = 1.0, ub = 3.0, p = 2.0, alg, abstol, reltol)
@@ -125,7 +125,7 @@ end
 ## One-dimensional nout
 for (alg, req) in pairs(alg_req), (i, scalarize) in enumerate(scalarize_solution), nout in 1:max_nout_test
     req.nout > 1 || continue
-    req.min_dim > 0 || continue
+    req.min_dim == 1 || continue
 
     @info "One-dimensional, multivariate, oop derivative test" alg scalarize=i nout
     do_tests(; f=f_1d_nout, scalarize, lb = 1.0, ub = 3.0, p = [2.0i for i in 1:nout], alg, abstol, reltol)
@@ -152,7 +152,7 @@ end
 ### One Dimensional
 for (alg, req) in pairs(alg_req), (i, scalarize) in enumerate(scalarize_solution)
     req.nout > 1 || continue
-    req.min_dim > 0 || continue
+    req.min_dim == 1 || continue
 
     @info "One-dimensional, scalar, iip derivative test" alg scalarize=i
     do_tests(; f=IntegralFunction(f_1d_scalar_iip, zeros(1)), scalarize, lb = 1.0, ub = 3.0, p = 2.0, alg, abstol, reltol)
@@ -161,7 +161,7 @@ end
 ## One-dimensional nout
 for (alg, req) in pairs(alg_req), (i, scalarize) in enumerate(scalarize_solution), nout in 1:max_nout_test
     req.nout > 1 || continue
-    req.min_dim > 0 || continue
+    req.min_dim == 1 || continue
 
     @info "One-dimensional, multivariate, iip derivative test" alg scalarize=i nout
     do_tests(; f=IntegralFunction(f_1d_nout_iip, zeros(nout)), scalarize, lb = 1.0, ub = 3.0, p = [2.0i for i in 1:nout], alg, abstol, reltol)
@@ -189,7 +189,7 @@ end
 for (alg, req) in pairs(alg_req), (i, scalarize) in enumerate(scalarize_solution)
     req.allows_batch || continue
     req.nout > 1 || continue
-    req.min_dim > 0 || continue
+    req.min_dim == 1 || continue
 
     @info "Batched, one-dimensional, scalar, oop derivative test" alg scalarize=i
     do_tests(; f=BatchIntegralFunction(bf_1d_scalar), scalarize, lb = 1.0, ub = 3.0, p = 2.0, alg, abstol, reltol)
@@ -199,7 +199,7 @@ end
 for (alg, req) in pairs(alg_req), (i, scalarize) in enumerate(scalarize_solution), nout in 1:max_nout_test
     req.allows_batch || continue
     req.nout > 1 || continue
-    req.min_dim > 0 || continue
+    req.min_dim == 1 || continue
 
     @info "Batched, one-dimensional, multivariate, oop derivative test" alg scalarize=i nout
     do_tests(; f=BatchIntegralFunction(bf_1d_nout), scalarize, lb = 1.0, ub = 3.0, p = [2.0i for i in 1:nout], alg, abstol, reltol)
@@ -229,7 +229,7 @@ end
 for (alg, req) in pairs(alg_req), (i, scalarize) in enumerate(scalarize_solution)
     req.allows_batch || continue
     req.nout > 1 || continue
-    req.min_dim > 0 || continue
+    req.min_dim == 1 || continue
 
     @info "Batched, one-dimensional, scalar, iip derivative test" alg scalarize=i
     do_tests(; f=BatchIntegralFunction(bf_1d_scalar_iip, zeros(0)), scalarize, lb = 1.0, ub = 3.0, p = 2.0, alg, abstol, reltol)
@@ -239,7 +239,7 @@ end
 for (alg, req) in pairs(alg_req), (i, scalarize) in enumerate(scalarize_solution), nout in 1:max_nout_test
     req.allows_batch || continue
     req.nout > 1 || continue
-    req.min_dim > 0 || continue
+    req.min_dim == 1 || continue
 
     @info "Batched, one-dimensional, multivariate, iip derivative test" alg scalarize=i nout
     do_tests(; f=BatchIntegralFunction(bf_1d_nout_iip, zeros(nout, 0)), scalarize, lb = 1.0, ub = 3.0, p = [2.0i for i in 1:nout], alg, abstol, reltol)
