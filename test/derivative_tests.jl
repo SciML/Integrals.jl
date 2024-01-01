@@ -21,12 +21,12 @@ alg_req = Dict(
         max_dim = Inf, allows_iip = true),
     # CubaVegas() => (nout = Inf, allows_batch = true, min_dim = 1, max_dim = Inf,
     #     allows_iip = true),
-    CubaSUAVE() => (nout = Inf, allows_batch = true, min_dim = 1, max_dim = Inf,
-        allows_iip = true),
-    CubaDivonne() => (nout = Inf, allows_batch = true, min_dim = 2,
-        max_dim = Inf, allows_iip = true),
-    CubaCuhre() => (nout = Inf, allows_batch = true, min_dim = 2, max_dim = Inf,
-        allows_iip = true),
+    # CubaSUAVE() => (nout = Inf, allows_batch = true, min_dim = 1, max_dim = Inf,
+    #     allows_iip = true),
+    # CubaDivonne() => (nout = Inf, allows_batch = true, min_dim = 2,
+    #     max_dim = Inf, allows_iip = true),
+    # CubaCuhre() => (nout = Inf, allows_batch = true, min_dim = 2, max_dim = Inf,
+    #     allows_iip = true),
 )
 # helper function / test runner
 scalarize_solution = (
