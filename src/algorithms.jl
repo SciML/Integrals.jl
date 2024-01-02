@@ -370,3 +370,16 @@ end
 function ArblibJL(; check_analytic=false, take_prec=false, warn_on_no_convergence=false, opts=C_NULL)
     return ArblibJL(check_analytic, take_prec, warn_on_no_convergence, opts)
 end
+
+
+"""
+    GSLIntegration(routine; kws...)
+
+One-dimensional quadrature of Float64-valued function using `routine` from GSL with
+additional arguments. For example `using Integrals, GSL; GSLIntegration(integration_cquad; wssize=100)`
+"""
+struct GSLIntegration{F,A<:NamedTuple} <: SciMLBase.AbstractIntegralAlgorithm
+    f::F
+    kws::A
+end
+GSLIntegration(f; kws...) = GSLIntegration(f, NamedTuple(kws))
