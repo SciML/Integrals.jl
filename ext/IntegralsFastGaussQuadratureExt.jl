@@ -12,13 +12,13 @@ using LinearAlgebra
 
 Integrals.gausslegendre(n) = FastGaussQuadrature.gausslegendre(n)
 
-function gauss_legendre(f, p, lb, ub, nodes, weights)
+function gauss_legendre(f::F, p, lb, ub, nodes, weights) where {F}
     scale = (ub - lb) / 2
     shift = (lb + ub) / 2
-    I = dot(weights, @. f(scale * nodes + shift, $Ref(p)))
+    I = mapreduce((w, x) -> w * f(scale * x + shift, p), +, weights, nodes)
     return scale * I
 end
-function composite_gauss_legendre(f, p, lb, ub, nodes, weights, subintervals)
+function composite_gauss_legendre(f::F, p, lb, ub, nodes, weights, subintervals) where {F}
     h = (ub - lb) / subintervals
     I = zero(h)
     for i in 1:subintervals
