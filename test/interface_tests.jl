@@ -131,7 +131,7 @@ end
             for dim in 1:max_dim_test
                 lb, ub = (ones(dim), 3ones(dim))
                 prob = IntegralProblem(iip_integrands[i], lb, ub)
-                if dim > req.max_dim || dim < req.min_dim
+                if dim > req.max_dim || dim < req.min_dim || !req.allows_iip
                     continue
                 end
                 @info "Alg = $(nameof(typeof(alg))), Integrand = $i, Dimension = $dim, Output Dimension = $nout"
@@ -263,7 +263,8 @@ end
                 for nout in 1:max_nout_test
                     prob = IntegralProblem((dx, x, p) -> iip_integrands_v[i](dx, x, p, nout),
                         lb, ub, nout = nout)
-                    if dim > req.max_dim || dim < req.min_dim || req.nout < nout
+                    if dim > req.max_dim || dim < req.min_dim || req.nout < nout ||
+                        !req.allows_iip
                         continue
                     end
                     @info "Alg = $(nameof(typeof(alg))), Integrand = $i, Dimension = $dim, Output Dimension = $nout"
