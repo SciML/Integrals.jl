@@ -12,6 +12,8 @@ abstol = 1e-3
 alg_req = Dict(
     QuadratureRule(gausslegendre, n=50) => (nout = Inf, min_dim = 1, max_dim = 1, allows_batch = false,
         allows_iip = false),
+    GaussLegendre(n=50) => (nout = Inf, min_dim = 1, max_dim = 1, allows_batch = false,
+        allows_iip = false),
     QuadGKJL() => (nout = Inf, allows_batch = true, min_dim = 1, max_dim = 1,
         allows_iip = true),
     HCubatureJL() => (nout = Inf, allows_batch = false, min_dim = 1,
