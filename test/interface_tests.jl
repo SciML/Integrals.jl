@@ -238,6 +238,8 @@ end
                 lb, ub = (ones(dim), 3ones(dim))
                 for nout in 1:max_nout_test
                     if dim > req.max_dim || dim < req.min_dim || req.nout < nout
+                        continue
+                    end
                     prob = IntegralProblem((x, p) -> integrands_v[i](x, p, nout), lb, ub,
                         nout = nout)
                     @info "Alg = $(nameof(typeof(alg))), Integrand = $i, Dimension = $dim, Output Dimension = $nout"
