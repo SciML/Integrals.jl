@@ -7,32 +7,31 @@ max_nout_test = 2
 reltol = 1e-3
 abstol = 1e-3
 
-
-algs = [QuadGKJL, HCubatureJL, GaussLegendre, CubatureJLh, CubatureJLp, #VEGAS, #CubaVegas,
-    CubaSUAVE, CubaDivonne, CubaCuhre]
-
-alg_req = Dict(QuadGKJL => (nout = Inf, allows_batch = true, min_dim = 1, max_dim = 1,
+alg_req = Dict(
+    QuadGKJL() => (nout = Inf, allows_batch = true, min_dim = 1, max_dim = 1,
         allows_iip = true),
-    GaussLegendre => (nout = Inf, min_dim = 1, max_dim = 1, allows_batch = false,
+    QuadratureRule(gausslegendre, n=50) => (nout = Inf, min_dim = 1, max_dim = 1, allows_batch = false,
         allows_iip = false),
-    HCubatureJL => (nout = Inf, allows_batch = false, min_dim = 1,
+    GaussLegendre() => (nout = Inf, min_dim = 1, max_dim = 1, allows_batch = false,
+        allows_iip = false),
+    HCubatureJL() => (nout = Inf, allows_batch = false, min_dim = 1,
         max_dim = Inf, allows_iip = true),
-    VEGAS => (nout = 1, allows_batch = true, min_dim = 2, max_dim = Inf,
-        allows_iip = true),
-    VEGASMC => (nout = Inf, allows_batch = false, min_dim = 1, max_dim = Inf, allows_iip = true),
-    CubatureJLh => (nout = Inf, allows_batch = true, min_dim = 1,
+    # VEGAS() => (nout = 1, allows_batch = true, min_dim = 2, max_dim = Inf,
+    #     allows_iip = true),
+    CubatureJLh() => (nout = Inf, allows_batch = true, min_dim = 1,
         max_dim = Inf, allows_iip = true),
-    CubatureJLp => (nout = Inf, allows_batch = true, min_dim = 1,
+    CubatureJLp() => (nout = Inf, allows_batch = true, min_dim = 1,
         max_dim = Inf, allows_iip = true),
-    CubaVegas => (nout = Inf, allows_batch = true, min_dim = 1, max_dim = Inf,
+    # CubaVegas() => (nout = Inf, allows_batch = true, min_dim = 1, max_dim = Inf,
+    #     allows_iip = true),
+    CubaSUAVE() => (nout = Inf, allows_batch = true, min_dim = 1, max_dim = Inf,
         allows_iip = true),
-    CubaSUAVE => (nout = Inf, allows_batch = true, min_dim = 1, max_dim = Inf,
-        allows_iip = true),
-    CubaDivonne => (nout = Inf, allows_batch = true, min_dim = 2,
+    CubaDivonne() => (nout = Inf, allows_batch = true, min_dim = 2,
         max_dim = Inf, allows_iip = true),
-    CubaCuhre => (nout = Inf, allows_batch = true, min_dim = 2, max_dim = Inf,
+    CubaCuhre() => (nout = Inf, allows_batch = true, min_dim = 2, max_dim = Inf,
         allows_iip = true),
-    ArblibJL => (nout=1, allows_batch=false, min_dim=1, max_dim=1, allows_iip=true))
+    ArblibJL() => (nout=1, allows_batch=false, min_dim=1, max_dim=1, allows_iip=true),
+)
 
 integrands = [
     (x, p) -> 1.0,
@@ -94,14 +93,14 @@ end
     lb, ub = (1.0, 3.0)
     nout = 1
     dim = 1
-    for alg in algs
-        if alg_req[alg].min_dim > 1
+    for (alg, req) in pairs(alg_req)
+        if req.min_dim > 1
             continue
         end
         for i in 1:length(integrands)
             prob = IntegralProblem(integrands[i], lb, ub)
             @info "Alg = $alg, Integrand = $i, Dimension = $dim, Output Dimension = $nout"
-            sol = solve(prob, alg(), reltol = reltol, abstol = abstol)
+            sol = solve(prob, alg, reltol = reltol, abstol = abstol)
             @test sol.u≈exact_sol[i](dim, nout, lb, ub) rtol=1e-2
         end
     end
@@ -109,8 +108,7 @@ end
 
 @testset "Standard Integrands" begin
     nout = 1
-    for alg in algs
-        req = alg_req[alg]
+    for (alg, req) in pairs(alg_req)
         for i in 1:length(integrands)
             for dim in 1:max_dim_test
                 lb, ub = (ones(dim), 3ones(dim))
@@ -119,7 +117,7 @@ end
                     continue
                 end
                 @info "Alg = $alg, Integrand = $i, Dimension = $dim, Output Dimension = $nout"
-                sol = solve(prob, alg(), reltol = reltol, abstol = abstol)
+                sol = solve(prob, alg, reltol = reltol, abstol = abstol)
                 @test sol.u≈exact_sol[i](dim, nout, lb, ub) rtol=1e-2
             end
         end
@@ -128,8 +126,7 @@ end
 
 @testset "In-place Standard Integrands" begin
     nout = 1
-    for alg in algs
-        req = alg_req[alg]
+    for (alg, req) in pairs(alg_req)
         for i in 1:length(iip_integrands)
             for dim in 1:max_dim_test
                 lb, ub = (ones(dim), 3ones(dim))
@@ -138,7 +135,7 @@ end
                     continue
                 end
                 @info "Alg = $alg, Integrand = $i, Dimension = $dim, Output Dimension = $nout"
-                sol = solve(prob, alg(), reltol = reltol, abstol = abstol)
+                sol = solve(prob, alg, reltol = reltol, abstol = abstol)
                 if sol.u isa Number
                     @test sol.u≈exact_sol[i](dim, nout, lb, ub) rtol=1e-2
                 else
@@ -152,15 +149,14 @@ end
 @testset "Batched Single Dimension Integrands" begin
     (lb, ub) = (1.0, 3.0)
     (dim, nout) = (1, 1)
-    for alg in algs
-        req = alg_req[alg]
+    for (alg, req) in pairs(alg_req)
         for i in 1:length(integrands)
             prob = IntegralProblem(batch_f(integrands[i]), lb, ub, batch = 1000)
             if req.min_dim > 1 || !req.allows_batch
                 continue
             end
             @info "Alg = $alg, Integrand = $i, Dimension = $dim, Output Dimension = $nout"
-            sol = solve(prob, alg(), reltol = reltol, abstol = abstol)
+            sol = solve(prob, alg, reltol = reltol, abstol = abstol)
             @test sol.u[1]≈exact_sol[i](dim, nout, lb, ub) rtol=1e-2
         end
     end
@@ -168,8 +164,7 @@ end
 
 @testset "Batched Standard Integrands" begin
     nout = 1
-    for alg in algs
-        req = alg_req[alg]
+    for (alg, req) in pairs(alg_req)
         for i in 1:length(integrands)
             for dim in 1:max_dim_test
                 (lb, ub) = (ones(dim), 3ones(dim))
@@ -178,7 +173,7 @@ end
                     continue
                 end
                 @info "Alg = $alg, Integrand = $i, Dimension = $dim, Output Dimension = $nout"
-                sol = solve(prob, alg(), reltol = reltol, abstol = abstol)
+                sol = solve(prob, alg, reltol = reltol, abstol = abstol)
                 if sol.u isa Number
                     @test sol.u≈exact_sol[i](dim, nout, lb, ub) rtol=1e-2
                 else
@@ -191,8 +186,7 @@ end
 
 @testset "In-Place Batched Standard Integrands" begin
     nout = 1
-    for alg in algs
-        req = req = alg_req[alg]
+    for (alg, req) in pairs(alg_req)
         for i in 1:length(iip_integrands)
             for dim in 1:max_dim_test
                 (lb, ub) = (ones(dim), 3ones(dim))
@@ -202,7 +196,7 @@ end
                     continue
                 end
                 @info "Alg = $alg, Integrand = $i, Dimension = $dim, Output Dimension = $nout"
-                sol = solve(prob, alg(), reltol = reltol, abstol = abstol)
+                sol = solve(prob, alg, reltol = reltol, abstol = abstol)
                 if sol.u isa Number
                     @test sol.u≈exact_sol[i](dim, nout, lb, ub) rtol=1e-2
                 else
@@ -217,8 +211,7 @@ end
 @testset "Standard Single Dimension Vector Integrands" begin
     lb, ub = (1.0, 3.0)
     dim = 1
-    for alg in algs
-        req = alg_req[alg]
+    for (alg, req) in pairs(alg_req)
         for i in 1:length(integrands_v)
             for nout in 1:max_nout_test
                 prob = IntegralProblem((x, p) -> integrands_v[i](x, p, nout), lb, ub,
@@ -227,7 +220,7 @@ end
                     continue
                 end
                 @info "Alg = $alg, Integrand = $i, Dimension = $dim, Output Dimension = $nout"
-                sol = solve(prob, alg(), reltol = reltol, abstol = abstol)
+                sol = solve(prob, alg, reltol = reltol, abstol = abstol)
                 if nout == 1
                     @test sol.u[1]≈exact_sol_v[i](dim, nout, lb, ub)[1] rtol=1e-2
                 else
@@ -239,20 +232,16 @@ end
 end
 
 @testset "Standard Vector Integrands" begin
-    for alg in algs
-        req = alg_req[alg]
+    for (alg, req) in pairs(alg_req)
         for i in 1:length(integrands_v)
             for dim in 1:max_dim_test
                 lb, ub = (ones(dim), 3ones(dim))
                 for nout in 1:max_nout_test
-                    if dim > req.max_dim || dim < req.min_dim || req.nout < nout ||
-                        alg() isa VEGAS # broken for integrand 2 due to sign problem?
-                        continue
-                    end
+                    if dim > req.max_dim || dim < req.min_dim || req.nout < nout
                     prob = IntegralProblem((x, p) -> integrands_v[i](x, p, nout), lb, ub,
                         nout = nout)
                     @info "Alg = $alg, Integrand = $i, Dimension = $dim, Output Dimension = $nout"
-                    sol = solve(prob, alg(), reltol = reltol, abstol = abstol)
+                    sol = solve(prob, alg, reltol = reltol, abstol = abstol)
                     if nout == 1
                         @test sol.u[1]≈exact_sol_v[i](dim, nout, lb, ub)[1] rtol=1e-2
                     else
@@ -265,8 +254,7 @@ end
 end
 
 @testset "In-place Standard Vector Integrands" begin
-    for alg in algs
-        req = alg_req[alg]
+    for (alg, req) in pairs(alg_req)
         for i in 1:length(iip_integrands_v)
             for dim in 1:max_dim_test
                 lb, ub = (ones(dim), 3ones(dim))
@@ -277,7 +265,7 @@ end
                         continue
                     end
                     @info "Alg = $alg, Integrand = $i, Dimension = $dim, Output Dimension = $nout"
-                    sol = solve(prob, alg(), reltol = reltol, abstol = abstol)
+                    sol = solve(prob, alg, reltol = reltol, abstol = abstol)
                     if nout == 1
                         @test sol.u[1]≈exact_sol_v[i](dim, nout, lb, ub)[1] rtol=1e-2
                     else
@@ -292,8 +280,7 @@ end
 @testset "Batched Single Dimension Vector Integrands" begin
     (lb, ub) = (1.0, 3.0)
     (dim, nout) = (1, 2)
-    for alg in algs
-        req = alg_req[alg]
+    for (alg, req) in pairs(alg_req)
         for i in 1:length(integrands_v)
             prob = IntegralProblem(batch_f_v(integrands_v[i], nout), lb, ub, batch = 1000,
                 nout = nout)
@@ -301,7 +288,7 @@ end
                 continue
             end
             @info "Alg = $alg, Integrand = $i, Dimension = $dim, Output Dimension = $nout"
-            sol = solve(prob, alg(), reltol = reltol, abstol = abstol)
+            sol = solve(prob, alg, reltol = reltol, abstol = abstol)
             @test sol.u≈exact_sol_v[i](dim, nout, lb, ub) rtol=1e-2
         end
     end
@@ -309,8 +296,7 @@ end
 
 @testset "Batched Standard Vector Integrands" begin
     nout = 2
-    for alg in algs
-        req = alg_req[alg]
+    for (alg, req) in pairs(alg_req)
         for i in 1:length(integrands_v)
             for dim in 1:max_dim_test
                 (lb, ub) = (ones(dim), 3ones(dim))
@@ -322,7 +308,7 @@ end
                     continue
                 end
                 @info "Alg = $alg, Integrand = $i, Dimension = $dim, Output Dimension = $nout"
-                sol = solve(prob, alg(), reltol = reltol, abstol = abstol)
+                sol = solve(prob, alg, reltol = reltol, abstol = abstol)
                 @test sol.u≈exact_sol_v[i](dim, nout, lb, ub) rtol=1e-2
             end
         end
@@ -331,8 +317,7 @@ end
 
 @testset "In-Place Batched Standard Vector Integrands" begin
     nout = 2
-    for alg in algs
-        req = req = alg_req[alg]
+    for (alg, req) in pairs(alg_req)
         for i in 1:length(iip_integrands_v)
             for dim in 1:max_dim_test
                 (lb, ub) = (ones(dim), 3ones(dim))
@@ -343,7 +328,7 @@ end
                     continue
                 end
                 @info "Alg = $alg, Integrand = $i, Dimension = $dim, Output Dimension = $nout"
-                sol = solve(prob, alg(), reltol = reltol, abstol = abstol)
+                sol = solve(prob, alg, reltol = reltol, abstol = abstol)
                 @test sol.u≈exact_sol_v[i](dim, nout, lb, ub) rtol=1e-2
             end
         end
@@ -364,13 +349,13 @@ end
     p = NaN # the integrands don't actually use this
     nout = 1
     dim = 1
-    for alg in algs
-        if alg_req[alg].min_dim > 1
+    for (alg, req) in pairs(alg_req)
+        if req.min_dim > 1
             continue
         end
         for i in 1:length(integrands)
             prob = IntegralProblem(integrands[i], lb, ub, p)
-            cache = init(prob, alg(), reltol = reltol, abstol = abstol)
+            cache = init(prob, alg, reltol = reltol, abstol = abstol)
             @test solve!(cache).u≈exact_sol[i](dim, nout, lb, ub) rtol=1e-2
             cache.lb = lb = 0.5
             @test solve!(cache).u≈exact_sol[i](dim, nout, lb, ub) rtol=1e-2
