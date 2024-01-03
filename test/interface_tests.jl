@@ -99,7 +99,7 @@ end
         end
         for i in 1:length(integrands)
             prob = IntegralProblem(integrands[i], lb, ub)
-            @info "Alg = $alg, Integrand = $i, Dimension = $dim, Output Dimension = $nout"
+            @info "Alg = $(nameof(typeof(alg))), Integrand = $i, Dimension = $dim, Output Dimension = $nout"
             sol = solve(prob, alg, reltol = reltol, abstol = abstol)
             @test sol.u≈exact_sol[i](dim, nout, lb, ub) rtol=1e-2
         end
@@ -116,7 +116,7 @@ end
                 if dim > req.max_dim || dim < req.min_dim
                     continue
                 end
-                @info "Alg = $alg, Integrand = $i, Dimension = $dim, Output Dimension = $nout"
+                @info "Alg = $(nameof(typeof(alg))), Integrand = $i, Dimension = $dim, Output Dimension = $nout"
                 sol = solve(prob, alg, reltol = reltol, abstol = abstol)
                 @test sol.u≈exact_sol[i](dim, nout, lb, ub) rtol=1e-2
             end
@@ -134,7 +134,7 @@ end
                 if dim > req.max_dim || dim < req.min_dim
                     continue
                 end
-                @info "Alg = $alg, Integrand = $i, Dimension = $dim, Output Dimension = $nout"
+                @info "Alg = $(nameof(typeof(alg))), Integrand = $i, Dimension = $dim, Output Dimension = $nout"
                 sol = solve(prob, alg, reltol = reltol, abstol = abstol)
                 if sol.u isa Number
                     @test sol.u≈exact_sol[i](dim, nout, lb, ub) rtol=1e-2
@@ -155,7 +155,7 @@ end
             if req.min_dim > 1 || !req.allows_batch
                 continue
             end
-            @info "Alg = $alg, Integrand = $i, Dimension = $dim, Output Dimension = $nout"
+            @info "Alg = $(nameof(typeof(alg))), Integrand = $i, Dimension = $dim, Output Dimension = $nout"
             sol = solve(prob, alg, reltol = reltol, abstol = abstol)
             @test sol.u[1]≈exact_sol[i](dim, nout, lb, ub) rtol=1e-2
         end
@@ -172,7 +172,7 @@ end
                 if dim > req.max_dim || dim < req.min_dim || !req.allows_batch
                     continue
                 end
-                @info "Alg = $alg, Integrand = $i, Dimension = $dim, Output Dimension = $nout"
+                @info "Alg = $(nameof(typeof(alg))), Integrand = $i, Dimension = $dim, Output Dimension = $nout"
                 sol = solve(prob, alg, reltol = reltol, abstol = abstol)
                 if sol.u isa Number
                     @test sol.u≈exact_sol[i](dim, nout, lb, ub) rtol=1e-2
@@ -195,7 +195,7 @@ end
                    !req.allows_iip
                     continue
                 end
-                @info "Alg = $alg, Integrand = $i, Dimension = $dim, Output Dimension = $nout"
+                @info "Alg = $(nameof(typeof(alg))), Integrand = $i, Dimension = $dim, Output Dimension = $nout"
                 sol = solve(prob, alg, reltol = reltol, abstol = abstol)
                 if sol.u isa Number
                     @test sol.u≈exact_sol[i](dim, nout, lb, ub) rtol=1e-2
@@ -219,7 +219,7 @@ end
                 if req.min_dim > 1 || req.nout < nout
                     continue
                 end
-                @info "Alg = $alg, Integrand = $i, Dimension = $dim, Output Dimension = $nout"
+                @info "Alg = $(nameof(typeof(alg))), Integrand = $i, Dimension = $dim, Output Dimension = $nout"
                 sol = solve(prob, alg, reltol = reltol, abstol = abstol)
                 if nout == 1
                     @test sol.u[1]≈exact_sol_v[i](dim, nout, lb, ub)[1] rtol=1e-2
@@ -240,7 +240,7 @@ end
                     if dim > req.max_dim || dim < req.min_dim || req.nout < nout
                     prob = IntegralProblem((x, p) -> integrands_v[i](x, p, nout), lb, ub,
                         nout = nout)
-                    @info "Alg = $alg, Integrand = $i, Dimension = $dim, Output Dimension = $nout"
+                    @info "Alg = $(nameof(typeof(alg))), Integrand = $i, Dimension = $dim, Output Dimension = $nout"
                     sol = solve(prob, alg, reltol = reltol, abstol = abstol)
                     if nout == 1
                         @test sol.u[1]≈exact_sol_v[i](dim, nout, lb, ub)[1] rtol=1e-2
@@ -264,7 +264,7 @@ end
                     if dim > req.max_dim || dim < req.min_dim || req.nout < nout
                         continue
                     end
-                    @info "Alg = $alg, Integrand = $i, Dimension = $dim, Output Dimension = $nout"
+                    @info "Alg = $(nameof(typeof(alg))), Integrand = $i, Dimension = $dim, Output Dimension = $nout"
                     sol = solve(prob, alg, reltol = reltol, abstol = abstol)
                     if nout == 1
                         @test sol.u[1]≈exact_sol_v[i](dim, nout, lb, ub)[1] rtol=1e-2
@@ -287,7 +287,7 @@ end
             if req.min_dim > 1 || !req.allows_batch || req.nout < nout
                 continue
             end
-            @info "Alg = $alg, Integrand = $i, Dimension = $dim, Output Dimension = $nout"
+            @info "Alg = $(nameof(typeof(alg))), Integrand = $i, Dimension = $dim, Output Dimension = $nout"
             sol = solve(prob, alg, reltol = reltol, abstol = abstol)
             @test sol.u≈exact_sol_v[i](dim, nout, lb, ub) rtol=1e-2
         end
@@ -307,7 +307,7 @@ end
                    req.nout < nout
                     continue
                 end
-                @info "Alg = $alg, Integrand = $i, Dimension = $dim, Output Dimension = $nout"
+                @info "Alg = $(nameof(typeof(alg))), Integrand = $i, Dimension = $dim, Output Dimension = $nout"
                 sol = solve(prob, alg, reltol = reltol, abstol = abstol)
                 @test sol.u≈exact_sol_v[i](dim, nout, lb, ub) rtol=1e-2
             end
@@ -327,7 +327,7 @@ end
                    !req.allows_iip || req.nout < nout
                     continue
                 end
-                @info "Alg = $alg, Integrand = $i, Dimension = $dim, Output Dimension = $nout"
+                @info "Alg = $(nameof(typeof(alg))), Integrand = $i, Dimension = $dim, Output Dimension = $nout"
                 sol = solve(prob, alg, reltol = reltol, abstol = abstol)
                 @test sol.u≈exact_sol_v[i](dim, nout, lb, ub) rtol=1e-2
             end
