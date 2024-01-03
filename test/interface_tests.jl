@@ -80,13 +80,12 @@ batch_f_v(f, nout) = (pts, p) -> begin
     fevals
 end
 
-# TODO ? check if pts is a vector or matrix
 batch_iip_f_v(f, nout) = (fevals, pts, p) -> begin
-    for i in 1:size(pts, 2)
-        x = pts[:, i]
+    for i in axes(pts, ndims(pts))
+        x = pts isa Vector ? pts[i] : pts[:, i]
         fevals[:, i] .= f(x, p, nout)
     end
-    nothing
+    return
 end
 
 @testset "Standard Single Dimension Integrands" begin
