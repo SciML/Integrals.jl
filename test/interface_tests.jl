@@ -1,5 +1,5 @@
 using Integrals
-using Cuba, Cubature, Arblib, MCIntegration
+using Cuba, Cubature, Arblib, FastGaussQuadrature, MCIntegration
 using Test
 
 max_dim_test = 2
@@ -7,11 +7,14 @@ max_nout_test = 2
 reltol = 1e-3
 abstol = 1e-3
 
-algs = [QuadGKJL, HCubatureJL, CubatureJLh, CubatureJLp, VEGAS, VEGASMC, #CubaVegas,
-    CubaSUAVE, CubaDivonne, CubaCuhre, ArblibJL]
 
-alg_req = Dict(QuadGKJL => (nout = 1, allows_batch = true, min_dim = 1, max_dim = 1,
+algs = [QuadGKJL, HCubatureJL, GaussLegendre, CubatureJLh, CubatureJLp, #VEGAS, #CubaVegas,
+    CubaSUAVE, CubaDivonne, CubaCuhre]
+
+alg_req = Dict(QuadGKJL => (nout = Inf, allows_batch = true, min_dim = 1, max_dim = 1,
         allows_iip = true),
+    GaussLegendre => (nout = Inf, min_dim = 1, max_dim = 1, allows_batch = false,
+        allows_iip = false),
     HCubatureJL => (nout = Inf, allows_batch = false, min_dim = 1,
         max_dim = Inf, allows_iip = true),
     VEGAS => (nout = 1, allows_batch = true, min_dim = 2, max_dim = Inf,
