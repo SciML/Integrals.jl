@@ -135,7 +135,7 @@ do_tests = function (; f, scalarize, lb, ub, p, alg, abstol, reltol)
     return
 end
 
-#=
+
 ### One Dimensional
 for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands), (i, scalarize) in enumerate(scalarize_solution)
     req.nout > 1 || continue
@@ -215,7 +215,7 @@ for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands), (i, scalarize
     fiip = IntegralFunction((y, x, p) -> f_helper!(f, y, x, p), zeros(nout))
     do_tests(; f=fiip, scalarize, lb = ones(dim), ub = 3ones(dim), p = [2.0i for i in 1:nout], alg, abstol, reltol)
 end
-=#
+
 ### Batch, One Dimensional
 for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands), (i, scalarize) in enumerate(scalarize_solution)
     req.allows_batch || continue
