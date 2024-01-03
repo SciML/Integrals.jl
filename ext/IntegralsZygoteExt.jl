@@ -1,4 +1,5 @@
 module IntegralsZygoteExt
+using LinearAlgebra: dot
 using Integrals
 if isdefined(Base, :get_extension)
     using Zygote
@@ -11,6 +12,7 @@ else
 end
 ChainRulesCore.@non_differentiable Integrals.checkkwargs(kwargs...)
 ChainRulesCore.@non_differentiable Integrals.isinplace(f, args...)    # fixes #99
+ChainRulesCore.@non_differentiable Integrals.init_cacheval(alg, prob)
 
 function ChainRulesCore.rrule(::typeof(Integrals.__solvebp), cache, alg, sensealg, domain,
         p;
@@ -24,23 +26,25 @@ function ChainRulesCore.rrule(::typeof(Integrals.__solvebp), cache, alg, senseal
         # https://juliadiff.org/ChainRulesCore.jl/dev/design/many_tangents.html#manytypes
         if isinplace(cache)
             # zygote doesn't support mutation, so we build an oop pullback
-            dx = similar(cache.f.integrand_prototype)
-            _f = x -> cache.f(dx, x, p)
             if sensealg.vjp isa Integrals.ZygoteVJP
                 if cache.f isa BatchIntegralFunction
+                    dx = similar(cache.f.integrand_prototype, size(cache.f.integrand_prototype)[begin:end-1]..., 1)
+                    _f = x -> (cache.f(dx, x, p); dx)
                     # TODO: let the user pass a batched jacobian so we can return a BatchIntegralFunction
                     dfdp_ = function (x, p)
                         x_ = x isa AbstractArray ? reshape(x, size(x)..., 1) : [x]
                         z, back = Zygote.pullback(p) do p
-                            _dx = Zygote.Buffer(dx, size(dx)[begin:(end - 1)]..., 1)
+                            _dx = Zygote.Buffer(dx)
                             cache.f(_dx, x_, p)
                             copy(_dx)
                         end
                         return back(z .= (Δ isa AbstractArray ? reshape(Δ, size(Δ)..., 1) :
-                                          [Δ]))[1]
+                                          Δ))[1]
                     end
                     dfdp = IntegralFunction{false}(dfdp_, nothing)
                 else
+                    dx = similar(cache.f.integrand_prototype)
+                    _f = x -> (cache.f(dx, x, p); dx)
                     dfdp_ = function (x, p)
                         _, back = Zygote.pullback(p) do p
                             _dx = Zygote.Buffer(dx)
@@ -62,8 +66,7 @@ function ChainRulesCore.rrule(::typeof(Integrals.__solvebp), cache, alg, senseal
                     dfdp_ = function (x, p)
                         x_ = x isa AbstractArray ? reshape(x, size(x)..., 1) : [x]
                         z, back = Zygote.pullback(p -> cache.f(x_, p), p)
-                        return back(z .= (Δ isa AbstractArray ? reshape(Δ, size(Δ)..., 1) :
-                                          [Δ]))[1]
+                        return back(Δ isa AbstractArray ? reshape(Δ, size(Δ)..., 1) : [Δ])[1]
                     end
                     dfdp = IntegralFunction{false}(dfdp_, nothing)
                 else
@@ -98,13 +101,15 @@ function ChainRulesCore.rrule(::typeof(Integrals.__solvebp), cache, alg, senseal
 
         lb, ub = domain
         if lb isa Number
-            dlb = cache.f isa BatchIntegralFunction ? -_f([lb]) : -_f(lb)
-            dub = cache.f isa BatchIntegralFunction ? _f([ub]) : _f(ub)
+            # TODO replace evaluation at endpoint (which anyone can do without Integrals.jl)
+            # with integration of dfdx uing the same quadrature
+            dlb = cache.f isa BatchIntegralFunction ? -batch_unwrap(_f([lb])) : -_f(lb)
+            dub = cache.f isa BatchIntegralFunction ?  batch_unwrap(_f([ub])) : _f(ub)
             return (NoTangent(),
                 NoTangent(),
                 NoTangent(),
                 NoTangent(),
-                Tangent{typeof(domain)}(dlb, dub),
+                Tangent{typeof(domain)}(dot(dlb, Δ), dot(dub, Δ)),
                 dp)
         else
             # we need to compute 2*length(lb) integrals on the faces of the hypercube, as we
@@ -122,6 +127,8 @@ function ChainRulesCore.rrule(::typeof(Integrals.__solvebp), cache, alg, senseal
     end
     out, quadrature_adjoint
 end
+
+batch_unwrap(x::AbstractArray) = dropdims(x; dims=ndims(x))
 
 Zygote.@adjoint function Zygote.literal_getproperty(sol::SciMLBase.IntegralSolution,
         ::Val{:u})

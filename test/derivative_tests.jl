@@ -1,243 +1,309 @@
 using Integrals, Zygote, FiniteDiff, ForwardDiff#, SciMLSensitivity
 using Cuba, Cubature
+using FastGaussQuadrature
 using Test
 
-### One Dimensional
+max_dim_test = 2
+max_nout_test = 2
 
-f(x, p) = sum(sin.(p[1] * x))
-lb = 1.0
-ub = 3.0
-p = 2.0
-prob = IntegralProblem(f, lb, ub, p)
-sol = solve(prob, QuadGKJL(), reltol = 1e-3, abstol = 1e-3)
+reltol = 1e-3
+abstol = 1e-3
 
-function testf(lb, ub, p)
-    prob = IntegralProblem(f, lb, ub, p)
-    sin(solve(prob, QuadGKJL(), reltol = 1e-3, abstol = 1e-3)[1])
+alg_req = Dict(
+    QuadratureRule(gausslegendre, n=50) => (nout = Inf, min_dim = 1, max_dim = 1, allows_batch = false,
+        allows_iip = false),
+    QuadGKJL() => (nout = Inf, allows_batch = true, min_dim = 1, max_dim = 1,
+        allows_iip = true),
+    HCubatureJL() => (nout = Inf, allows_batch = false, min_dim = 1,
+        max_dim = Inf, allows_iip = true),
+    # VEGAS() => (nout = 1, allows_batch = true, min_dim = 2, max_dim = Inf,
+        # allows_iip = true),
+    CubatureJLh() => (nout = Inf, allows_batch = true, min_dim = 1,
+        max_dim = Inf, allows_iip = true),
+    CubatureJLp() => (nout = Inf, allows_batch = true, min_dim = 1,
+        max_dim = Inf, allows_iip = true),
+    # CubaVegas() => (nout = Inf, allows_batch = true, min_dim = 1, max_dim = Inf,
+    #     allows_iip = true),
+    # CubaSUAVE() => (nout = Inf, allows_batch = true, min_dim = 1, max_dim = Inf,
+    #     allows_iip = true),
+    # CubaDivonne() => (nout = Inf, allows_batch = true, min_dim = 2,
+    #     max_dim = Inf, allows_iip = true),
+    # CubaCuhre() => (nout = Inf, allows_batch = true, min_dim = 2, max_dim = Inf,
+    #     allows_iip = true),
+)
+
+# integrands should have same shape as parameters, independent of dimensionality
+integrands =(
+    (x, p) -> map(q -> prod(y -> sin(y*q), x), p),
+)
+
+# function to turn the output into a scalar / test different tangent types
+scalarize_solution = (
+    sol -> sin(sum(sol)),
+    sol -> sin(sol[1]),
+)
+
+# we will be able to use broadcasting for this after https://github.com/FluxML/Zygote.jl/pull/1488
+function buffer_copyto!(y, x)
+    for (j, i) in zip(eachindex(y), eachindex(x))
+        y[j] = x[i]
+    end
+    return y
 end
-dlb1, dub1, dp1 = Zygote.gradient(testf, lb, ub, p)
-dlb2 = FiniteDiff.finite_difference_derivative(lb -> testf(lb, ub, p), lb)
-dub2 = FiniteDiff.finite_difference_derivative(ub -> testf(lb, ub, p), ub)
-dp2 = FiniteDiff.finite_difference_derivative(p -> testf(lb, ub, p), p)
+function f_helper!(f, y, x, p)
+    buffer_copyto!(y, f(x, p))
+    return
+end
 
-# dlb3 = ForwardDiff.derivative(lb->testf(lb,ub,p),lb)
-# dub3 = ForwardDiff.derivative(ub->testf(lb,ub,p),ub)
-dp3 = ForwardDiff.derivative(p -> testf(lb, ub, p), p)
+# the Zygote implementation is inconsistent about 0-d so we hijack it
+struct Scalar{T<:Real} <: Real
+    x::T
+end
+Base.iterate(a::Scalar) = (a.x, nothing)
+Base.iterate(::Scalar, _) = nothing
+Base.IteratorSize(::Type{Scalar{T}}) where {T} = Base.HasShape{0}()
+Base.eltype(::Type{Scalar{T}}) where {T} = T
+Base.length(a::Scalar) = 1
+Base.size(::Scalar) = ()
+Base.:+(a::Scalar, b::Scalar) = Scalar(a.x+b.x)
+Base.:*(a::Number, b::Scalar) = a*b.x
+Base.:*(a::Scalar, b::Number) = a.x*b
+Base.:*(a::Scalar, b::Scalar) = Scalar(a.x*b.x)
+Base.zero(a::Scalar) = Scalar(zero(a.x))
+Base.map(f, a::Scalar) = map(f, a.x)
+(::Type{T})(a::Scalar) where {T<:Real} = T(a.x)
+struct ScalarAxes end # the implementation doesn't preserve singleton axes
+Base.axes(::Scalar) = ScalarAxes()
+Base.iterate(::ScalarAxes) = nothing
+Base.reshape(A::AbstractArray, ::ScalarAxes) = Scalar(only(A))
 
-#@test dlb1 ≈ dlb3
-#@test dub1 ≈ dub3
-@test dp1 ≈ dp3
+# here we assume f evaluated at scalar inputs gives a scalar output
+# p will be able to be a number  after https://github.com/FluxML/Zygote.jl/pull/1489
+# p will be able to be a 0-array after https://github.com/FluxML/Zygote.jl/pull/1491
+# p can't be either without both prs
+function batch_helper(f, x, p)
+    t = f(zero(eltype(x)), zero(eltype(eltype(p))))
+    typeof(t).([f(y, q) for q in p, y in eachslice(x; dims=ndims(x))])
+end
+
+function batch_helper!(f, y, x, p)
+    buffer_copyto!(y, batch_helper(f, x, p))
+    return
+end
+
+# helper function / test runner
+do_tests = function (; f, scalarize, lb, ub, p, alg, abstol, reltol)
+    testf = function (lb, ub, p)
+        prob = IntegralProblem(f, (lb, ub), p)
+        scalarize(solve(prob, alg; reltol, abstol))
+    end
+    testf(lb, ub, p)
+
+    dlb1, dub1, dp1 = Zygote.gradient(testf, lb, ub, p isa Number && f isa BatchIntegralFunction ? Scalar(p) : p)
+
+    f_lb = lb -> testf(lb, ub, p)
+    f_ub = ub -> testf(lb, ub, p)
+
+    dlb = lb isa AbstractArray ? :gradient : :derivative
+    dub = ub isa AbstractArray ? :gradient : :derivative
+
+    dlb2 = getproperty(FiniteDiff, Symbol(:finite_difference_, dlb))(f_lb, lb)
+    dub2 = getproperty(FiniteDiff, Symbol(:finite_difference_, dub))(f_ub, ub)
+
+    if lb isa Number
+        @test dlb1 ≈ dlb2 atol=abstol rtol=reltol
+        @test dub1 ≈ dub2 atol=abstol rtol=reltol
+    else # TODO: implement multivariate limit derivatives in ZygoteExt
+        @test_broken dlb1 ≈ dlb2 atol=abstol rtol=reltol
+        @test_broken dub1 ≈ dub2 atol=abstol rtol=reltol
+    end
+
+    # TODO: implement limit derivatives in ForwardDiffExt
+    @test_broken dlb2 ≈ getproperty(ForwardDiff, dlb)(dfdlb, lb) atol=abstol rtol=reltol
+    @test_broken dub2 ≈ getproperty(ForwardDiff, dub)(dfdub, ub) atol=abstol rtol=reltol
+
+    f_p = p -> testf(lb, ub, p)
+
+    dp = p isa AbstractArray ? :gradient : :derivative
+
+    dp2 = getproperty(FiniteDiff, Symbol(:finite_difference_, dp))(f_p, p)
+    dp3 = getproperty(ForwardDiff, dp)(f_p, p)
+
+    @test dp1 ≈ dp2 atol=abstol rtol=reltol
+    @test dp2 ≈ dp3 atol=abstol rtol=reltol
+
+    return
+end
+
+
+### One Dimensional
+for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands), (i, scalarize) in enumerate(scalarize_solution)
+    req.nout > 1 || continue
+    req.min_dim <= 1 || continue
+
+    @info "One-dimensional, scalar, oop derivative test" alg integrand=j scalarize=i
+    do_tests(; f, scalarize, lb = 1.0, ub = 3.0, p = 2.0, alg, abstol, reltol)
+end
+
+## One-dimensional nout
+for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands), (i, scalarize) in enumerate(scalarize_solution), nout in 1:max_nout_test
+    req.nout > 1 || continue
+    req.min_dim <= 1 || continue
+
+    @info "One-dimensional, multivariate, oop derivative test" alg integrand=j scalarize=i nout
+    do_tests(; f, scalarize, lb = 1.0, ub = 3.0, p = [2.0i for i in 1:nout], alg, abstol, reltol)
+end
 
 ### N-dimensional
+for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands), (i, scalarize) in enumerate(scalarize_solution), dim in 1:max_dim_test
+    req.nout > 1 || continue
+    req.min_dim <= dim <= req.max_dim || continue
 
-f(x, p) = sum(sin.(x .* p))
-lb = ones(2)
-ub = 3ones(2)
-p = [1.5, 2.0]
-prob = IntegralProblem(f, lb, ub, p)
-sol = solve(prob, CubaCuhre(), reltol = 1e-3, abstol = 1e-3)
-
-function testf(lb, ub, p)
-    prob = IntegralProblem(f, lb, ub, p)
-    sin(solve(prob, CubaCuhre(), reltol = 1e-6, abstol = 1e-6)[1])
+    @info "Multi-dimensional, scalar, oop derivative test" alg integrand=j scalarize=i dim
+    do_tests(; f, scalarize, lb = ones(dim), ub = 3ones(dim), p = 2.0, alg, abstol, reltol)
 end
 
-function testf2(lb, ub, p)
-    prob = IntegralProblem(f, lb, ub, p)
-    sin(solve(prob, HCubatureJL(), reltol = 1e-6, abstol = 1e-6)[1])
+### N-dimensional nout
+for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands), (i, scalarize) in enumerate(scalarize_solution), dim in 1:max_dim_test, nout in 1:max_nout_test
+    req.nout > 1 || continue
+    req.min_dim <= dim <= req.max_dim || continue
+
+    @info "Multi-dimensional, multivariate, oop derivative test" alg integrand=j scalarize=i dim nout
+    do_tests(; f, scalarize, lb = ones(dim), ub = 3ones(dim), p = [2.0i for i in 1:nout], alg, abstol, reltol)
 end
 
-dlb1, dub1, dp1 = Zygote.gradient(testf, lb, ub, p)
-dlb2 = FiniteDiff.finite_difference_gradient(lb -> testf(lb, ub, p), lb)
-dub2 = FiniteDiff.finite_difference_gradient(ub -> testf(lb, ub, p), ub)
-dp2 = FiniteDiff.finite_difference_gradient(p -> testf(lb, ub, p), p)
+### One Dimensional
+for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands), (i, scalarize) in enumerate(scalarize_solution)
+    req.allows_iip || continue
+    req.nout > 1 || continue
+    req.min_dim <= 1 || continue
 
-@test_broken dlb1 ≈ dlb2
-@test_broken dub1 ≈ dub2
-@test dp1 ≈ dp2
-
-# dlb3 = ForwardDiff.gradient(lb->testf(lb,ub,p),lb)
-# dub3 = ForwardDiff.gradient(ub->testf(lb,ub,p),ub)
-dp3 = ForwardDiff.gradient(p -> testf2(lb, ub, p), p)
-
-#@test dlb1 ≈ dlb3
-#@test dub1 ≈ dub3
-@test dp1 ≈ dp3
-
-# dlb4 = ForwardDiff.gradient(lb->testf(lb,ub,p),lb)
-# dub4 = ForwardDiff.gradient(ub->testf(lb,ub,p),ub)
-dp4 = ForwardDiff.gradient(p -> testf(lb, ub, p), p)
-
-#@test dlb1 ≈ dlb4
-#@test dub1 ≈ dub4
-@test dp1 ≈ dp4
-
-### N-dimensional N-out
-
-f(x, p) = sin.(x .* p)
-lb = ones(2)
-ub = 3ones(2)
-p = [1.5, 2.0]
-prob = IntegralProblem(f, lb, ub, p, nout = 2)
-sol = solve(prob, CubaCuhre(), reltol = 1e-3, abstol = 1e-3)
-
-function testf(lb, ub, p)
-    prob = IntegralProblem(f, lb, ub, p, nout = 2)
-    sin(sum(solve(prob, CubaCuhre(), reltol = 1e-6, abstol = 1e-6)))
+    @info "One-dimensional, scalar, iip derivative test" alg integrand=j scalarize=i
+    fiip = IntegralFunction((y, x, p) -> f_helper!(f, y, x, p), zeros(1))
+    do_tests(; f=fiip, scalarize, lb = 1.0, ub = 3.0, p = 2.0, alg, abstol, reltol)
 end
 
-function testf2(lb, ub, p)
-    prob = IntegralProblem(f, lb, ub, p, nout = 2)
-    sin(sum(solve(prob, HCubatureJL(), reltol = 1e-6, abstol = 1e-6)))
+## One-dimensional nout
+for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands), (i, scalarize) in enumerate(scalarize_solution), nout in 1:max_nout_test
+    req.allows_iip || continue
+    req.nout > 1 || continue
+    req.min_dim <= 1 || continue
+
+    @info "One-dimensional, multivariate, iip derivative test" alg integrand=j scalarize=i nout
+    fiip = IntegralFunction((y, x, p) -> f_helper!(f, y, x, p), zeros(nout))
+    do_tests(; f=fiip, scalarize, lb = 1.0, ub = 3.0, p = [2.0i for i in 1:nout], alg, abstol, reltol)
 end
 
-dlb1, dub1, dp1 = Zygote.gradient(testf, lb, ub, p)
-dlb2 = FiniteDiff.finite_difference_gradient(lb -> testf(lb, ub, p), lb)
-dub2 = FiniteDiff.finite_difference_gradient(ub -> testf(lb, ub, p), ub)
-dp2 = FiniteDiff.finite_difference_gradient(p -> testf(lb, ub, p), p)
+### N-dimensional
+for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands), (i, scalarize) in enumerate(scalarize_solution), dim in 1:max_dim_test
+    req.allows_iip || continue
+    req.nout > 1 || continue
+    req.min_dim <= dim <= req.max_dim || continue
 
-@test_broken dlb1 ≈ dlb2
-@test_broken dub1 ≈ dub2
-@test dp1 ≈ dp2
-
-# dlb3 = ForwardDiff.gradient(lb->testf(lb,ub,p),lb)
-# dub3 = ForwardDiff.gradient(ub->testf(lb,ub,p),ub)
-dp3 = ForwardDiff.gradient(p -> testf2(lb, ub, p), p)
-
-#@test dlb1 ≈ dlb3
-#@test dub1 ≈ dub3
-@test dp1 ≈ dp3
-
-# dlb4 = ForwardDiff.gradient(lb->testf(lb,ub,p),lb)
-# dub4 = ForwardDiff.gradient(ub->testf(lb,ub,p),ub)
-dp4 = ForwardDiff.gradient(p -> testf(lb, ub, p), p)
-
-#@test dlb1 ≈ dlb4
-#@test dub1 ≈ dub4
-@test dp1 ≈ dp4
-
-### Batch Single dim
-f(x, p) = x * p[1] .+ p[2] * p[3]  # scalar integrand
-
-lb = 1.0
-ub = 3.0
-p = [2.0, 3.0, 4.0]
-prob = IntegralProblem(f, lb, ub, p)
-
-function testf3(lb, ub, p; f = f)
-    prob = IntegralProblem(f, lb, ub, p, batch = 10, nout = 1)
-    solve(prob, CubatureJLh(); reltol = 1e-3, abstol = 1e-3)[1]
+    @info "Multi-dimensional, scalar, iip derivative test" alg integrand=j scalarize=i dim
+    fiip = IntegralFunction((y, x, p) -> f_helper!(f, y, x, p), zeros(1))
+    do_tests(; f=fiip, scalarize, lb = ones(dim), ub = 3ones(dim), p = 2.0, alg, abstol, reltol)
 end
 
-dp1 = ForwardDiff.gradient(p -> testf3(lb, ub, p), p)
-dp2 = Zygote.gradient(p -> testf3(lb, ub, p), p)[1] # TODO fix: LoadError: DimensionMismatch("variable with size(x) == (1, 15) cannot have a gradient with size(dx) == (15,)")
-dp3 = FiniteDiff.finite_difference_gradient(p -> testf3(lb, ub, p), p)
+### N-dimensional nout iip
+for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands), (i, scalarize) in enumerate(scalarize_solution), dim in 1:max_dim_test, nout in 1:max_nout_test
+    req.allows_iip || continue
+    req.nout > 1 || continue
+    req.min_dim <= dim <= req.max_dim || continue
 
-@test dp1 ≈ dp3 #passes
-@test dp2 ≈ dp3 #passes
-
-### Batch single dim, nout
-f(x, p) = (x' * p[1] .+ p[2] * p[3]) .* [1; 2]
-
-lb = 1.0
-ub = 3.0
-p = [2.0, 3.0, 4.0]
-prob = IntegralProblem(f, lb, ub, p)
-
-function testf3(lb, ub, p; f = f)
-    prob = IntegralProblem(f, lb, ub, p, batch = 10, nout = 2)
-    sum(solve(prob, CubatureJLh(); reltol = 1e-3, abstol = 1e-3))
+    @info "Multi-dimensional, multivariate, iip derivative test" alg integrand=j scalarize=i dim nout
+    fiip = IntegralFunction((y, x, p) -> f_helper!(f, y, x, p), zeros(nout))
+    do_tests(; f=fiip, scalarize, lb = ones(dim), ub = 3ones(dim), p = [2.0i for i in 1:nout], alg, abstol, reltol)
 end
 
-dp1 = ForwardDiff.gradient(p -> testf3(lb, ub, p), p)
-dp2 = Zygote.gradient(p -> testf3(lb, ub, p), p)[1]
-dp3 = FiniteDiff.finite_difference_gradient(p -> testf3(lb, ub, p), p)
+### Batch, One Dimensional
+for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands), (i, scalarize) in enumerate(scalarize_solution)
+    req.allows_batch || continue
+    req.nout > 1 || continue
+    req.min_dim <= 1 || continue
 
-@test dp1 ≈ dp3 #passes
-@test dp2 ≈ dp3 #passes
-
-### Batch multi dim
-f(x, p) = x[1, :] * p[1] .+ p[2] * p[3]
-
-lb = [1.0, 1.0]
-ub = [3.0, 3.0]
-p = [2.0, 3.0, 4.0]
-prob = IntegralProblem(f, lb, ub, p)
-
-function testf3(lb, ub, p; f = f)
-    prob = IntegralProblem(f, lb, ub, p, batch = 10, nout = 1)
-    solve(prob, CubatureJLh(); reltol = 1e-3, abstol = 1e-3)[1]
+    @info "Batched, one-dimensional, scalar, oop derivative test" alg integrand=j scalarize=i
+    bf = BatchIntegralFunction((x, p) -> batch_helper(f, x, p))
+    do_tests(; f=bf, scalarize, lb = 1.0, ub = 3.0, p = 2.0, alg, abstol, reltol)
 end
 
-dp1 = ForwardDiff.gradient(p -> testf3(lb, ub, p), p)
-dp2 = Zygote.gradient(p -> testf3(lb, ub, p), p)[1]
-dp3 = FiniteDiff.finite_difference_gradient(p -> testf3(lb, ub, p), p)
+## Batch, One-dimensional nout
+for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands), (i, scalarize) in enumerate(scalarize_solution), nout in 1:max_nout_test
+    req.allows_batch || continue
+    req.nout > 1 || continue
+    req.min_dim <= 1 || continue
 
-@test dp1 ≈ dp3
-@test dp2 ≈ dp3
-
-### Batch multi dim nout
-f(x, p) = x * p[1] .+ p[2] * p[3]
-
-lb = [1.0, 1.0]
-ub = [3.0, 3.0]
-p = [2.0, 3.0, 4.0]
-prob = IntegralProblem(f, lb, ub, p)
-
-function testf3(lb, ub, p; f = f)
-    prob = IntegralProblem(f, lb, ub, p, batch = 10, nout = 2)
-    sum(solve(prob, CubatureJLh(); reltol = 1e-3, abstol = 1e-3))
+    @info "Batched, one-dimensional, multivariate, oop derivative test" alg integrand=j scalarize=i nout
+    bf = BatchIntegralFunction((x, p) -> batch_helper(f, x, p))
+    do_tests(; f=bf, scalarize, lb = 1.0, ub = 3.0, p = [2.0i for i in 1:nout], alg, abstol, reltol)
 end
 
-dp1 = ForwardDiff.gradient(p -> testf3(lb, ub, p), p)
-dp2 = Zygote.gradient(p -> testf3(lb, ub, p), p)[1]
-dp3 = FiniteDiff.finite_difference_gradient(p -> testf3(lb, ub, p), p)
+### Batch, N-dimensional
+for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands), (i, scalarize) in enumerate(scalarize_solution), dim in 1:max_dim_test
+    req.allows_batch || continue
+    req.nout > 1 || continue
+    req.min_dim <= dim <= req.max_dim || continue
 
-@test dp1 ≈ dp3
-@test dp2 ≈ dp3
-
-## iip Batch multi dim
-function g(dx, x, p)
-    dx .= sum(x * p[1] .+ p[2] * p[3], dims = 1)
+    @info "Batched, multi-dimensional, scalar, oop derivative test" alg integrand=j scalarize=i dim
+    bf = BatchIntegralFunction((x, p) -> batch_helper(f, x, p))
+    do_tests(; f=bf, scalarize, lb = ones(dim), ub = 3ones(dim), p = 2.0, alg, abstol, reltol)
 end
 
-lb = [1.0, 1.0]
-ub = [3.0, 3.0]
-p = [2.0, 3.0, 4.0]
-prob = IntegralProblem(g, lb, ub, p)
+### Batch, N-dimensional nout
+for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands), (i, scalarize) in enumerate(scalarize_solution), dim in 1:max_dim_test, nout in 1:max_nout_test
+    req.allows_batch || continue
+    req.nout > 1 || continue
+    req.min_dim <= dim <= req.max_dim || continue
 
-function testf3(lb, ub, p; f = g)
-    prob = IntegralProblem(f, lb, ub, p, batch = 10, nout = 1)
-    solve(prob, CubatureJLh(); reltol = 1e-3, abstol = 1e-3)[1]
+    @info "Batch, multi-dimensional, multivariate, oop derivative test" alg integrand=j scalarize=i dim nout
+    bf = BatchIntegralFunction((x, p) -> batch_helper(f, x, p))
+    do_tests(; f=bf, scalarize, lb = ones(dim), ub = 3ones(dim), p = [2.0i for i in 1:nout], alg, abstol, reltol)
 end
 
-testf3(lb, ub, p)
+### Batch, one-dimensional
+for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands), (i, scalarize) in enumerate(scalarize_solution)
+    req.allows_batch || continue
+    req.allows_iip || continue
+    req.nout > 1 || continue
+    req.min_dim <= 1 || continue
 
-dp1 = ForwardDiff.gradient(p -> testf3(lb, ub, p), p)
-dp2 = Zygote.gradient(p -> testf3(lb, ub, p), p)[1]
-dp3 = FiniteDiff.finite_difference_gradient(p -> testf3(lb, ub, p), p)
-
-@test dp1 ≈ dp3
-@test dp2 ≈ dp3
-
-## iip Batch mulit dim nout
-function g(dx, x, p)
-    dx .= x * p[1] .+ p[2] * p[3]
+    @info "Batched, one-dimensional, scalar, iip derivative test" alg integrand=j scalarize=i
+    bfiip = BatchIntegralFunction((y, x, p) -> batch_helper!(f, y, x, p), zeros(0))
+    do_tests(; f=bfiip, scalarize, lb = 1.0, ub = 3.0, p = 2.0, alg, abstol, reltol)
 end
 
-lb = [1.0, 1.0]
-ub = [3.0, 3.0]
-p = [2.0, 3.0, 4.0]
-prob = IntegralProblem(g, lb, ub, p)
+## Batch, one-dimensional nout
+for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands), (i, scalarize) in enumerate(scalarize_solution), nout in 1:max_nout_test
+    req.allows_batch || continue
+    req.allows_iip || continue
+    req.nout > 1 || continue
+    req.min_dim <= 1 || continue
 
-function testf3(lb, ub, p; f = g)
-    prob = IntegralProblem(f, lb, ub, p, batch = 10, nout = 2)
-    sum(solve(prob, CubatureJLh(); reltol = 1e-3, abstol = 1e-3))
+    @info "Batched, one-dimensional, multivariate, iip derivative test" alg integrand=j scalarize=i nout
+    bfiip = BatchIntegralFunction((y, x, p) -> batch_helper!(f, y, x, p), zeros(nout, 0))
+    do_tests(; f=bfiip, scalarize, lb = 1.0, ub = 3.0, p = [2.0i for i in 1:nout], alg, abstol, reltol)
 end
 
-dp1 = ForwardDiff.gradient(p -> testf3(lb, ub, p), p)
-dp2 = Zygote.gradient(p -> testf3(lb, ub, p), p)[1]
-dp3 = FiniteDiff.finite_difference_gradient(p -> testf3(lb, ub, p), p)
+### Batch, N-dimensional
+for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands), (i, scalarize) in enumerate(scalarize_solution), dim in 1:max_dim_test
+    req.allows_batch || continue
+    req.allows_iip || continue
+    req.nout > 1 || continue
+    req.min_dim <= dim <= req.max_dim || continue
 
-@test dp1 ≈ dp3
-@test dp2 ≈ dp3
+    @info "Batched, multi-dimensional, scalar, iip derivative test" alg integrand=j scalarize=i dim
+    bfiip = BatchIntegralFunction((y, x, p) -> batch_helper!(f, y, x, p), zeros(0))
+    do_tests(; f=bfiip, scalarize, lb = ones(dim), ub = 3ones(dim), p = 2.0, alg, abstol, reltol)
+end
+
+### Batch, N-dimensional nout iip
+for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands), (i, scalarize) in enumerate(scalarize_solution), dim in 1:max_dim_test, nout in 1:max_nout_test
+    req.allows_batch || continue
+    req.allows_iip || continue
+    req.nout > 1 || continue
+    req.min_dim <= dim <= req.max_dim || continue
+
+    @info "Batched, multi-dimensional, multivariate, iip derivative test" alg integrand=j scalarize=i dim nout
+    bfiip = BatchIntegralFunction((y, x, p) -> batch_helper!(f, y, x, p), zeros(nout, 0))
+    do_tests(; f=bfiip, scalarize, lb = ones(dim), ub = 3ones(dim), p = [2.0i for i in 1:nout], alg, abstol, reltol)
+end
