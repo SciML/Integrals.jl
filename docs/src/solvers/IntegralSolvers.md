@@ -6,7 +6,7 @@ The following algorithms are available:
   - `HCubatureJL`: Uses HCubature.jl. Requires `batch=0`.
   - `VEGAS`: Uses MonteCarloIntegration.jl. Requires `nout=1`. Works only for
     `>1`-dimensional integrations.
-  - `VEGASMC`: Uses MCIntegration.jl. Requires `nout=1`. Works only for `>1`-dimensional integrations.
+  - `VEGASMC`: Uses MCIntegration.jl. Requires `using MCIntegration`. Doesn't support batching.
   - `CubatureJLh`: h-Cubature from Cubature.jl. Requires `using Cubature`.
   - `CubatureJLp`: p-Cubature from Cubature.jl. Requires `using Cubature`.
   - `CubaVegas`: Vegas from Cuba.jl. Requires `using Cuba`, `nout=1`.
