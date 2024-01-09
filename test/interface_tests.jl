@@ -19,7 +19,7 @@ alg_req = Dict(
     # VEGAS() => (nout = 1, allows_batch = true, min_dim = 2, max_dim = Inf,
     #     allows_iip = true),
     VEGASMC() => (nout = Inf, allows_batch = false, min_dim = 1, max_dim = Inf,
-        allows_iip = true)
+        allows_iip = true),
     CubatureJLh() => (nout = Inf, allows_batch = true, min_dim = 1,
         max_dim = Inf, allows_iip = true),
     CubatureJLp() => (nout = Inf, allows_batch = true, min_dim = 1,
