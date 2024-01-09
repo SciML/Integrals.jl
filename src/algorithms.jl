@@ -372,18 +372,16 @@ function ArblibJL(; check_analytic=false, take_prec=false, warn_on_no_convergenc
 end
 
 """
-    VEGASMC(; neval=10^4, niter=20, block=16, adapt=true, gamma=1.0, verbose=-2, debug=false)
+    VEGASMC(; kws...)
 
 Markov-chain based Vegas algorithm from MCIntegration.jl
+
+Refer to
+[`MCIntegration.integrate`](https://numericaleft.github.io/MCIntegration.jl/dev/lib/montecarlo/#MCIntegration.integrate-Tuple{Function})
+for documentation on the keywords, which are passed directly to the solver with a set of
+defaults that works for conforming integrands.
 """
-struct VEGASMC <: SciMLBase.AbstractIntegralAlgorithm
-    neval::Int
-    niter::Int
-    block::Int
-    adapt::Bool
-    gamma::Float64
-    verbose::Int
-    debug::Bool
+struct VEGASMC{K<:NamedTuple} <: SciMLBase.AbstractIntegralAlgorithm
+    kws::K
 end
-VEGASMC(; neval=10^4, niter=20, block=16, adapt=true, gamma=1.0, verbose=-2, debug=false) =
-    VEGASMC(neval, niter, block, adapt, gamma, verbose, debug)
+VEGASMC(; kws...) = VEGASMC(NamedTuple(kws))
