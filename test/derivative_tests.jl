@@ -12,6 +12,8 @@ abstol = 1e-3
 alg_req = Dict(
     QuadratureRule(gausslegendre, n=50) => (nout = Inf, min_dim = 1, max_dim = 1, allows_batch = false,
         allows_iip = false),
+    GaussLegendre(n=50) => (nout = Inf, min_dim = 1, max_dim = 1, allows_batch = false,
+        allows_iip = false),
     QuadGKJL() => (nout = Inf, allows_batch = true, min_dim = 1, max_dim = 1,
         allows_iip = true),
     HCubatureJL() => (nout = Inf, allows_batch = false, min_dim = 1,
@@ -141,7 +143,7 @@ for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands), (i, scalarize
     req.nout > 1 || continue
     req.min_dim <= 1 || continue
 
-    @info "One-dimensional, scalar, oop derivative test" alg integrand=j scalarize=i
+    @info "One-dimensional, scalar, oop derivative test" alg=nameof(typeof(alg)) integrand=j scalarize=i
     do_tests(; f, scalarize, lb = 1.0, ub = 3.0, p = 2.0, alg, abstol, reltol)
 end
 
@@ -150,7 +152,7 @@ for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands), (i, scalarize
     req.nout > 1 || continue
     req.min_dim <= 1 || continue
 
-    @info "One-dimensional, multivariate, oop derivative test" alg integrand=j scalarize=i nout
+    @info "One-dimensional, multivariate, oop derivative test" alg=nameof(typeof(alg)) integrand=j scalarize=i nout
     do_tests(; f, scalarize, lb = 1.0, ub = 3.0, p = [2.0i for i in 1:nout], alg, abstol, reltol)
 end
 
@@ -159,7 +161,7 @@ for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands), (i, scalarize
     req.nout > 1 || continue
     req.min_dim <= dim <= req.max_dim || continue
 
-    @info "Multi-dimensional, scalar, oop derivative test" alg integrand=j scalarize=i dim
+    @info "Multi-dimensional, scalar, oop derivative test" alg=nameof(typeof(alg)) integrand=j scalarize=i dim
     do_tests(; f, scalarize, lb = ones(dim), ub = 3ones(dim), p = 2.0, alg, abstol, reltol)
 end
 
@@ -168,7 +170,7 @@ for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands), (i, scalarize
     req.nout > 1 || continue
     req.min_dim <= dim <= req.max_dim || continue
 
-    @info "Multi-dimensional, multivariate, oop derivative test" alg integrand=j scalarize=i dim nout
+    @info "Multi-dimensional, multivariate, oop derivative test" alg=nameof(typeof(alg)) integrand=j scalarize=i dim nout
     do_tests(; f, scalarize, lb = ones(dim), ub = 3ones(dim), p = [2.0i for i in 1:nout], alg, abstol, reltol)
 end
 
@@ -178,7 +180,7 @@ for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands), (i, scalarize
     req.nout > 1 || continue
     req.min_dim <= 1 || continue
 
-    @info "One-dimensional, scalar, iip derivative test" alg integrand=j scalarize=i
+    @info "One-dimensional, scalar, iip derivative test" alg=nameof(typeof(alg)) integrand=j scalarize=i
     fiip = IntegralFunction((y, x, p) -> f_helper!(f, y, x, p), zeros(1))
     do_tests(; f=fiip, scalarize, lb = 1.0, ub = 3.0, p = 2.0, alg, abstol, reltol)
 end
@@ -189,7 +191,7 @@ for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands), (i, scalarize
     req.nout > 1 || continue
     req.min_dim <= 1 || continue
 
-    @info "One-dimensional, multivariate, iip derivative test" alg integrand=j scalarize=i nout
+    @info "One-dimensional, multivariate, iip derivative test" alg=nameof(typeof(alg)) integrand=j scalarize=i nout
     fiip = IntegralFunction((y, x, p) -> f_helper!(f, y, x, p), zeros(nout))
     do_tests(; f=fiip, scalarize, lb = 1.0, ub = 3.0, p = [2.0i for i in 1:nout], alg, abstol, reltol)
 end
@@ -200,7 +202,7 @@ for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands), (i, scalarize
     req.nout > 1 || continue
     req.min_dim <= dim <= req.max_dim || continue
 
-    @info "Multi-dimensional, scalar, iip derivative test" alg integrand=j scalarize=i dim
+    @info "Multi-dimensional, scalar, iip derivative test" alg=nameof(typeof(alg)) integrand=j scalarize=i dim
     fiip = IntegralFunction((y, x, p) -> f_helper!(f, y, x, p), zeros(1))
     do_tests(; f=fiip, scalarize, lb = ones(dim), ub = 3ones(dim), p = 2.0, alg, abstol, reltol)
 end
@@ -211,7 +213,7 @@ for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands), (i, scalarize
     req.nout > 1 || continue
     req.min_dim <= dim <= req.max_dim || continue
 
-    @info "Multi-dimensional, multivariate, iip derivative test" alg integrand=j scalarize=i dim nout
+    @info "Multi-dimensional, multivariate, iip derivative test" alg=nameof(typeof(alg)) integrand=j scalarize=i dim nout
     fiip = IntegralFunction((y, x, p) -> f_helper!(f, y, x, p), zeros(nout))
     do_tests(; f=fiip, scalarize, lb = ones(dim), ub = 3ones(dim), p = [2.0i for i in 1:nout], alg, abstol, reltol)
 end
@@ -222,7 +224,7 @@ for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands), (i, scalarize
     req.nout > 1 || continue
     req.min_dim <= 1 || continue
 
-    @info "Batched, one-dimensional, scalar, oop derivative test" alg integrand=j scalarize=i
+    @info "Batched, one-dimensional, scalar, oop derivative test" alg=nameof(typeof(alg)) integrand=j scalarize=i
     bf = BatchIntegralFunction((x, p) -> batch_helper(f, x, p))
     do_tests(; f=bf, scalarize, lb = 1.0, ub = 3.0, p = 2.0, alg, abstol, reltol)
 end
@@ -233,7 +235,7 @@ for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands), (i, scalarize
     req.nout > 1 || continue
     req.min_dim <= 1 || continue
 
-    @info "Batched, one-dimensional, multivariate, oop derivative test" alg integrand=j scalarize=i nout
+    @info "Batched, one-dimensional, multivariate, oop derivative test" alg=nameof(typeof(alg)) integrand=j scalarize=i nout
     bf = BatchIntegralFunction((x, p) -> batch_helper(f, x, p))
     do_tests(; f=bf, scalarize, lb = 1.0, ub = 3.0, p = [2.0i for i in 1:nout], alg, abstol, reltol)
 end
@@ -244,7 +246,7 @@ for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands), (i, scalarize
     req.nout > 1 || continue
     req.min_dim <= dim <= req.max_dim || continue
 
-    @info "Batched, multi-dimensional, scalar, oop derivative test" alg integrand=j scalarize=i dim
+    @info "Batched, multi-dimensional, scalar, oop derivative test" alg=nameof(typeof(alg)) integrand=j scalarize=i dim
     bf = BatchIntegralFunction((x, p) -> batch_helper(f, x, p))
     do_tests(; f=bf, scalarize, lb = ones(dim), ub = 3ones(dim), p = 2.0, alg, abstol, reltol)
 end
@@ -255,7 +257,7 @@ for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands), (i, scalarize
     req.nout > 1 || continue
     req.min_dim <= dim <= req.max_dim || continue
 
-    @info "Batch, multi-dimensional, multivariate, oop derivative test" alg integrand=j scalarize=i dim nout
+    @info "Batch, multi-dimensional, multivariate, oop derivative test" alg=nameof(typeof(alg)) integrand=j scalarize=i dim nout
     bf = BatchIntegralFunction((x, p) -> batch_helper(f, x, p))
     do_tests(; f=bf, scalarize, lb = ones(dim), ub = 3ones(dim), p = [2.0i for i in 1:nout], alg, abstol, reltol)
 end
@@ -267,7 +269,7 @@ for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands), (i, scalarize
     req.nout > 1 || continue
     req.min_dim <= 1 || continue
 
-    @info "Batched, one-dimensional, scalar, iip derivative test" alg integrand=j scalarize=i
+    @info "Batched, one-dimensional, scalar, iip derivative test" alg=nameof(typeof(alg)) integrand=j scalarize=i
     bfiip = BatchIntegralFunction((y, x, p) -> batch_helper!(f, y, x, p), zeros(0))
     do_tests(; f=bfiip, scalarize, lb = 1.0, ub = 3.0, p = 2.0, alg, abstol, reltol)
 end
@@ -279,7 +281,7 @@ for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands), (i, scalarize
     req.nout > 1 || continue
     req.min_dim <= 1 || continue
 
-    @info "Batched, one-dimensional, multivariate, iip derivative test" alg integrand=j scalarize=i nout
+    @info "Batched, one-dimensional, multivariate, iip derivative test" alg=nameof(typeof(alg)) integrand=j scalarize=i nout
     bfiip = BatchIntegralFunction((y, x, p) -> batch_helper!(f, y, x, p), zeros(nout, 0))
     do_tests(; f=bfiip, scalarize, lb = 1.0, ub = 3.0, p = [2.0i for i in 1:nout], alg, abstol, reltol)
 end
@@ -291,7 +293,7 @@ for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands), (i, scalarize
     req.nout > 1 || continue
     req.min_dim <= dim <= req.max_dim || continue
 
-    @info "Batched, multi-dimensional, scalar, iip derivative test" alg integrand=j scalarize=i dim
+    @info "Batched, multi-dimensional, scalar, iip derivative test" alg=nameof(typeof(alg)) integrand=j scalarize=i dim
     bfiip = BatchIntegralFunction((y, x, p) -> batch_helper!(f, y, x, p), zeros(0))
     do_tests(; f=bfiip, scalarize, lb = ones(dim), ub = 3ones(dim), p = 2.0, alg, abstol, reltol)
 end
@@ -303,7 +305,7 @@ for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands), (i, scalarize
     req.nout > 1 || continue
     req.min_dim <= dim <= req.max_dim || continue
 
-    @info "Batched, multi-dimensional, multivariate, iip derivative test" alg integrand=j scalarize=i dim nout
+    @info "Batched, multi-dimensional, multivariate, iip derivative test" alg=nameof(typeof(alg)) integrand=j scalarize=i dim nout
     bfiip = BatchIntegralFunction((y, x, p) -> batch_helper!(f, y, x, p), zeros(nout, 0))
     do_tests(; f=bfiip, scalarize, lb = ones(dim), ub = 3ones(dim), p = [2.0i for i in 1:nout], alg, abstol, reltol)
 end
