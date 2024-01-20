@@ -141,7 +141,7 @@ f = x -> x^2
 x = range(0, 1, length=20)
 y = f.(x)
 problem = SampledIntegralProblem(y, x)
-method = TrapezoidalRul()
+method = TrapezoidalRule()
 solve(problem, method)
 ```
 """
