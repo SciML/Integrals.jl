@@ -8,9 +8,12 @@ using Integrals, Test
     grid2 = rand(npoints).*(ub-lb) .+ lb
     grid2 = [lb; sort(grid2); ub]
 
+    grid3 = rand(npoints+1).*(ub-lb) .+ lb # also test odd number of points
+    grid3 = [lb; sort(grid2); ub]
+
     exact_sols = [1 / 6 * (ub^6 - lb^6), sin(ub) - sin(lb)]
-    for method in [TrapezoidalRule] # Simpson's later
-        for grid in [grid1, grid2]
+    for method in [TrapezoidalRule, SimpsonsRule]
+        for grid in [grid1, grid2, grid3]
             for (i, f) in enumerate([x -> x^5, x -> cos(x)])
                 exact = exact_sols[i]
                 # single dimensional y

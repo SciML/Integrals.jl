@@ -60,14 +60,15 @@ f3 = x -> x^4
 x = range(0, 1, length=20)
 y = [f1.(x) f2.(x) f3.(x)]
 problem = SampledIntegralProblem(y, x; dim=1)
-method = TrapezoidalRule()
+method = SimpsonsRule()
 solve(problem, method)
 ```
 
 ### Supported methods
 
-Right now, only the `TrapezoidalRule` is supported, [see wikipedia](https://en.wikipedia.org/wiki/Trapezoidal_rule).
+Right now, only the [`TrapezoidalRule`](https://en.wikipedia.org/wiki/Trapezoidal_rule) and [`SimpsonsRule`](https://en.wikipedia.org/wiki/Simpson%27s_rule) are supported.
 
 ```@docs
 TrapezoidalRule
+SimpsonsRule
 ```
