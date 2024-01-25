@@ -85,9 +85,9 @@ version = "0.5.1"
 
 [[deps.ChainRules]]
 deps = ["Adapt", "ChainRulesCore", "Compat", "Distributed", "GPUArraysCore", "IrrationalConstants", "LinearAlgebra", "Random", "RealDot", "SparseArrays", "SparseInverseSubset", "Statistics", "StructArrays", "SuiteSparse"]
-git-tree-sha1 = "0aa0a3dd7b9bacbbadf1932ccbdfa938985c5561"
+git-tree-sha1 = "07fbef147241b3869deb9cb08b10a2fc37600101"
 uuid = "082447d4-558c-5d27-93f4-14fc19e9eca2"
-version = "1.58.1"
+version = "1.59.0"
 
 [[deps.ChainRulesCore]]
 deps = ["Compat", "LinearAlgebra"]
@@ -169,9 +169,9 @@ uuid = "7bc98958-0e37-5d67-a6ac-a3a19030071a"
 version = "1.0.5+0"
 
 [[deps.DataAPI]]
-git-tree-sha1 = "8da84edb865b0b5b0100c0666a9bc9a0b71c553c"
+git-tree-sha1 = "abe83f3a2f1b857aac70ef8b269080af17764bbe"
 uuid = "9a962f9c-6df0-11e9-0e5d-c546b8b5ee8a"
-version = "1.15.0"
+version = "1.16.0"
 
 [[deps.DataStructures]]
 deps = ["Compat", "InteractiveUtils", "OrderedCollections"]
@@ -365,9 +365,9 @@ version = "0.2.4"
 
 [[deps.IRTools]]
 deps = ["InteractiveUtils", "MacroTools", "Test"]
-git-tree-sha1 = "8aa91235360659ca7560db43a7d57541120aa31d"
+git-tree-sha1 = "5d8c5713f38f7bc029e26627b687710ba406d0dd"
 uuid = "7869d1d1-7146-5819-86e3-90919afe41df"
-version = "0.4.11"
+version = "0.4.12"
 
 [[deps.Integrals]]
 deps = ["CommonSolve", "HCubature", "LinearAlgebra", "MonteCarloIntegration", "QuadGK", "Reexport", "SciMLBase"]
@@ -670,14 +670,15 @@ version = "1.3.4"
 
 [[deps.RecursiveArrayTools]]
 deps = ["Adapt", "ArrayInterface", "DocStringExtensions", "GPUArraysCore", "IteratorInterfaceExtensions", "LinearAlgebra", "RecipesBase", "SparseArrays", "StaticArraysCore", "Statistics", "SymbolicIndexingInterface", "Tables"]
-git-tree-sha1 = "dd7fc1923fde0cc6cdff451352d17924b0704ca1"
+git-tree-sha1 = "16f1bb9de02b8bce31a7b2495345532901214cae"
 uuid = "731186ca-8d62-57ce-b412-fbd966d074cd"
-version = "3.5.4"
+version = "3.6.2"
 
     [deps.RecursiveArrayTools.extensions]
     RecursiveArrayToolsFastBroadcastExt = "FastBroadcast"
     RecursiveArrayToolsMeasurementsExt = "Measurements"
     RecursiveArrayToolsMonteCarloMeasurementsExt = "MonteCarloMeasurements"
+    RecursiveArrayToolsReverseDiffExt = ["ReverseDiff", "Zygote"]
     RecursiveArrayToolsTrackerExt = "Tracker"
     RecursiveArrayToolsZygoteExt = "Zygote"
 
@@ -685,6 +686,7 @@ version = "3.5.4"
     FastBroadcast = "7034ab61-46d4-4ed7-9d0f-46aef9175898"
     Measurements = "eff96d63-e80a-5855-80a2-b1b0885c5ab7"
     MonteCarloMeasurements = "0987c9cc-fe09-11e8-30f0-b96dd679fdca"
+    ReverseDiff = "37e2e3b7-166d-5795-8a7a-e32c996b4267"
     Tracker = "9f7883ad-71c0-57eb-9f7f-b5c9e6d3789c"
     Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
@@ -870,9 +872,9 @@ uuid = "bea87d4a-7f5b-5778-9afe-8cc45184846c"
 version = "7.2.1+1"
 
 [[deps.SymbolicIndexingInterface]]
-git-tree-sha1 = "74502f408d99fc217a9d7cd901d9ffe45af892b1"
+git-tree-sha1 = "34573fc920adfd457c5be704098d0168e4f20e54"
 uuid = "2efcf032-c050-4f8e-a9bb-153293bab1f5"
-version = "0.3.3"
+version = "0.3.4"
 
 [[deps.TOML]]
 deps = ["Dates"]
