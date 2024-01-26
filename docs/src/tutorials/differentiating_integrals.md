@@ -6,7 +6,7 @@ calls. It integrates with ForwardDiff.jl for forward-mode automatic differentiat
 and Zygote.jl for reverse-mode automatic differentiation. For example:
 
 ```@example AD
-using Integrals, ForwardDiff, FiniteDiff, Zygote, IntegralsCuba
+using Integrals, ForwardDiff, FiniteDiff, Zygote, Cuba
 f(x, p) = sum(sin.(x .* p))
 lb = ones(2)
 ub = 3ones(2)

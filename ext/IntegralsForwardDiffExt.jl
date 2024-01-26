@@ -3,89 +3,116 @@ using Integrals
 isdefined(Base, :get_extension) ? (using ForwardDiff) : (using ..ForwardDiff)
 ### Forward-Mode AD Intercepts
 
-# Direct AD on solvers with QuadGK and HCubature
-function Integrals.__solvebp(cache, alg::QuadGKJL, sensealg, lb, ub,
-    p::AbstractArray{<:ForwardDiff.Dual{T, V, P}, N};
-    kwargs...) where {T, V, P, N}
-    Integrals.__solvebp_call(cache, alg, sensealg, lb, ub, p; kwargs...)
+#= Direct AD on solvers with QuadGK and HCubature
+# incompatible with iip since types must change
+function Integrals.__solvebp(cache, alg::QuadGKJL, sensealg, domain,
+        p::AbstractArray{<:ForwardDiff.Dual{T, V, P}, N};
+        kwargs...) where {T, V, P, N}
+    Integrals.__solvebp_call(cache, alg, sensealg, domain, p; kwargs...)
 end
 
-function Integrals.__solvebp(cache, alg::HCubatureJL, sensealg, lb, ub,
-    p::AbstractArray{<:ForwardDiff.Dual{T, V, P}, N};
-    kwargs...) where {T, V, P, N}
-    Integrals.__solvebp_call(cache, alg, sensealg, lb, ub, p; kwargs...)
+function Integrals.__solvebp(cache, alg::HCubatureJL, sensealg, domain,
+        p::AbstractArray{<:ForwardDiff.Dual{T, V, P}, N};
+        kwargs...) where {T, V, P, N}
+    Integrals.__solvebp_call(cache, alg, sensealg, domain, p; kwargs...)
 end
+=#
+
+# TODO: add the pushforward for derivative w.r.t lb, and ub (and then combinations?)
 
 # Manually split for the pushforward
-function Integrals.__solvebp(cache, alg, sensealg, lb, ub,
-    p::AbstractArray{<:ForwardDiff.Dual{T, V, P}, N};
-    kwargs...) where {T, V, P, N}
-    primal = Integrals.__solvebp_call(cache, alg, sensealg, lb, ub, ForwardDiff.value.(p);
-        kwargs...)
+function Integrals.__solvebp(cache, alg, sensealg, domain,
+        p::Union{D,AbstractArray{<:D}};
+        kwargs...) where {T, V, P, D<:ForwardDiff.Dual{T, V, P}}
 
-    nout = cache.nout * P
-
+    # we need the output type to avoid perturbation confusion while unwrapping nested duals
+    # We compute a vector-valued integral of the primal and dual simultaneously
     if isinplace(cache)
-        dfdp = function (out, x, p)
-            dualp = reinterpret(ForwardDiff.Dual{T, V, P}, p)
-            if cache.batch > 0
-                dx = cache.nout == 1 ? similar(dualp, size(x, ndims(x))) :
-                     similar(dualp, cache.nout, size(x, ndims(x)))
-            else
-                dx = similar(dualp, cache.nout)
-            end
-            cache.f(dx, x, dualp)
+        y = cache.f.integrand_prototype
+        elt = eltype(cache.f.integrand_prototype)
+        DT = replace_dualvaltype(eltype(p), elt)
+        len = duallen(p)
+        dual_prototype = similar(cache.f.integrand_prototype,
+            len,
+            size(cache.f.integrand_prototype)...)
 
-            ys = reinterpret(ForwardDiff.Dual{T, V, P}, dx)
-            idx = 0
-            for y in ys
-                for p in ForwardDiff.partials(y)
-                    out[idx += 1] = p
-                end
-            end
-            return out
+        dfdp_ = function (out, x, _p)
+            dualp = reinterpret(ForwardDiff.Dual{T, V, P}, _p)
+            dout = reinterpret(reshape, DT, out)
+            cache.f(dout, x, p isa D ? only(dualp) : reshape(dualp, size(p)))
+            return
+        end
+        dfdp = if cache.f isa BatchIntegralFunction
+            BatchIntegralFunction{true}(dfdp_, dual_prototype)
+        else
+            IntegralFunction{true}(dfdp_, dual_prototype)
         end
     else
-        dfdp = function (x, p)
-            dualp = reinterpret(ForwardDiff.Dual{T, V, P}, p)
-            ys = cache.f(x, dualp)
-            if cache.batch > 0
-                out = similar(p, V, nout, size(x, ndims(x)))
-            else
-                out = similar(p, V, nout)
-            end
+        lb, ub = domain
+        mid = (lb + ub) / 2
+        y = if cache.f isa BatchIntegralFunction
+            mid isa Number ? cache.f(eltype(mid)[], p) :
+            cache.f(Matrix{eltype(mid)}(undef, length(mid), 0), p)
+        else
+            cache.f(mid, p)
+        end
+        DT = y isa AbstractArray ? eltype(y) : typeof(y)
+        elt = unwrap_dualvaltype(DT)
 
-            idx = 0
-            for y in ys
-                for p in ForwardDiff.partials(y)
-                    out[idx += 1] = p
-                end
-            end
-
-            return out
+        dfdp_ = function (x, _p)
+            dualp = reinterpret(ForwardDiff.Dual{T, V, P}, _p)
+            ys = cache.f(x, p isa D ? only(dualp) : reshape(dualp, size(p)))
+            ys_ = ys isa AbstractArray ? ys : [ys]
+            # we need to reshape in order for batching to be consistent
+            return reinterpret(reshape, elt, ys_)
+        end
+        dfdp = if cache.f isa BatchIntegralFunction
+            BatchIntegralFunction{false}(dfdp_, nothing)
+        else
+            IntegralFunction{false}(dfdp_, nothing)
         end
     end
 
-    rawp = copy(reinterpret(V, p))
+    ForwardDiff.can_dual(elt) || ForwardDiff.throw_cannot_dual(elt)
+    rawp = p isa D ? reinterpret(V, [p]) : copy(reinterpret(V, vec(p)))
 
     prob = Integrals.build_problem(cache)
-    dp_prob = remake(prob, f = dfdp, nout = nout, p = rawp)
+    dp_prob = remake(prob, f = dfdp, p = rawp)
     # the infinity transformation was already applied to f so we don't apply it to dfdp
     dp_cache = init(dp_prob,
         alg;
         sensealg = sensealg,
         do_inf_transformation = Val(false),
         cache.kwargs...)
-    dual = Integrals.__solvebp_call(dp_cache, alg, sensealg, lb, ub, rawp; kwargs...)
+    dual = Integrals.__solvebp_call(dp_cache, alg, sensealg, domain, rawp; kwargs...)
 
-    res = similar(p, cache.nout)
-    partials = reinterpret(typeof(first(res).partials), dual.u)
-    for idx in eachindex(res)
-        res[idx] = ForwardDiff.Dual{T, V, P}(primal.u[idx], partials[idx])
+    res = reinterpret(reshape, DT, dual.u)
+    # unwrap the dual when the primal would return a scalar
+    out = if (cache.f isa BatchIntegralFunction && y isa AbstractVector) ||
+             !(y isa AbstractArray)
+        only(res)
+    else
+        res
     end
-    if primal.u isa Number
-        res = first(res)
-    end
-    SciMLBase.build_solution(prob, alg, res, primal.resid)
+    SciMLBase.build_solution(prob, alg, out, dual.resid)
+end
+
+duallen(::Type{T}) where {T} = 1
+duallen(::T) where {T} = duallen(T)
+duallen(::AbstractArray{T}) where {T} = duallen(T)
+function duallen(::Type{ForwardDiff.Dual{T, V, P}}) where {T, V, P}
+    len = duallen(V)
+    return len * (P + 1)
+end
+
+replace_dualvaltype(::Type{T}, ::Type{S}) where {T, S} = S
+function replace_dualvaltype(::Type{ForwardDiff.Dual{T, V, P}},
+        ::Type{S}) where {T, V, P, S}
+    return ForwardDiff.Dual{T, replace_dualvaltype(V, S), P}
+end
+
+unwrap_dualvaltype(::Type{T}) where {T} = T
+function unwrap_dualvaltype(::Type{ForwardDiff.Dual{T, V, P}}) where {T, V, P}
+    unwrap_dualvaltype(V)
 end
 end

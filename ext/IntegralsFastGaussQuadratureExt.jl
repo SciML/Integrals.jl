@@ -12,13 +12,13 @@ using LinearAlgebra
 
 Integrals.gausslegendre(n) = FastGaussQuadrature.gausslegendre(n)
 
-function gauss_legendre(f, p, lb, ub, nodes, weights)
+function gauss_legendre(f::F, p, lb, ub, nodes, weights) where {F}
     scale = (ub - lb) / 2
     shift = (lb + ub) / 2
-    I = dot(weights, @. f(scale * nodes + shift, $Ref(p)))
+    I = mapreduce((w, x) -> w * f(scale * x + shift, p), +, weights, nodes)
     return scale * I
 end
-function composite_gauss_legendre(f, p, lb, ub, nodes, weights, subintervals)
+function composite_gauss_legendre(f::F, p, lb, ub, nodes, weights, subintervals) where {F}
     h = (ub - lb) / subintervals
     I = zero(h)
     for i in 1:subintervals
@@ -30,14 +30,15 @@ function composite_gauss_legendre(f, p, lb, ub, nodes, weights, subintervals)
 end
 
 function Integrals.__solvebp_call(prob::IntegralProblem, alg::Integrals.GaussLegendre{C},
-    sensealg, lb, ub, p;
-    reltol = nothing, abstol = nothing,
-    maxiters = nothing) where {C}
-    if isinplace(prob) || lb isa AbstractArray || ub isa AbstractArray
+        sensealg, domain, p;
+        reltol = nothing, abstol = nothing,
+        maxiters = nothing) where {C}
+    if !all(isone∘length, domain)
         error("GaussLegendre only accepts one-dimensional quadrature problems.")
     end
-    @assert prob.batch == 0
-    @assert prob.nout == 1
+    @assert prob.f isa IntegralFunction
+    @assert !isinplace(prob)
+    lb, ub = map(only, domain)
     if C
         val = composite_gauss_legendre(prob.f, prob.p, lb, ub,
             alg.nodes, alg.weights, alg.subintervals)
