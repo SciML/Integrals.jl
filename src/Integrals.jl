@@ -14,6 +14,7 @@ include("infinity_handling.jl")
 include("quadrules.jl")
 include("sampled.jl")
 include("trapezoidal.jl")
+include("simpsons.jl")
 
 abstract type QuadSensitivityAlg end
 struct ReCallVJP{V}
@@ -217,8 +218,7 @@ function __solvebp_call(prob::IntegralProblem, alg::VEGAS, sensealg, domain, p;
     SciMLBase.build_solution(prob, alg, val, err, chi = chi, retcode = ReturnCode.Success)
 end
 
-
-export QuadGKJL, HCubatureJL, VEGAS, VEGASMC, GaussLegendre, QuadratureRule, TrapezoidalRule
+export QuadGKJL, HCubatureJL, VEGAS, VEGASMC, GaussLegendre, QuadratureRule, TrapezoidalRule, SimpsonsRule
 export CubaVegas, CubaSUAVE, CubaDivonne, CubaCuhre
 export CubatureJLh, CubatureJLp
 export ArblibJL
