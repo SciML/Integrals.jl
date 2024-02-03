@@ -59,7 +59,7 @@ function substitute_f(t, p, f, lb::AbstractVector, ub::AbstractVector)
             jac_diag[i] = one(lb[i])
         end
     end
-    f(x, p) * prod(jac_diag)
+    f(oftype(t, x), p) * prod(jac_diag)
 end
 function substitute_f_iip(dt, t, p, f, lb, ub)
     x = similar(t)
@@ -79,7 +79,7 @@ function substitute_f_iip(dt, t, p, f, lb, ub)
             jac_diag[i] = one(lb[i])
         end
     end
-    f(dt, x, p)
+    f(dt, oftype(t, x), p)
     dt .*= prod(jac_diag)
 end
 
