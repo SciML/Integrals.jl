@@ -59,7 +59,7 @@ function f(y, u, p)
     y[2] = sum(cos.(u))
 end
 prototype = zeros(2)
-prob = IntegralProblem(IntegralProblem(f, prototype), ones(3), 3ones(3))
+prob = IntegralProblem(IntegralFunction(f, prototype), ones(3), 3ones(3))
 sol = solve(prob, CubatureJLh(); reltol = 1e-3, abstol = 1e-3)
 sol.u
 ```
