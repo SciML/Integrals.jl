@@ -39,15 +39,15 @@ For example, we also want to evaluate:
 ```@example integrate2
 using Integrals
 f(u, p) = [sum(sin.(u)), sum(cos.(u))]
-prob = IntegralProblem(f, ones(3), 3ones(3); nout = 2)
+prob = IntegralProblem(f, ones(3), 3ones(3))
 sol = solve(prob, HCubatureJL(); reltol = 1e-3, abstol = 1e-3)
 sol.u
 ```
 
-The keyword `nout` now has to be specified equal to the number of integrals we are are calculating, 2.
 Another way to think about this is that the integrand is now a vector valued function.
-The default value for the keyword `nout` is 1,
-and thus it does not need to be specified for scalar valued functions.
+In general, we should be able to integrate any type that is in a vector space
+and supports addition and scalar multiplication, although Integrals.jl allows
+scalars and arrays.
 In the above example, the integrand was defined out-of-position.
 This means that a new output vector is created every time the function `f` is called.
 If we do not  want these allocations, we can also define `f` in-position.
@@ -58,14 +58,16 @@ function f(y, u, p)
     y[1] = sum(sin.(u))
     y[2] = sum(cos.(u))
 end
-prob = IntegralProblem(f, ones(3), 3ones(3); nout = 2)
+prototype = zeros(2)
+prob = IntegralProblem(IntegralFunction(f, prototype), ones(3), 3ones(3))
 sol = solve(prob, CubatureJLh(); reltol = 1e-3, abstol = 1e-3)
 sol.u
 ```
 
-where `y` is a cache to store the evaluation of the integrand.
+where `y` is a cache to store the evaluation of the integrand and `prototype` is
+an instance of `y` with the desired type and shape.
 We needed to change the algorithm to `CubatureJLh()`
-because `HCubatureJL()` does not support in-position.
+because `HCubatureJL()` does not support in-position under the hood.
 `f` evaluates the integrand at a certain point,
 but most adaptive quadrature algorithms need to evaluate the integrand at multiple points
 in each step of the algorithm.
@@ -77,11 +79,12 @@ For example, here we do allocation-free multithreading with Cubature.jl:
 using Integrals, Cubature, Base.Threads
 function f(y, u, p)
     Threads.@threads for i in 1:size(u, 2)
-        y[1, i] = sum(sin.(@view(u[:, i])))
-        y[2, i] = sum(cos.(@view(u[:, i])))
+        y[1, i] = sum(sin, @view(u[:, i]))
+        y[2, i] = sum(cos, @view(u[:, i]))
     end
 end
-prob = IntegralProblem(f, ones(3), 3ones(3); nout = 2, batch = 2)
+prototype = zeros(2, 0)
+prob = IntegralProblem(BatchIntegralFunction(f, prototype), ones(3), 3ones(3))
 sol = solve(prob, CubatureJLh(); reltol = 1e-3, abstol = 1e-3)
 sol.u
 ```
@@ -89,6 +92,7 @@ sol.u
 Both `u` and `y` changed from vectors to matrices,
 where each column is respectively a point the integrand is evaluated at or
 the evaluation of the integrand at the corresponding point.
+The `prototype` now has an extra dimension for batching that can be of size zero.
 Try to create yourself an out-of-position version of the above problem.
 For the full details of the batching interface, see the [problem page](@ref prob).
 
@@ -109,7 +113,7 @@ The [solvers page](@ref solvers) gives an overview of which arguments each algor
 
 ## One-dimensional integrals
 
-Integrals.jl also has specific solvers for integrals in a single dimension, such as `QuadGKLJ`.
+Integrals.jl also has specific solvers for integrals in a single dimension, such as `QuadGKJL`.
 For example, we can create our own sine function by integrating the cosine function from 0 to x.
 
 ```@example integrate6

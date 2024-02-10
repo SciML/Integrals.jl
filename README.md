@@ -57,10 +57,10 @@ multithreading with Cubature.jl:
 using Integrals, Cubature, Base.Threads
 function f(dx, x, p)
     Threads.@threads for i in 1:size(x, 2)
-        dx[i] = sum(sin.(@view(x[:, i])))
+        dx[i] = sum(sin, @view(x[:, i]))
     end
 end
-prob = IntegralProblem(f, ones(2), 3ones(2), batch = 2)
+prob = IntegralProblem(BatchIntegralFunction(f, zeros(0)), ones(2), 3ones(2))
 sol = solve(prob, CubatureJLh(), reltol = 1e-3, abstol = 1e-3)
 ```
 
