@@ -28,6 +28,11 @@ The exact answer is of course \$ 1/3 \$.
 
 ## Details
 
+```@docs
+SciMLBase.SampledIntegralProblem
+solve(::SampledIntegralProblem, ::SciMLBase.AbstractIntegralAlgorithm)
+```
+
 ### Non-equidistant grids
 
 If the sampling points `x` are provided as an `AbstractRange`

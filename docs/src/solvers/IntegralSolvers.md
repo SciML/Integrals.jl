@@ -21,6 +21,8 @@ The following algorithms are available:
 ```@docs
 QuadGKJL
 HCubatureJL
+CubatureJLp
+CubatureJLh
 VEGAS
 VEGASMC
 CubaVegas

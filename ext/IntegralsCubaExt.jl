@@ -8,8 +8,8 @@ import Integrals: transformation_if_inf,
 function Integrals.__solvebp_call(prob::IntegralProblem, alg::AbstractCubaAlgorithm,
         sensealg,
         domain, p;
-        reltol = 1e-8, abstol = 1e-8,
-        maxiters = alg isa CubaSUAVE ? 1000000 : typemax(Int))
+        reltol = 1e-4, abstol = 1e-12,
+        maxiters = 1000000)
     @assert maxiters>=1000 "maxiters for $alg should be larger than 1000"
     lb, ub = domain
     mid = (lb + ub) / 2
@@ -19,16 +19,16 @@ function Integrals.__solvebp_call(prob::IntegralProblem, alg::AbstractCubaAlgori
     # we could support other types by multiplying by the jacobian determinant at the end
 
     if prob.f isa BatchIntegralFunction
+        nvec = min(maxiters, prob.f.max_batch)
         # nvec == 1 in Cuba will change vectors to matrices, so we won't support it when
         # batching
-        (nvec = prob.f.max_batch) > 1 ||
-            throw(ArgumentError("BatchIntegralFunction must take multiple batch points"))
+        nvec > 1 || throw(ArgumentError("BatchIntegralFunction must take multiple batch points"))
 
         if mid isa Real
-            _x = zeros(typeof(mid), prob.f.max_batch)
+            _x = zeros(typeof(mid), nvec)
             scale = x -> scale_x!(resize!(_x, length(x)), ub, lb, vec(x))
         else
-            _x = zeros(eltype(mid), length(mid), prob.f.max_batch)
+            _x = zeros(eltype(mid), length(mid), nvec)
             scale = x -> scale_x!(view(_x, :, 1:size(x, 2)), ub, lb, x)
         end
 

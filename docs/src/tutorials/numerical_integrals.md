@@ -12,7 +12,8 @@ We can numerically approximate this integral:
 ```@example integrate1
 using Integrals
 f(u, p) = sum(sin.(u))
-prob = IntegralProblem(f, ones(3), 3ones(3))
+domain = (ones(3), 3ones(3)) # (lb, ub)
+prob = IntegralProblem(f, domain)
 sol = solve(prob, HCubatureJL(); reltol = 1e-3, abstol = 1e-3)
 sol.u
 ```
@@ -39,7 +40,8 @@ For example, we also want to evaluate:
 ```@example integrate2
 using Integrals
 f(u, p) = [sum(sin.(u)), sum(cos.(u))]
-prob = IntegralProblem(f, ones(3), 3ones(3))
+domain = (ones(3), 3ones(3)) # (lb, ub)
+prob = IntegralProblem(f, domain)
 sol = solve(prob, HCubatureJL(); reltol = 1e-3, abstol = 1e-3)
 sol.u
 ```
@@ -59,7 +61,8 @@ function f(y, u, p)
     y[2] = sum(cos.(u))
 end
 prototype = zeros(2)
-prob = IntegralProblem(IntegralFunction(f, prototype), ones(3), 3ones(3))
+domain = (ones(3), 3ones(3)) # (lb, ub)
+prob = IntegralProblem(IntegralFunction(f, prototype), domain)
 sol = solve(prob, CubatureJLh(); reltol = 1e-3, abstol = 1e-3)
 sol.u
 ```
@@ -84,7 +87,8 @@ function f(y, u, p)
     end
 end
 prototype = zeros(2, 0)
-prob = IntegralProblem(BatchIntegralFunction(f, prototype), ones(3), 3ones(3))
+domain = (ones(3), 3ones(3)) # (lb, ub)
+prob = IntegralProblem(BatchIntegralFunction(f, prototype), domain)
 sol = solve(prob, CubatureJLh(); reltol = 1e-3, abstol = 1e-3)
 sol.u
 ```
@@ -103,7 +107,8 @@ the change is a one-argument change:
 using Integrals
 using Cuba
 f(u, p) = sum(sin.(u))
-prob = IntegralProblem(f, ones(3), 3ones(3))
+domain = (ones(3), 3ones(3)) # (lb, ub)
+prob = IntegralProblem(f, domain)
 sol = solve(prob, CubaCuhre(); reltol = 1e-3, abstol = 1e-3)
 sol.u
 ```
@@ -118,7 +123,7 @@ For example, we can create our own sine function by integrating the cosine funct
 
 ```@example integrate6
 using Integrals
-my_sin(x) = solve(IntegralProblem((x, p) -> cos(x), 0.0, x), QuadGKJL()).u
+my_sin(x) = solve(IntegralProblem((x, p) -> cos(x), (0.0, x)), QuadGKJL()).u
 x = 0:0.1:(2 * pi)
 @. my_sin(x) ≈ sin(x)
 ```
@@ -152,7 +157,7 @@ using Distributions
 using Integrals
 dist = MvNormal(ones(2))
 f = (x, p) -> pdf(dist, x)
-(lb, ub) = ([-Inf, 0.0], [Inf, Inf])
-prob = IntegralProblem(f, lb, ub)
+domain = ([-Inf, 0.0], [Inf, Inf]) # (lb, ub)
+prob = IntegralProblem(f, domain)
 solve(prob, HCubatureJL(), reltol = 1e-3, abstol = 1e-3)
 ```
