@@ -55,10 +55,12 @@ function Base.getproperty(cache::IntegralCache, name::Symbol)
 end
 function Base.setproperty!(cache::IntegralCache, name::Symbol, x)
     if name === :lb
+        @warn "updating lb is deprecated by replacing domain"
         lb, ub = cache.domain
         setfield!(cache, :domain, (oftype(lb, x), ub))
         return x
     elseif name === :ub
+        @warn "updating ub is deprecated by replacing domain"
         lb, ub = cache.domain
         setfield!(cache, :domain, (lb, oftype(ub, x)))
         return x
