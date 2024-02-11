@@ -6,7 +6,7 @@ problems. For example, if one is going to solve the same integral for several pa
 ```julia
 using Integrals
 
-prob = IntegralProblem((x, p) -> sin(x * p), 0, 1, 14.0)
+prob = IntegralProblem((x, p) -> sin(x * p), (0, 1), 14.0)
 alg = QuadGKJL()
 
 solve(prob, alg)
@@ -33,7 +33,7 @@ This uses the [SciML `init` interface](https://docs.sciml.ai/SciMLBase/stable/in
 ```@example cache1
 using Integrals
 
-prob = IntegralProblem((x, p) -> sin(x * p), 0, 1, 14.0)
+prob = IntegralProblem((x, p) -> sin(x * p), (0, 1), 14.0)
 alg = QuadGKJL()
 
 cache = init(prob, alg)
@@ -45,7 +45,7 @@ cache.p = 15.0
 sol2 = solve!(cache)
 ```
 
-The caching interface is intended for updating `p`, `lb`, `ub`, `nout`, and `batch`.
+The caching interface is intended for updating `p` and `domain`.
 Note that the types of these variables is not allowed to change.
 If it is necessary to change the integrand `f` instead of defining a new
 `IntegralProblem`, consider using
