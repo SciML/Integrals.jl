@@ -34,7 +34,8 @@ into the problem as the fourth argument of `IntegralProblem`.
 using Integrals
 f(x, p) = sin(x * p)
 p = 1.7
-prob = IntegralProblem(f, -2, 5, p)
+domain = (-2, 5) # (lb, ub)
+prob = IntegralProblem(f, domain, p)
 sol = solve(prob, QuadGKJL())
 ```
 
@@ -45,7 +46,8 @@ the bounds giving the interval of integration for `x[i]`.
 ```julia
 using Integrals
 f(x, p) = sum(sin.(x))
-prob = IntegralProblem(f, ones(2), 3ones(2))
+domain = (ones(2), 3ones(2)) # (lb, ub)
+prob = IntegralProblem(f, domain)
 sol = solve(prob, HCubatureJL(), reltol = 1e-3, abstol = 1e-3)
 ```
 
@@ -60,7 +62,8 @@ function f(dx, x, p)
         dx[i] = sum(sin, @view(x[:, i]))
     end
 end
-prob = IntegralProblem(BatchIntegralFunction(f, zeros(0)), ones(2), 3ones(2))
+domain = (ones(2), 3ones(2)) # (lb, ub)
+prob = IntegralProblem(BatchIntegralFunction(f, zeros(0)), domain)
 sol = solve(prob, CubatureJLh(), reltol = 1e-3, abstol = 1e-3)
 ```
 
@@ -68,6 +71,6 @@ If we would like to compare the results against Cuba.jl's `Cuhre` method, then
 the change is a one-argument change:
 
 ```julia
-using IntegralsCuba
+using Cuba
 sol = solve(prob, CubaCuhre(), reltol = 1e-3, abstol = 1e-3)
 ```
