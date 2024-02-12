@@ -67,7 +67,7 @@ function Integrals.__solvebp_call(prob::IntegralProblem,
             end
         elseif y isa AbstractArray
             bfsize = size(y)[begin:(end - 1)]
-            bfdim = prod(fsize)
+            bfdim = prod(bfsize)
             if isinplace(prob)
                 # dx is a Matrix, but to provide a buffer of the same type as y, we make
                 # would like to make views of a larger buffer, but CubatureJL doesn't set
