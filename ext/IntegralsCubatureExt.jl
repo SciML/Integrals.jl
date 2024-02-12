@@ -66,42 +66,42 @@ function Integrals.__solvebp_call(prob::IntegralProblem,
                 end
             end
         elseif y isa AbstractArray
-            fsize = size(y)[begin:(end - 1)]
-            fdim = prod(fsize)
+            bfsize = size(y)[begin:(end - 1)]
+            bfdim = prod(fsize)
             if isinplace(prob)
                 # dx is a Matrix, but to provide a buffer of the same type as y, we make
                 # would like to make views of a larger buffer, but CubatureJL doesn't set
                 # a hard limit for max_batch, so we allocate a new buffer with the needed size
                 f = (x, dx) -> begin
-                    dy = similar(y, fsize..., size(dx, 2))
+                    dy = similar(y, bfsize..., size(dx, 2))
                     prob.f(dy, x, p)
-                    dx .= reshape(dy, fdim, size(dx, 2))
+                    dx .= reshape(dy, bfdim, size(dx, 2))
                 end
             else
-                f = (x, dx) -> (dx .= reshape(prob.f(x, p), fdim, size(dx, 2)))
+                f = (x, dx) -> (dx .= reshape(prob.f(x, p), bfdim, size(dx, 2)))
             end
             if mid isa Number
                 if alg isa CubatureJLh
-                    val_, err = Cubature.hquadrature_v(fdim, f, lb, ub;
+                    val_, err = Cubature.hquadrature_v(bfdim, f, lb, ub;
                         reltol = reltol, abstol = abstol,
                         maxevals = maxiters, error_norm = alg.error_norm)
                 else
-                    val_, err = Cubature.pquadrature_v(fdim, f, lb, ub;
+                    val_, err = Cubature.pquadrature_v(bfdim, f, lb, ub;
                         reltol = reltol, abstol = abstol,
                         maxevals = maxiters, error_norm = alg.error_norm)
                 end
             else
                 if alg isa CubatureJLh
-                    val_, err = Cubature.hcubature_v(fdim, f, lb, ub;
+                    val_, err = Cubature.hcubature_v(bfdim, f, lb, ub;
                         reltol = reltol, abstol = abstol,
                         maxevals = maxiters, error_norm = alg.error_norm)
                 else
-                    val_, err = Cubature.pcubature_v(fdim, f, lb, ub;
+                    val_, err = Cubature.pcubature_v(bfdim, f, lb, ub;
                         reltol = reltol, abstol = abstol,
                         maxevals = maxiters, error_norm = alg.error_norm)
                 end
             end
-            val = reshape(val_, fsize...)
+            val = reshape(val_, bfsize...)
         else
             error("BatchIntegralFunction integrands must be arrays for Cubature.jl")
         end
@@ -165,22 +165,6 @@ function Integrals.__solvebp_call(prob::IntegralProblem,
             error("IntegralFunctions must be scalars or arrays for Cubature.jl")
         end
     end
-
-    #=
-    nout = prob.nout
-    if nout == 1
-        # the output of prob.f could be either scalar or a vector of length 1, however
-        # the behavior of the output of the integration routine is undefined (could differ
-        # across algorithms)
-        # Cubature will output a real number in when called without nout/fdim
-        if prob.batch == 0
-            if isinplace(prob)
-                dx = zeros(eltype(lb), prob.nout)
-    @@ -181,6 +334,7 @@ function Integrals.__solvebp_call(prob::IntegralProblem,
-            end
-        end
-    end
-    =#
     SciMLBase.build_solution(prob, alg, val, err, retcode = ReturnCode.Success)
 end
 
