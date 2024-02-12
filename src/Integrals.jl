@@ -98,15 +98,15 @@ function __solvebp_call(cache::IntegralCache, alg::QuadGKJL, sensealg, domain, p
         if isinplace(prob)
             # quadgk only works with vector buffers. If the buffer is an array, we have to
             # turn it into a vector of arrays
-            u = prob.f.integrand_prototype
-            f = if u isa AbstractVector
-                BatchIntegrand((y, x) -> prob.f(y, x, p), similar(u))
+            bu = prob.f.integrand_prototype
+            f = if bu isa AbstractVector
+                BatchIntegrand((y, x) -> prob.f(y, x, p), similar(bu))
             else
-                fsize = size(u)[begin:(end - 1)]
-                BatchIntegrand{Array{eltype(u),ndims(u)-1}}() do y, x
-                    y_ = similar(u, fsize..., length(y))
+                fsize = size(bu)[begin:(end - 1)]
+                BatchIntegrand{Array{eltype(bu),ndims(bu)-1}}() do y, x
+                    y_ = similar(bu, fsize..., length(y))
                     prob.f(y_, x, p)
-                    map!(collect, y, eachslice(y_; dims=ndims(u)))
+                    map!(collect, y, eachslice(y_; dims=ndims(bu)))
                     return nothing
                 end
             end
