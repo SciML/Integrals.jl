@@ -1,113 +1,116 @@
+_oftype(x, y) = oftype(x, y)
+_oftype(::SubArray, y) = y
+
 function substitute_bounds(lb, ub)
+    mid = (lb + ub) / 2 # floating-point promotion
     if isinf(lb) && isinf(ub)
-        lb < 0 || error("Positive infinite lower bound not supported.")
-        ub > 0 || error("Negative infinite lower bound not supported.")
-        lb_sub = -one(lb)
-        ub_sub = one(lb)
+        lb_sub = flipsign(one(mid), lb)
+        ub_sub = flipsign(one(mid), ub)
     elseif isinf(lb)
-        lb < 0 || error("Positive infinite lower bound not supported.")
-        lb_sub = -one(lb)
-        ub_sub = zero(lb)
+        lb_sub = flipsign(one(mid), lb)
+        ub_sub = zero(one(mid))
     elseif isinf(ub)
-        ub > 0 || error("Positive infinite lower bound not supported.")
-        lb_sub = zero(lb)
-        ub_sub = one(lb)
+        lb_sub = zero(one(mid))
+        ub_sub = flipsign(one(mid), ub)
     else
-        lb_sub = lb
-        ub_sub = ub
+        lb_sub = -one(mid)
+        ub_sub = one(mid)
     end
-    return lb_sub, ub_sub
+    return lb_sub, ub_sub # unitless
 end
-function substitute_f(t, p, f, lb::Number, ub::Number)
+
+function substitute_t(t::Number, lb::Number, ub::Number)
+    u = oneunit(eltype(lb))
+    # apply correct units
     if isinf(lb) && isinf(ub)
-        return f(t / (1 - t^2), p) * (1 + t^2) / (1 - t^2)^2
+        den = inv(1 - t^2)
+        t * den * u, (1 + t^2) * den^2 * u
     elseif isinf(lb)
-        return f(ub + (t / (1 + t)), p) * 1 / ((1 + t)^2)
+        den = inv(1 - flipsign(t, lb))
+        ub + t * den * u, den^2 * u
     elseif isinf(ub)
-        return f(lb + (t / (1 - t)), p) * 1 / ((1 - t)^2)
+        den = inv(1 - flipsign(t, ub))
+        lb + t * den * u, den^2 * u
     else
-        return f(t, p)
-    end
-end
-function substitute_f_iip(dt, dy, t, p, f, lb::Number, ub::Number)
-    if isinf(lb) && isinf(ub)
-        f(dt, t / (1 - t^2), p)
-        dt .= dy .* ((1 + t^2) / (1 - t^2)^2)
-    elseif isinf(lb)
-        return f(ub + (t / (1 + t)), p) * 1 / ((1 + t)^2)
-    elseif isinf(ub)
-        return f(lb + (t / (1 - t)), p) * 1 / ((1 - t)^2)
-    else
-        return f(t, p)
+        den = (ub - lb) * oftype(t, 0.5)
+        lb - t * den, den
     end
 end
-function substitute_f(t, p, f, lb::AbstractVector, ub::AbstractVector)
-    x = similar(t)
-    jac_diag = similar(t)
+function substitute_t(t::AbstractVector, lb::AbstractVector, ub::AbstractVector)
+    x = similar(t, typeof(one(eltype(t))*(first(lb)+first(ub))))
+    jac = one(eltype(t))
     for i in eachindex(lb)
-        if isinf(lb[i]) && isinf(ub[i])
-            x[i] = t[i] / (1 - t[i]^2)
-            jac_diag[i] = (1 + t[i]^2) / (1 - t[i]^2)^2
-        elseif isinf(lb[i])
-            x[i] = ub[i] + (t[i] / (1 + t[i]))
-            jac_diag[i] = 1 / ((1 + t[i])^2)
-        elseif isinf(ub[i])
-            x[i] = lb[i] + (t[i] / (1 - t[i]))
-            jac_diag[i] = 1 / ((1 - t[i])^2)
-        else
-            x[i] = t[i]
-            jac_diag[i] = one(lb[i])
+        x[i], dj = substitute_t(t[i], lb[i], ub[i])
+        jac *= dj
+    end
+    return _oftype(t, x), jac
+end
+
+function substitute_f(f::F, t, p, lb, ub) where {F}
+    x, jac = substitute_t(t, lb, ub)
+    return f(x, p) * jac
+end
+function substitute_f(f::F, dt, t, p, lb, ub) where {F}
+    x, jac = substitute_t(t, lb, ub)
+    f(dt, x, p)
+    dt .*= jac
+    return
+end
+
+function substitute_t(t::AbstractVector, lb::Number, ub::Number)
+    x = similar(t, typeof(one(eltype(t))*(lb+ub)))
+    jac = similar(x)
+    for (i, ti) in enumerate(t)
+        x[i], jac[i] = substitute_t(ti, lb, ub)
+    end
+    return x, jac
+end
+function substitute_t(t::AbstractArray, lb::AbstractVector, ub::AbstractVector)
+    x = similar(t, typeof(one(eltype(t))*(first(lb)+first(ub))))
+    jac = similar(x, size(t, ndims(t)))
+    for (i, it) in enumerate(axes(t)[end])
+        x[axes(x)[begin:end-1]..., i], jac[i] = substitute_t(t[axes(t)[begin:end-1]..., it], lb, ub)
+    end
+    return x, jac
+end
+
+function substitute_batchf(f::F, t, p, lb, ub) where {F}
+    x, jac = substitute_t(t, lb, ub)
+    r = f(x, p)
+    return r .* reshape(jac, ntuple(d -> d==ndims(r) ? length(jac) : 1, ndims(r)))
+end
+function substitute_batchf(f::F, dt, t, p, lb, ub) where {F}
+    x, jac = substitute_t(t, lb, ub)
+    f(dt, x, p)
+    for (i, j) in zip(axes(dt)[end], jac)
+        for idt in CartesianIndices(axes(dt)[begin:end-1])
+            dt[idt, i] *= j
         end
     end
-    f(oftype(t, x), p) * prod(jac_diag)
-end
-function substitute_f_iip(dt, t, p, f, lb, ub)
-    x = similar(t)
-    jac_diag = similar(t)
-    for i in eachindex(lb)
-        if isinf(lb[i]) && isinf(ub[i])
-            x[i] = t[i] / (1 - t[i]^2)
-            jac_diag[i] = (1 + t[i]^2) / (1 - t[i]^2)^2
-        elseif isinf(lb[i])
-            x[i] = ub[i] + (t[i] / (1 + t[i]))
-            jac_diag[i] = 1 / ((1 + t[i])^2)
-        elseif isinf(ub[i])
-            x[i] = lb[i] + (t[i] / (1 - t[i]))
-            jac_diag[i] = 1 / ((1 - t[i])^2)
-        else
-            x[i] = t[i]
-            jac_diag[i] = one(lb[i])
-        end
-    end
-    f(dt, oftype(t, x), p)
-    dt .*= prod(jac_diag)
+    return
 end
 
 function transformation_if_inf(prob, ::Val{true})
-    lb, ub = prob.domain
+    lb, ub = promote(prob.domain...)
     f = prob.f
-    if lb isa Number
-        lb_sub, ub_sub = substitute_bounds(lb, ub)
-    else
-        bounds = substitute_bounds.(lb, ub)
-        lb_sub = first.(bounds)
-        ub_sub = last.(bounds)
-    end
+    bounds = map(substitute_bounds, lb, ub)
+    lb_sub = lb isa Number ? first(bounds) : map(first, bounds)
+    ub_sub = ub isa Number ? last(bounds)  : map(last, bounds)
     f_sub = if isinplace(prob)
         if f isa BatchIntegralFunction
-            BatchIntegralFunction{true}((dt, t, p) -> substitute_f_iip(dt, t, p, f, lb, ub),
+            BatchIntegralFunction{true}(let f=f.f; (dt, t, p) -> substitute_batchf(f, dt, t, p, lb, ub); end,
                 f.integrand_prototype,
                 max_batch = f.max_batch)
         else
-            IntegralFunction{true}((dt, t, p) -> substitute_f_iip(dt, t, p, f, lb, ub),
+            IntegralFunction{true}(let f=f.f; (dt, t, p) -> substitute_f(f, dt, t, p, lb, ub); end,
                 f.integrand_prototype)
         end
     else
         if f isa BatchIntegralFunction
-            BatchIntegralFunction{false}((t, p) -> substitute_f(t, p, f, lb, ub),
+            BatchIntegralFunction{false}(let f=f.f; (t, p) -> substitute_batchf(f, t, p, lb, ub); end,
                 f.integrand_prototype)
         else
-            IntegralFunction{false}((t, p) -> substitute_f(t, p, f, lb, ub),
+            IntegralFunction{false}(let f=f.f; (t, p) -> substitute_f(f, t, p, lb, ub); end,
                 f.integrand_prototype)
         end
     end
@@ -116,8 +119,7 @@ end
 
 function transformation_if_inf(prob, ::Nothing)
     lb, ub = prob.domain
-    if (lb isa Number && ub isa Number && (ub == Inf || lb == -Inf)) ||
-       -Inf in lb || Inf in ub
+    if any(isinf, lb) || any(isinf, ub)
         return transformation_if_inf(prob, Val(true))
     else
         return transformation_if_inf(prob, Val(false))
