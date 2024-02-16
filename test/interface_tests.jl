@@ -102,6 +102,7 @@ end
             prob = IntegralProblem(integrands[i], lb, ub)
             @info "Alg = $(nameof(typeof(alg))), Integrand = $i, Dimension = $dim, Output Dimension = $nout"
             sol = solve(prob, alg, reltol = reltol, abstol = abstol)
+            @test sol.alg == alg
             @test sol.u≈exact_sol[i](dim, nout, lb, ub) rtol=1e-2
         end
     end
@@ -119,6 +120,7 @@ end
                 end
                 @info "Alg = $(nameof(typeof(alg))), Integrand = $i, Dimension = $dim, Output Dimension = $nout"
                 sol = solve(prob, alg, reltol = reltol, abstol = abstol)
+                @test sol.alg == alg
                 @test sol.u≈exact_sol[i](dim, nout, lb, ub) rtol=1e-2
             end
         end
@@ -137,6 +139,7 @@ end
                 end
                 @info "Alg = $(nameof(typeof(alg))), Integrand = $i, Dimension = $dim, Output Dimension = $nout"
                 sol = solve(prob, alg, reltol = reltol, abstol = abstol)
+                @test sol.alg == alg
                 if sol.u isa Number
                     @test sol.u≈exact_sol[i](dim, nout, lb, ub) rtol=1e-2
                 else
@@ -158,6 +161,7 @@ end
             end
             @info "Alg = $(nameof(typeof(alg))), Integrand = $i, Dimension = $dim, Output Dimension = $nout"
             sol = solve(prob, alg, reltol = reltol, abstol = abstol)
+            @test sol.alg == alg
             @test sol.u[1]≈exact_sol[i](dim, nout, lb, ub) rtol=1e-2
         end
     end
@@ -175,6 +179,7 @@ end
                 end
                 @info "Alg = $(nameof(typeof(alg))), Integrand = $i, Dimension = $dim, Output Dimension = $nout"
                 sol = solve(prob, alg, reltol = reltol, abstol = abstol)
+                @test sol.alg == alg
                 if sol.u isa Number
                     @test sol.u≈exact_sol[i](dim, nout, lb, ub) rtol=1e-2
                 else
@@ -198,6 +203,7 @@ end
                 end
                 @info "Alg = $(nameof(typeof(alg))), Integrand = $i, Dimension = $dim, Output Dimension = $nout"
                 sol = solve(prob, alg, reltol = reltol, abstol = abstol)
+                @test sol.alg == alg
                 if sol.u isa Number
                     @test sol.u≈exact_sol[i](dim, nout, lb, ub) rtol=1e-2
                 else
@@ -222,6 +228,7 @@ end
                 end
                 @info "Alg = $(nameof(typeof(alg))), Integrand = $i, Dimension = $dim, Output Dimension = $nout"
                 sol = solve(prob, alg, reltol = reltol, abstol = abstol)
+                @test sol.alg == alg
                 if nout == 1
                     @test sol.u[1]≈exact_sol_v[i](dim, nout, lb, ub)[1] rtol=1e-2
                 else
@@ -245,6 +252,7 @@ end
                         nout = nout)
                     @info "Alg = $(nameof(typeof(alg))), Integrand = $i, Dimension = $dim, Output Dimension = $nout"
                     sol = solve(prob, alg, reltol = reltol, abstol = abstol)
+                    @test sol.alg == alg
                     if nout == 1
                         @test sol.u[1]≈exact_sol_v[i](dim, nout, lb, ub)[1] rtol=1e-2
                     else
@@ -270,6 +278,7 @@ end
                     end
                     @info "Alg = $(nameof(typeof(alg))), Integrand = $i, Dimension = $dim, Output Dimension = $nout"
                     sol = solve(prob, alg, reltol = reltol, abstol = abstol)
+                    @test sol.alg == alg
                     if nout == 1
                         @test sol.u[1]≈exact_sol_v[i](dim, nout, lb, ub)[1] rtol=1e-2
                     else
@@ -293,6 +302,7 @@ end
             end
             @info "Alg = $(nameof(typeof(alg))), Integrand = $i, Dimension = $dim, Output Dimension = $nout"
             sol = solve(prob, alg, reltol = reltol, abstol = abstol)
+            @test sol.alg == alg
             @test sol.u≈exact_sol_v[i](dim, nout, lb, ub) rtol=1e-2
         end
     end
@@ -313,6 +323,7 @@ end
                 end
                 @info "Alg = $(nameof(typeof(alg))), Integrand = $i, Dimension = $dim, Output Dimension = $nout"
                 sol = solve(prob, alg, reltol = reltol, abstol = abstol)
+                @test sol.alg == alg
                 @test sol.u≈exact_sol_v[i](dim, nout, lb, ub) rtol=1e-2
             end
         end
@@ -333,6 +344,7 @@ end
                 end
                 @info "Alg = $(nameof(typeof(alg))), Integrand = $i, Dimension = $dim, Output Dimension = $nout"
                 sol = solve(prob, alg, reltol = reltol, abstol = abstol)
+                @test sol.alg == alg
                 @test sol.u≈exact_sol_v[i](dim, nout, lb, ub) rtol=1e-2
             end
         end
