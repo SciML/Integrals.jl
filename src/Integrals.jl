@@ -112,7 +112,7 @@ function __solvebp_call(cache::IntegralCache, alg::QuadGKJL, sensealg, domain, p
             end
             val, err = quadgk(f, lb, ub, segbuf = cache.cacheval, maxevals = maxiters,
                 rtol = reltol, atol = abstol, order = alg.order, norm = alg.norm)
-            SciMLBase.build_solution(prob, QuadGKJL(), val, err, retcode = ReturnCode.Success)
+            SciMLBase.build_solution(prob, alg, val, err, retcode = ReturnCode.Success)
         else
             u = prob.f(typeof(mid)[], p)
             f = if u isa AbstractVector
@@ -125,7 +125,7 @@ function __solvebp_call(cache::IntegralCache, alg::QuadGKJL, sensealg, domain, p
             end
             val, err = quadgk(f, lb, ub, segbuf = cache.cacheval, maxevals = maxiters,
                 rtol = reltol, atol = abstol, order = alg.order, norm = alg.norm)
-            SciMLBase.build_solution(prob, QuadGKJL(), val, err, retcode = ReturnCode.Success)
+            SciMLBase.build_solution(prob, alg, val, err, retcode = ReturnCode.Success)
         end
     else
         if isinplace(prob)
@@ -133,12 +133,12 @@ function __solvebp_call(cache::IntegralCache, alg::QuadGKJL, sensealg, domain, p
             f = (y, x) -> prob.f(y, x, p)
             val, err = quadgk!(f, result, lb, ub, segbuf = cache.cacheval, maxevals = maxiters,
                 rtol = reltol, atol = abstol, order = alg.order, norm = alg.norm)
-            SciMLBase.build_solution(prob, QuadGKJL(), val, err, retcode = ReturnCode.Success)
+            SciMLBase.build_solution(prob, alg, val, err, retcode = ReturnCode.Success)
         else
             f = x -> prob.f(x, p)
             val, err = quadgk(f, lb, ub, segbuf = cache.cacheval, maxevals = maxiters,
                 rtol = reltol, atol = abstol, order = alg.order, norm = alg.norm)
-            SciMLBase.build_solution(prob, QuadGKJL(), val, err, retcode = ReturnCode.Success)
+            SciMLBase.build_solution(prob, alg, val, err, retcode = ReturnCode.Success)
         end
     end
 end
@@ -166,7 +166,7 @@ function __solvebp_call(prob::IntegralProblem, alg::HCubatureJL, sensealg, domai
             rtol = reltol, atol = abstol,
             maxevals = maxiters, norm = alg.norm, initdiv = alg.initdiv)
     end
-    SciMLBase.build_solution(prob, HCubatureJL(), val, err, retcode = ReturnCode.Success)
+    SciMLBase.build_solution(prob, alg, val, err, retcode = ReturnCode.Success)
 end
 
 function __solvebp_call(prob::IntegralProblem, alg::VEGAS, sensealg, domain, p;
