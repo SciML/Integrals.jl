@@ -330,7 +330,7 @@ CubaCuhre(; flags = 0, minevals = 0, key = 0) = CubaCuhre(flags, minevals, key)
 
 abstract type AbstractCubatureJLAlgorithm <: SciMLBase.AbstractIntegralAlgorithm end
 """
-    CubatureJLh()
+    CubatureJLh(; norm=Cubature.INDIVIDUAL)
 
 Multidimensional h-adaptive integration from Cubature.jl.
 `error_norm` specifies the convergence criterion  for vector valued integrands.
@@ -353,9 +353,10 @@ publisher={Elsevier}
 struct CubatureJLh <: AbstractCubatureJLAlgorithm
     error_norm::Int32
 end
+CubatureJLh(; norm=0) = CubatureJLh(norm)
 
 """
-    CubatureJLp()
+    CubatureJLp(; norm=Cubature.INDIVIDUAL)
 
 Multidimensional p-adaptive integration from Cubature.jl.
 This method is based on repeatedly doubling the degree of the cubature rules,
@@ -368,6 +369,8 @@ Defaults to `Cubature.INDIVIDUAL`, other options are
 struct CubatureJLp <: AbstractCubatureJLAlgorithm
     error_norm::Int32
 end
+CubatureJLp(; norm=0) = CubatureJLp(norm)
+
 
 
 """
