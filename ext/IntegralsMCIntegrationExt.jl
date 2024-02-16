@@ -40,7 +40,7 @@ function Integrals.__solvebp_call(prob::IntegralProblem, alg::VEGASMC, sensealg,
         else
             map(a -> reshape(a, size(f0)), (res.mean, res.stdev, res.chi2))
         end
-        SciMLBase.build_solution(prob, VEGASMC(), out, err, chi=chi, retcode = ReturnCode.Success)
+        SciMLBase.build_solution(prob, alg, out, err, chi=chi, retcode = ReturnCode.Success)
     end
 end
 
