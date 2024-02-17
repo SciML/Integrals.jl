@@ -64,21 +64,6 @@ end
 # Give a layer to intercept with AD
 __solvebp(args...; kwargs...) = __solvebp_call(args...; kwargs...)
 
-function __solvebp_call(prob::IntegralProblem, alg::SciMLBase.AbstractIntegralAlgorithm, args...; kws...)
-    if alg isa AbstractCubatureJLAlgorithm
-        error("algorithm $(nameof(typeof(alg))) requires `using Cubature`")
-    elseif alg isa AbstractCubaAlgorithm
-        error("algorithm $(nameof(typeof(alg))) requires `using Cuba`")
-    elseif alg isa VEGASMC
-        error("algorithm $(nameof(typeof(alg))) requires `using MCIntegration`")
-    elseif alg isa GaussLegendre
-        error("algorithm $(nameof(typeof(alg))) requires `using FastGaussQuadrature`")
-    elseif alg isa ArblibJL
-        error("algorithm $(nameof(typeof(alg))) requires `using Arblib`")
-    else
-        throw(MethodError(__solvebp_call, (prob, alg, args...)))
-    end
-end
 
 function quadgk_prob_types(f, lb::T, ub::T, p, nrm) where {T}
     DT = float(T)   # we need to be careful to infer the same result as `evalrule`
