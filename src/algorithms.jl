@@ -127,50 +127,6 @@ function GaussLegendre(; n = 250, subintervals = 1, nodes = nothing, weights = n
     return GaussLegendre(nodes, weights, subintervals)
 end
 
-"""
-    TrapezoidalRule
-
-Struct for evaluating an integral via the trapezoidal rule.
-
-
-Example with sampled data:
-
-```
-using Integrals
-f = x -> x^2
-x = range(0, 1, length=20)
-y = f.(x)
-problem = SampledIntegralProblem(y, x)
-method = TrapezoidalRule()
-solve(problem, method)
-```
-"""
-struct TrapezoidalRule <: SciMLBase.AbstractIntegralAlgorithm
-end
-
-"""
-    SimpsonsRule
-
-Struct for evaluating an integral via the Simpson's composite 1/3-3/8
-rule over `AbstractRange`s (evenly spaced points) and 
-Simpson's composite 1/3 rule for non-equidistant grids.
-
-
-Example with equidistant data:
-
-```
-using Integrals 
-f = x -> x^2
-x = range(0, 1, length=20)
-y = f.(x)
-problem = SampledIntegralProblem(y, x)
-method = SimpsonsRule()
-solve(problem, method)
-```
-"""
-struct SimpsonsRule <: SciMLBase.AbstractIntegralAlgorithm
-end
-
 
 """
   QuadratureRule(q; n=250)
