@@ -10,6 +10,8 @@ using LinearAlgebra
 
 include("common.jl")
 include("algorithms.jl")
+include("algorithms_sampled.jl")
+include("algorithms_extension.jl")
 include("infinity_handling.jl")
 include("quadrules.jl")
 include("sampled.jl")
@@ -63,6 +65,7 @@ end
 
 # Give a layer to intercept with AD
 __solvebp(args...; kwargs...) = __solvebp_call(args...; kwargs...)
+
 
 function quadgk_prob_types(f, lb::T, ub::T, p, nrm) where {T}
     DT = float(T)   # we need to be careful to infer the same result as `evalrule`
