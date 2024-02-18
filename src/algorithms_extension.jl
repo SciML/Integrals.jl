@@ -151,7 +151,7 @@ end
 abstract type AbstractCubatureJLAlgorithm <: AbstractIntegralExtensionAlgorithm end
 
 """
-    CubatureJLh(; norm=Cubature.INDIVIDUAL)
+    CubatureJLh(; error_norm=Cubature.INDIVIDUAL)
 
 Multidimensional h-adaptive integration from Cubature.jl.
 `error_norm` specifies the convergence criterion  for vector valued integrands.
@@ -174,13 +174,13 @@ publisher={Elsevier}
 struct CubatureJLh <: AbstractCubatureJLAlgorithm
     error_norm::Int32
 end
-function CubatureJLh(; norm=0)
+function CubatureJLh(; error_norm=0)
     isnothing(Base.get_extension(@__MODULE__, :IntegralsCubatureExt)) && error("CubatureJLh requires `using Cubature`")
-    return CubatureJLh(norm)
+    return CubatureJLh(error_norm)
 end
 
 """
-    CubatureJLp(; norm=Cubature.INDIVIDUAL)
+    CubatureJLp(; error_norm=Cubature.INDIVIDUAL)
 
 Multidimensional p-adaptive integration from Cubature.jl.
 This method is based on repeatedly doubling the degree of the cubature rules,
@@ -193,9 +193,9 @@ Defaults to `Cubature.INDIVIDUAL`, other options are
 struct CubatureJLp <: AbstractCubatureJLAlgorithm
     error_norm::Int32
 end
-function CubatureJLp(; norm=0)
+function CubatureJLp(; error_norm=0)
     isnothing(Base.get_extension(@__MODULE__, :IntegralsCubatureExt)) && error("CubatureJLp requires `using Cubature`")
-    return CubatureJLp(norm)
+    return CubatureJLp(error_norm)
 end
 
 
