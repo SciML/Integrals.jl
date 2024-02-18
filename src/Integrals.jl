@@ -10,6 +10,8 @@ using LinearAlgebra
 
 include("common.jl")
 include("algorithms.jl")
+include("algorithms_sampled.jl")
+include("algorithms_extension.jl")
 include("infinity_handling.jl")
 include("quadrules.jl")
 include("sampled.jl")
