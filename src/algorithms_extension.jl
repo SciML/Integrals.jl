@@ -3,6 +3,7 @@
 abstract type AbstractIntegralExtensionAlgorithm <: SciMLBase.AbstractIntegralAlgorithm end
 
 abstract type AbstractCubaAlgorithm <: AbstractIntegralExtensionAlgorithm end
+
 """
     CubaVegas()
 
@@ -30,6 +31,7 @@ struct CubaVegas <: AbstractCubaAlgorithm
     nincrease::Int
     gridno::Int
 end
+
 """
     CubaSUAVE()
 
@@ -58,6 +60,7 @@ struct CubaSUAVE{R} <: AbstractCubaAlgorithm where {R <: Real}
     nmin::Int
     flatness::R
 end
+
 """
     CubaDivonne()
 
@@ -93,6 +96,7 @@ struct CubaDivonne{R1, R2, R3, R4} <:
     nextra::Int
     peakfinder::Ptr{Cvoid}
 end
+
 """
     CubaCuhre()
 
@@ -119,23 +123,33 @@ end
 
 function CubaVegas(; flags = 0, seed = 0, minevals = 0, nstart = 1000, nincrease = 500,
         gridno = 0)
-    CubaVegas(flags, seed, minevals, nstart, nincrease, gridno)
+    isnothing(Base.get_extension(@__MODULE__, :IntegralsCubaExt)) && error("CubaVegas requires `using Cuba`")
+    return CubaVegas(flags, seed, minevals, nstart, nincrease, gridno)
 end
+
 function CubaSUAVE(; flags = 0, seed = 0, minevals = 0, nnew = 1000, nmin = 2,
         flatness = 25.0)
-    CubaSUAVE(flags, seed, minevals, nnew, nmin, flatness)
+    isnothing(Base.get_extension(@__MODULE__, :IntegralsCubaExt)) && error("CubaSUAVE requires `using Cuba`")
+    return CubaSUAVE(flags, seed, minevals, nnew, nmin, flatness)
 end
+
 function CubaDivonne(; flags = 0, seed = 0, minevals = 0,
         key1 = 47, key2 = 1, key3 = 1, maxpass = 5, border = 0.0,
         maxchisq = 10.0, mindeviation = 0.25,
         xgiven = zeros(Cdouble, 0, 0),
         nextra = 0, peakfinder = C_NULL)
-    CubaDivonne(flags, seed, minevals, key1, key2, key3, maxpass, border, maxchisq,
+    isnothing(Base.get_extension(@__MODULE__, :IntegralsCubaExt)) && error("CubaDivonne requires `using Cuba`")
+    return CubaDivonne(flags, seed, minevals, key1, key2, key3, maxpass, border, maxchisq,
         mindeviation, xgiven, nextra, peakfinder)
 end
-CubaCuhre(; flags = 0, minevals = 0, key = 0) = CubaCuhre(flags, minevals, key)
+
+function CubaCuhre(; flags = 0, minevals = 0, key = 0)
+    isnothing(Base.get_extension(@__MODULE__, :IntegralsCubaExt)) && error("CubaCuhre requires `using Cuba`")
+    return CubaCuhre(flags, minevals, key)
+end
 
 abstract type AbstractCubatureJLAlgorithm <: AbstractIntegralExtensionAlgorithm end
+
 """
     CubatureJLh(; norm=Cubature.INDIVIDUAL)
 
@@ -160,7 +174,10 @@ publisher={Elsevier}
 struct CubatureJLh <: AbstractCubatureJLAlgorithm
     error_norm::Int32
 end
-CubatureJLh(; norm=0) = CubatureJLh(norm)
+function CubatureJLh(; norm=0)
+    isnothing(Base.get_extension(@__MODULE__, :IntegralsCubatureExt)) && error("CubatureJLh requires `using Cubature`")
+    return CubatureJLh(norm)
+end
 
 """
     CubatureJLp(; norm=Cubature.INDIVIDUAL)
@@ -176,7 +193,10 @@ Defaults to `Cubature.INDIVIDUAL`, other options are
 struct CubatureJLp <: AbstractCubatureJLAlgorithm
     error_norm::Int32
 end
-CubatureJLp(; norm=0) = CubatureJLp(norm)
+function CubatureJLp(; norm=0)
+    isnothing(Base.get_extension(@__MODULE__, :IntegralsCubatureExt)) && error("CubatureJLp requires `using Cubature`")
+    return CubatureJLp(norm)
+end
 
 
 
@@ -202,6 +222,7 @@ struct ArblibJL{O} <: AbstractIntegralExtensionAlgorithm
     opts::O
 end
 function ArblibJL(; check_analytic=false, take_prec=false, warn_on_no_convergence=false, opts=C_NULL)
+    isnothing(Base.get_extension(@__MODULE__, :IntegralsArblibExt)) && error("ArblibJL requires `using Arblib`")
     return ArblibJL(check_analytic, take_prec, warn_on_no_convergence, opts)
 end
 
@@ -218,4 +239,7 @@ defaults that works for conforming integrands.
 struct VEGASMC{K<:NamedTuple} <: AbstractIntegralExtensionAlgorithm
     kws::K
 end
-VEGASMC(; kws...) = VEGASMC(NamedTuple(kws))
+function VEGASMC(; kws...)
+    isnothing(Base.get_extension(@__MODULE__, :IntegralsMCIntegrationExt)) && error("VEGASMC requires `using MCIntegration`")
+    return VEGASMC(NamedTuple(kws))
+end
