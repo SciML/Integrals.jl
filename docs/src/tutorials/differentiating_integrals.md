@@ -16,7 +16,7 @@ function testf(p)
     sin(solve(prob, CubaCuhre(), reltol = 1e-6, abstol = 1e-6)[1])
 end
 testf(p)
-dp1 = Zygote.gradient(testf,p)
+dp1 = Zygote.gradient(testf, p)
 dp2 = FiniteDiff.finite_difference_gradient(testf, p)
 dp3 = ForwardDiff.gradient(testf, p)
 dp1[1] ≈ dp2 ≈ dp3

@@ -10,7 +10,8 @@ abstol = 1e-3
 alg_req = Dict(
     QuadGKJL() => (nout = Inf, allows_batch = true, min_dim = 1, max_dim = 1,
         allows_iip = true),
-    QuadratureRule(gausslegendre, n=50) => (nout = Inf, min_dim = 1, max_dim = 1, allows_batch = false,
+    QuadratureRule(gausslegendre, n = 50) => (
+        nout = Inf, min_dim = 1, max_dim = 1, allows_batch = false,
         allows_iip = false),
     GaussLegendre() => (nout = Inf, min_dim = 1, max_dim = 1, allows_batch = false,
         allows_iip = false),
@@ -18,7 +19,7 @@ alg_req = Dict(
         max_dim = Inf, allows_iip = true),
     # VEGAS() => (nout = 1, allows_batch = true, min_dim = 2, max_dim = Inf,
     #     allows_iip = true),
-    VEGASMC(seed=42) => (nout = Inf, allows_batch = false, min_dim = 1, max_dim = Inf,
+    VEGASMC(seed = 42) => (nout = Inf, allows_batch = false, min_dim = 1, max_dim = Inf,
         allows_iip = true),
     CubatureJLh() => (nout = Inf, allows_batch = true, min_dim = 1,
         max_dim = Inf, allows_iip = true),
@@ -32,27 +33,28 @@ alg_req = Dict(
         max_dim = Inf, allows_iip = true),
     CubaCuhre() => (nout = Inf, allows_batch = true, min_dim = 2, max_dim = Inf,
         allows_iip = true),
-    ArblibJL() => (nout=1, allows_batch=false, min_dim=1, max_dim=1, allows_iip=true),
+    ArblibJL() => (
+        nout = 1, allows_batch = false, min_dim = 1, max_dim = 1, allows_iip = true)
 )
 
 integrands = [
     (x, p) -> 1.0,
-    (x, p) -> x isa Number ? cos(x) : prod(cos.(x)),
+    (x, p) -> x isa Number ? cos(x) : prod(cos.(x))
 ]
 iip_integrands = [(dx, x, p) -> (dx .= f(x, p)) for f in integrands]
 
 integrands_v = [(x, p, nout) -> collect(1.0:nout)
-    (x, p, nout) -> integrands[2](x, p) * collect(1.0:nout)]
+                (x, p, nout) -> integrands[2](x, p) * collect(1.0:nout)]
 iip_integrands_v = [(dx, x, p, nout) -> (dx .= f(x, p, nout)) for f in integrands_v]
 
 exact_sol = [
     (ndim, nout, lb, ub) -> prod(ub - lb),
-    (ndim, nout, lb, ub) -> prod(sin.(ub) - sin.(lb)),
+    (ndim, nout, lb, ub) -> prod(sin.(ub) - sin.(lb))
 ]
 
 exact_sol_v = [
     (ndim, nout, lb, ub) -> prod(ub - lb) * collect(1.0:nout),
-    (ndim, nout, lb, ub) -> exact_sol[2](ndim, nout, lb, ub) * collect(1:nout),
+    (ndim, nout, lb, ub) -> exact_sol[2](ndim, nout, lb, ub) * collect(1:nout)
 ]
 
 batch_f(f) = (pts, p) -> begin
@@ -67,7 +69,7 @@ end
 batch_iip_f(f) = (fevals, pts, p) -> begin
     ax = axes(pts)
     for i in ax[end]
-        x = pts[ax[begin:(end-1)]..., i]
+        x = pts[ax[begin:(end - 1)]..., i]
         fevals[i] = f(x, p)
     end
     nothing
@@ -270,10 +272,11 @@ end
             for dim in 1:max_dim_test
                 lb, ub = (ones(dim), 3ones(dim))
                 for nout in 1:max_nout_test
-                    prob = IntegralProblem((dx, x, p) -> iip_integrands_v[i](dx, x, p, nout),
+                    prob = IntegralProblem(
+                        (dx, x, p) -> iip_integrands_v[i](dx, x, p, nout),
                         lb, ub, nout = nout)
                     if dim > req.max_dim || dim < req.min_dim || req.nout < nout ||
-                        !req.allows_iip
+                       !req.allows_iip
                         continue
                     end
                     @info "Alg = $(nameof(typeof(alg))), Integrand = $i, Dimension = $dim, Output Dimension = $nout"
@@ -354,7 +357,8 @@ end
 @testset "Allowed keyword test" begin
     f(u, p) = sum(sin.(u))
     prob = IntegralProblem(f, ones(3), 3ones(3))
-    @test_throws Integrals.CommonKwargError((:relztol => 1e-3, :abstol => 1e-3)) solve(prob,
+    @test_throws Integrals.CommonKwargError((:relztol => 1e-3, :abstol => 1e-3)) solve(
+        prob,
         HCubatureJL();
         relztol = 1e-3,
         abstol = 1e-3)

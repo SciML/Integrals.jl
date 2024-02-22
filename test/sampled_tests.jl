@@ -8,7 +8,7 @@ using Integrals, Test
     grid2 = rand(npoints) .* (ub - lb) .+ lb
     grid2 = [lb; sort(grid2); ub]
 
-    grid3 = rand(npoints+1).*(ub-lb) .+ lb # also test odd number of points
+    grid3 = rand(npoints + 1) .* (ub - lb) .+ lb # also test odd number of points
     grid3 = [lb; sort(grid3); ub]
 
     exact_sols = [1 / 6 * (ub^6 - lb^6), sin(ub) - sin(lb)]

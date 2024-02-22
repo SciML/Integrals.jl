@@ -5,7 +5,6 @@ abstract type AbstractSampledIntegralAlgorithm <: SciMLBase.AbstractIntegralAlgo
 
 Struct for evaluating an integral via the trapezoidal rule.
 
-
 Example with sampled data:
 
 ```
@@ -26,7 +25,6 @@ struct TrapezoidalRule <: AbstractSampledIntegralAlgorithm end
 Struct for evaluating an integral via the Simpson's composite 1/3-3/8
 rule over `AbstractRange`s (evenly spaced points) and
 Simpson's composite 1/3 rule for non-equidistant grids.
-
 
 Example with equidistant data:
 

@@ -33,7 +33,7 @@ function Integrals.__solvebp_call(prob::IntegralProblem, alg::Integrals.GaussLeg
         sensealg, domain, p;
         reltol = nothing, abstol = nothing,
         maxiters = nothing) where {C}
-    if !all(isone∘length, domain)
+    if !all(isone ∘ length, domain)
         error("GaussLegendre only accepts one-dimensional quadrature problems.")
     end
     @assert prob.f isa IntegralFunction

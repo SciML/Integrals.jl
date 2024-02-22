@@ -124,13 +124,15 @@ end
 
 function CubaVegas(; flags = 0, seed = 0, minevals = 0, nstart = 1000, nincrease = 500,
         gridno = 0)
-    isnothing(Base.get_extension(@__MODULE__, :IntegralsCubaExt)) && error("CubaVegas requires `using Cuba`")
+    isnothing(Base.get_extension(@__MODULE__, :IntegralsCubaExt)) &&
+        error("CubaVegas requires `using Cuba`")
     return CubaVegas(flags, seed, minevals, nstart, nincrease, gridno)
 end
 
 function CubaSUAVE(; flags = 0, seed = 0, minevals = 0, nnew = 1000, nmin = 2,
         flatness = 25.0)
-    isnothing(Base.get_extension(@__MODULE__, :IntegralsCubaExt)) && error("CubaSUAVE requires `using Cuba`")
+    isnothing(Base.get_extension(@__MODULE__, :IntegralsCubaExt)) &&
+        error("CubaSUAVE requires `using Cuba`")
     return CubaSUAVE(flags, seed, minevals, nnew, nmin, flatness)
 end
 
@@ -139,13 +141,15 @@ function CubaDivonne(; flags = 0, seed = 0, minevals = 0,
         maxchisq = 10.0, mindeviation = 0.25,
         xgiven = zeros(Cdouble, 0, 0),
         nextra = 0, peakfinder = C_NULL)
-    isnothing(Base.get_extension(@__MODULE__, :IntegralsCubaExt)) && error("CubaDivonne requires `using Cuba`")
+    isnothing(Base.get_extension(@__MODULE__, :IntegralsCubaExt)) &&
+        error("CubaDivonne requires `using Cuba`")
     return CubaDivonne(flags, seed, minevals, key1, key2, key3, maxpass, border, maxchisq,
         mindeviation, xgiven, nextra, peakfinder)
 end
 
 function CubaCuhre(; flags = 0, minevals = 0, key = 0)
-    isnothing(Base.get_extension(@__MODULE__, :IntegralsCubaExt)) && error("CubaCuhre requires `using Cuba`")
+    isnothing(Base.get_extension(@__MODULE__, :IntegralsCubaExt)) &&
+        error("CubaCuhre requires `using Cuba`")
     return CubaCuhre(flags, minevals, key)
 end
 
@@ -175,8 +179,9 @@ publisher={Elsevier}
 struct CubatureJLh <: AbstractCubatureJLAlgorithm
     error_norm::Int32
 end
-function CubatureJLh(; error_norm=0)
-    isnothing(Base.get_extension(@__MODULE__, :IntegralsCubatureExt)) && error("CubatureJLh requires `using Cubature`")
+function CubatureJLh(; error_norm = 0)
+    isnothing(Base.get_extension(@__MODULE__, :IntegralsCubatureExt)) &&
+        error("CubatureJLh requires `using Cubature`")
     return CubatureJLh(error_norm)
 end
 
@@ -194,12 +199,11 @@ Defaults to `Cubature.INDIVIDUAL`, other options are
 struct CubatureJLp <: AbstractCubatureJLAlgorithm
     error_norm::Int32
 end
-function CubatureJLp(; error_norm=0)
-    isnothing(Base.get_extension(@__MODULE__, :IntegralsCubatureExt)) && error("CubatureJLp requires `using Cubature`")
+function CubatureJLp(; error_norm = 0)
+    isnothing(Base.get_extension(@__MODULE__, :IntegralsCubatureExt)) &&
+        error("CubatureJLp requires `using Cubature`")
     return CubatureJLp(error_norm)
 end
-
-
 
 """
     ArblibJL(; check_analytic=false, take_prec=false, warn_on_no_convergence=false, opts=C_NULL)
@@ -222,8 +226,10 @@ struct ArblibJL{O} <: AbstractIntegralCExtensionAlgorithm
     warn_on_no_convergence::Bool
     opts::O
 end
-function ArblibJL(; check_analytic=false, take_prec=false, warn_on_no_convergence=false, opts=C_NULL)
-    isnothing(Base.get_extension(@__MODULE__, :IntegralsArblibExt)) && error("ArblibJL requires `using Arblib`")
+function ArblibJL(; check_analytic = false, take_prec = false,
+        warn_on_no_convergence = false, opts = C_NULL)
+    isnothing(Base.get_extension(@__MODULE__, :IntegralsArblibExt)) &&
+        error("ArblibJL requires `using Arblib`")
     return ArblibJL(check_analytic, take_prec, warn_on_no_convergence, opts)
 end
 
@@ -233,14 +239,15 @@ end
 Markov-chain based Vegas algorithm from MCIntegration.jl
 
 Refer to
-[`MCIntegration.integrate`](https://numericaleft.github.io/MCIntegration.jl/dev/lib/montecarlo/#MCIntegration.integrate-Tuple{Function})
+[`MCIntegration.integrate`](https://numericaleft.github.io/MCIntegration.jl/dev/lib/montecarlo/#MCIntegration.integrate-Tuple%7BFunction%7D)
 for documentation on the keywords, which are passed directly to the solver with a set of
 defaults that works for conforming integrands.
 """
-struct VEGASMC{K<:NamedTuple} <: AbstractIntegralExtensionAlgorithm
+struct VEGASMC{K <: NamedTuple} <: AbstractIntegralExtensionAlgorithm
     kws::K
 end
 function VEGASMC(; kws...)
-    isnothing(Base.get_extension(@__MODULE__, :IntegralsMCIntegrationExt)) && error("VEGASMC requires `using MCIntegration`")
+    isnothing(Base.get_extension(@__MODULE__, :IntegralsMCIntegrationExt)) &&
+        error("VEGASMC requires `using MCIntegration`")
     return VEGASMC(NamedTuple(kws))
 end
