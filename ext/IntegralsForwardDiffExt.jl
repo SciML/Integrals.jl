@@ -22,8 +22,8 @@ end
 
 # Manually split for the pushforward
 function Integrals.__solvebp(cache, alg, sensealg, domain,
-        p::Union{D,AbstractArray{<:D}};
-        kwargs...) where {T, V, P, D<:ForwardDiff.Dual{T, V, P}}
+        p::Union{D, AbstractArray{<:D}};
+        kwargs...) where {T, V, P, D <: ForwardDiff.Dual{T, V, P}}
 
     # we need the output type to avoid perturbation confusion while unwrapping nested duals
     # We compute a vector-valued integral of the primal and dual simultaneously

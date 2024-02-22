@@ -28,7 +28,8 @@ function ChainRulesCore.rrule(::typeof(Integrals.__solvebp), cache, alg, senseal
             # zygote doesn't support mutation, so we build an oop pullback
             if sensealg.vjp isa Integrals.ZygoteVJP
                 if cache.f isa BatchIntegralFunction
-                    dx = similar(cache.f.integrand_prototype, size(cache.f.integrand_prototype)[begin:end-1]..., 1)
+                    dx = similar(cache.f.integrand_prototype,
+                        size(cache.f.integrand_prototype)[begin:(end - 1)]..., 1)
                     _f = x -> (cache.f(dx, x, p); dx)
                     # TODO: let the user pass a batched jacobian so we can return a BatchIntegralFunction
                     dfdp_ = function (x, p)
@@ -104,7 +105,7 @@ function ChainRulesCore.rrule(::typeof(Integrals.__solvebp), cache, alg, senseal
             # TODO replace evaluation at endpoint (which anyone can do without Integrals.jl)
             # with integration of dfdx uing the same quadrature
             dlb = cache.f isa BatchIntegralFunction ? -batch_unwrap(_f([lb])) : -_f(lb)
-            dub = cache.f isa BatchIntegralFunction ?  batch_unwrap(_f([ub])) : _f(ub)
+            dub = cache.f isa BatchIntegralFunction ? batch_unwrap(_f([ub])) : _f(ub)
             return (NoTangent(),
                 NoTangent(),
                 NoTangent(),
@@ -128,7 +129,7 @@ function ChainRulesCore.rrule(::typeof(Integrals.__solvebp), cache, alg, senseal
     out, quadrature_adjoint
 end
 
-batch_unwrap(x::AbstractArray) = dropdims(x; dims=ndims(x))
+batch_unwrap(x::AbstractArray) = dropdims(x; dims = ndims(x))
 
 Zygote.@adjoint function Zygote.literal_getproperty(sol::SciMLBase.IntegralSolution,
         ::Val{:u})

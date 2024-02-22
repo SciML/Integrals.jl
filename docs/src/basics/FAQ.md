@@ -40,8 +40,9 @@ For badly-behaved integrands, such as (nearly) singular and highly oscillatory
 functions, most algorithms will fail to converge and either throw an error or
 silently return the incorrect result. In some cases Integrals.jl can provide an
 error code when things go wrong, but otherwise you can always check if the error
-estimate for the integral is less than the requested tolerance, e.g. `sol.resid
-< max(abstol, reltol*norm(sol.u))`. Sometimes using a larger tolerance or higher
+estimate for the integral is less than the requested tolerance, e.g.
+`sol.resid < max(abstol, reltol*norm(sol.u))`.
+Sometimes using a larger tolerance or higher
 precision arithmetic may help.
 
 ## How can I integrate arbitrarily-spaced data?

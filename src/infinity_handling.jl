@@ -37,7 +37,7 @@ function substitute_t(t::Number, lb::Number, ub::Number)
     end
 end
 function substitute_t(t::AbstractVector, lb::AbstractVector, ub::AbstractVector)
-    x = similar(t, typeof(one(eltype(t))*(first(lb)+first(ub))))
+    x = similar(t, typeof(one(eltype(t)) * (first(lb) + first(ub))))
     jac = one(eltype(t))
     for i in eachindex(lb)
         x[i], dj = substitute_t(t[i], lb[i], ub[i])
@@ -58,7 +58,7 @@ function substitute_f(f::F, dt, t, p, lb, ub) where {F}
 end
 
 function substitute_t(t::AbstractVector, lb::Number, ub::Number)
-    x = similar(t, typeof(one(eltype(t))*(lb+ub)))
+    x = similar(t, typeof(one(eltype(t)) * (lb + ub)))
     jac = similar(x)
     for (i, ti) in enumerate(t)
         x[i], jac[i] = substitute_t(ti, lb, ub)
@@ -66,10 +66,11 @@ function substitute_t(t::AbstractVector, lb::Number, ub::Number)
     return x, jac
 end
 function substitute_t(t::AbstractArray, lb::AbstractVector, ub::AbstractVector)
-    x = similar(t, typeof(one(eltype(t))*(first(lb)+first(ub))))
+    x = similar(t, typeof(one(eltype(t)) * (first(lb) + first(ub))))
     jac = similar(x, size(t, ndims(t)))
     for (i, it) in enumerate(axes(t)[end])
-        x[axes(x)[begin:end-1]..., i], jac[i] = substitute_t(t[axes(t)[begin:end-1]..., it], lb, ub)
+        x[axes(x)[begin:(end - 1)]..., i], jac[i] = substitute_t(
+            t[axes(t)[begin:(end - 1)]..., it], lb, ub)
     end
     return x, jac
 end
@@ -77,13 +78,13 @@ end
 function substitute_batchf(f::F, t, p, lb, ub) where {F}
     x, jac = substitute_t(t, lb, ub)
     r = f(x, p)
-    return r .* reshape(jac, ntuple(d -> d==ndims(r) ? length(jac) : 1, ndims(r)))
+    return r .* reshape(jac, ntuple(d -> d == ndims(r) ? length(jac) : 1, ndims(r)))
 end
 function substitute_batchf(f::F, dt, t, p, lb, ub) where {F}
     x, jac = substitute_t(t, lb, ub)
     f(dt, x, p)
     for (i, j) in zip(axes(dt)[end], jac)
-        for idt in CartesianIndices(axes(dt)[begin:end-1])
+        for idt in CartesianIndices(axes(dt)[begin:(end - 1)])
             dt[idt, i] *= j
         end
     end
@@ -95,22 +96,31 @@ function transformation_if_inf(prob, ::Val{true})
     f = prob.f
     bounds = map(substitute_bounds, lb, ub)
     lb_sub = lb isa Number ? first(bounds) : map(first, bounds)
-    ub_sub = ub isa Number ? last(bounds)  : map(last, bounds)
+    ub_sub = ub isa Number ? last(bounds) : map(last, bounds)
     f_sub = if isinplace(prob)
         if f isa BatchIntegralFunction
-            BatchIntegralFunction{true}(let f=f.f; (dt, t, p) -> substitute_batchf(f, dt, t, p, lb, ub); end,
+            BatchIntegralFunction{true}(
+                let f = f.f
+                    (dt, t, p) -> substitute_batchf(f, dt, t, p, lb, ub)
+                end,
                 f.integrand_prototype,
                 max_batch = f.max_batch)
         else
-            IntegralFunction{true}(let f=f.f; (dt, t, p) -> substitute_f(f, dt, t, p, lb, ub); end,
+            IntegralFunction{true}(let f = f.f
+                    (dt, t, p) -> substitute_f(f, dt, t, p, lb, ub)
+                end,
                 f.integrand_prototype)
         end
     else
         if f isa BatchIntegralFunction
-            BatchIntegralFunction{false}(let f=f.f; (t, p) -> substitute_batchf(f, t, p, lb, ub); end,
+            BatchIntegralFunction{false}(let f = f.f
+                    (t, p) -> substitute_batchf(f, t, p, lb, ub)
+                end,
                 f.integrand_prototype)
         else
-            IntegralFunction{false}(let f=f.f; (t, p) -> substitute_f(f, t, p, lb, ub); end,
+            IntegralFunction{false}(let f = f.f
+                    (t, p) -> substitute_f(f, t, p, lb, ub)
+                end,
                 f.integrand_prototype)
         end
     end

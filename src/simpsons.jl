@@ -49,11 +49,13 @@ end
     isodd(j) &&
         return (x[begin + j + 1] - x[begin + j - 1])^3 / (x[begin + j] - x[begin + j - 1]) /
                (x[begin + j + 1] - x[begin + j]) / 6
-    iseven(j) && 
+    iseven(j) &&
         return (x[begin + j] - x[begin + j - 2]) / 6 *
-           (2 - (x[begin + j - 1] - x[begin + j - 2]) / (x[begin + j] - x[begin + j - 1])) +
-           (x[begin + j + 2] - x[begin + j]) / 6 *
-           (2 - (x[begin + j + 2] - x[begin + j + 1]) / (x[begin + j + 1] - x[begin + j]))
+               (2 -
+                (x[begin + j - 1] - x[begin + j - 2]) / (x[begin + j] - x[begin + j - 1])) +
+               (x[begin + j + 2] - x[begin + j]) / 6 *
+               (2 -
+                (x[begin + j + 2] - x[begin + j + 1]) / (x[begin + j + 1] - x[begin + j]))
 end
 
 function find_weights(x::AbstractVector, ::SimpsonsRule)

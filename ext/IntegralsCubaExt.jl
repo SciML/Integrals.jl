@@ -2,8 +2,8 @@ module IntegralsCubaExt
 
 using Integrals, Cuba
 import Integrals: transformation_if_inf,
-    scale_x, scale_x!, CubaVegas, AbstractCubaAlgorithm,
-    CubaSUAVE, CubaDivonne, CubaCuhre
+                  scale_x, scale_x!, CubaVegas, AbstractCubaAlgorithm,
+                  CubaSUAVE, CubaDivonne, CubaCuhre
 
 function Integrals.__solvebp_call(prob::IntegralProblem, alg::AbstractCubaAlgorithm,
         sensealg,
@@ -22,7 +22,8 @@ function Integrals.__solvebp_call(prob::IntegralProblem, alg::AbstractCubaAlgori
         nvec = min(maxiters, prob.f.max_batch)
         # nvec == 1 in Cuba will change vectors to matrices, so we won't support it when
         # batching
-        nvec > 1 || throw(ArgumentError("BatchIntegralFunction must take multiple batch points"))
+        nvec > 1 ||
+            throw(ArgumentError("BatchIntegralFunction must take multiple batch points"))
 
         if mid isa Real
             _x = zeros(typeof(mid), nvec)
