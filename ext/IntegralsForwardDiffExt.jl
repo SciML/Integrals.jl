@@ -3,27 +3,37 @@ using Integrals
 isdefined(Base, :get_extension) ? (using ForwardDiff) : (using ..ForwardDiff)
 ### Forward-Mode AD Intercepts
 
-#= Direct AD on solvers with QuadGK and HCubature
-# incompatible with iip since types must change
-function Integrals.__solvebp(cache, alg::QuadGKJL, sensealg, domain,
-        p::AbstractArray{<:ForwardDiff.Dual{T, V, P}, N};
-        kwargs...) where {T, V, P, N}
-    Integrals.__solvebp_call(cache, alg, sensealg, domain, p; kwargs...)
+# Default to direct AD on solvers
+function Integrals.__solvebp(cache, alg, sensealg, domain,
+        p::Union{D,AbstractArray{<:D}};
+        kwargs...) where {T, V, P, D<:ForwardDiff.Dual{T, V, P}}
+
+    if isinplace(cache.f)
+        prototype = cache.f.integrand_prototype
+        elt = eltype(prototype)
+        ForwardDiff.can_dual(elt) || throw(ArgumentError("ForwardDiff of in-place integrands only supports prototypes with real elements"))
+        dprototype = similar(prototype, replace_dualvaltype(D, elt))
+        df = if cache.f isa BatchIntegralFunction
+            BatchIntegralFunction{true}(cache.f.f, dprototype)
+        else
+            IntegralFunction{true}(cache.f.f, dprototype)
+        end
+        prob = Integrals.build_problem(cache)
+        dprob = remake(prob, f = df)
+        dcache = init(dprob, alg; sensealg = sensealg, do_inf_transformation=Val(false), kwargs...)
+        Integrals.__solvebp_call(dcache, alg, sensealg, domain, p; kwargs...)
+    else
+        Integrals.__solvebp_call(cache, alg, sensealg, domain, p; kwargs...)
+    end
 end
 
-function Integrals.__solvebp(cache, alg::HCubatureJL, sensealg, domain,
-        p::AbstractArray{<:ForwardDiff.Dual{T, V, P}, N};
-        kwargs...) where {T, V, P, N}
-    Integrals.__solvebp_call(cache, alg, sensealg, domain, p; kwargs...)
-end
-=#
 
 # TODO: add the pushforward for derivative w.r.t lb, and ub (and then combinations?)
 
 # Manually split for the pushforward
-function Integrals.__solvebp(cache, alg, sensealg, domain,
-        p::Union{D, AbstractArray{<:D}};
-        kwargs...) where {T, V, P, D <: ForwardDiff.Dual{T, V, P}}
+function Integrals.__solvebp(cache, alg::Integrals.AbstractIntegralCExtensionAlgorithm, sensealg, domain,
+        p::Union{D,AbstractArray{<:D}};
+        kwargs...) where {T, V, P, D<:ForwardDiff.Dual{T, V, P}}
 
     # we need the output type to avoid perturbation confusion while unwrapping nested duals
     # We compute a vector-valued integral of the primal and dual simultaneously
@@ -73,6 +83,7 @@ function Integrals.__solvebp(cache, alg, sensealg, domain,
         end
     end
 
+    DT <: Real || throw(ArgumentError("differentiating algorithms in C"))
     ForwardDiff.can_dual(elt) || ForwardDiff.throw_cannot_dual(elt)
     rawp = p isa D ? reinterpret(V, [p]) : copy(reinterpret(V, vec(p)))
 

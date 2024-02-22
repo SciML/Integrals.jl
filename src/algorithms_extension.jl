@@ -1,8 +1,9 @@
 ## Extension Algorithms
 
 abstract type AbstractIntegralExtensionAlgorithm <: SciMLBase.AbstractIntegralAlgorithm end
+abstract type AbstractIntegralCExtensionAlgorithm <: AbstractIntegralExtensionAlgorithm end
 
-abstract type AbstractCubaAlgorithm <: AbstractIntegralExtensionAlgorithm end
+abstract type AbstractCubaAlgorithm <: AbstractIntegralCExtensionAlgorithm end
 
 """
     CubaVegas()
@@ -152,7 +153,7 @@ function CubaCuhre(; flags = 0, minevals = 0, key = 0)
     return CubaCuhre(flags, minevals, key)
 end
 
-abstract type AbstractCubatureJLAlgorithm <: AbstractIntegralExtensionAlgorithm end
+abstract type AbstractCubatureJLAlgorithm <: AbstractIntegralCExtensionAlgorithm end
 
 """
     CubatureJLh(; error_norm=Cubature.INDIVIDUAL)
@@ -219,7 +220,7 @@ documentation for additional details the algorithm arguments and on implementing
 high-precision integrands. Additionally, the error estimate is included in the return value
 of the integral, representing a ball.
 """
-struct ArblibJL{O} <: AbstractIntegralExtensionAlgorithm
+struct ArblibJL{O} <: AbstractIntegralCExtensionAlgorithm
     check_analytic::Bool
     take_prec::Bool
     warn_on_no_convergence::Bool
