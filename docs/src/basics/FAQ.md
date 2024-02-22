@@ -64,7 +64,7 @@ Otherwise, feel free to open an issue or pull request.
 While bugs are not out of the question, certain algorithms, especially those implemented in C, are not compatible with arbitrary Julia types and have to return specific numeric types or arrays thereof.
 In some cases, such as [`ArblibJL`](@ref), it is also expected that the integrand work with a custom quadrature point type.
 Moreover, some algorithms, such as [`VEGAS`](@ref), only support scalar integrands.
-For more details see the [solver page](solvers).
+For more details see the [solver page](@ref solvers).
 
 ## Can I take derivatives with respect to the limits of integration?
 
