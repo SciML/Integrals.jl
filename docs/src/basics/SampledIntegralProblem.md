@@ -12,7 +12,7 @@ Say, by some means we have generated a dataset `x` and `y`:
 ```@example 1
 using Integrals # hide
 f = x -> x^2
-x = range(0, 1, length=20)
+x = range(0, 1, length = 20)
 y = f.(x)
 ```
 
@@ -63,9 +63,9 @@ using Integrals # hide
 f1 = x -> x^2
 f2 = x -> x^3
 f3 = x -> x^4
-x = range(0, 1, length=20)
+x = range(0, 1, length = 20)
 y = [f1.(x) f2.(x) f3.(x)]
-problem = SampledIntegralProblem(y, x; dim=1)
+problem = SampledIntegralProblem(y, x; dim = 1)
 method = SimpsonsRule()
 solve(problem, method)
 ```

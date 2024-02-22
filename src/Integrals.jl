@@ -66,7 +66,6 @@ end
 # Give a layer to intercept with AD
 __solvebp(args...; kwargs...) = __solvebp_call(args...; kwargs...)
 
-
 function quadgk_prob_types(f, lb::T, ub::T, p, nrm) where {T}
     DT = float(T)   # we need to be careful to infer the same result as `evalrule`
     RT = Base.promote_op(*, DT, Base.promote_op(f, DT, typeof(p)))    # kernel
@@ -106,10 +105,10 @@ function __solvebp_call(cache::IntegralCache, alg::QuadGKJL, sensealg, domain, p
                 BatchIntegrand((y, x) -> prob.f(y, x, p), similar(bu))
             else
                 fsize = size(bu)[begin:(end - 1)]
-                BatchIntegrand{Array{eltype(bu),ndims(bu)-1}}() do y, x
+                BatchIntegrand{Array{eltype(bu), ndims(bu) - 1}}() do y, x
                     y_ = similar(bu, fsize..., length(y))
                     prob.f(y_, x, p)
-                    map!(collect, y, eachslice(y_; dims=ndims(bu)))
+                    map!(collect, y, eachslice(y_; dims = ndims(bu)))
                     return nothing
                 end
             end
@@ -121,8 +120,8 @@ function __solvebp_call(cache::IntegralCache, alg::QuadGKJL, sensealg, domain, p
             f = if u isa AbstractVector
                 BatchIntegrand((y, x) -> y .= prob.f(x, p), u)
             else
-                BatchIntegrand{Array{eltype(u),ndims(u)-1}}() do y, x
-                    map!(collect, y, eachslice(prob.f(x, p); dims=ndims(u)))
+                BatchIntegrand{Array{eltype(u), ndims(u) - 1}}() do y, x
+                    map!(collect, y, eachslice(prob.f(x, p); dims = ndims(u)))
                     return nothing
                 end
             end
@@ -134,7 +133,8 @@ function __solvebp_call(cache::IntegralCache, alg::QuadGKJL, sensealg, domain, p
         if isinplace(prob)
             result = prob.f.integrand_prototype * mid   # result may have different units than prototype
             f = (y, x) -> prob.f(y, x, p)
-            val, err = quadgk!(f, result, lb, ub, segbuf = cache.cacheval, maxevals = maxiters,
+            val, err = quadgk!(
+                f, result, lb, ub, segbuf = cache.cacheval, maxevals = maxiters,
                 rtol = reltol, atol = abstol, order = alg.order, norm = alg.norm)
             SciMLBase.build_solution(prob, alg, val, err, retcode = ReturnCode.Success)
         else
@@ -189,8 +189,9 @@ function __solvebp_call(prob::IntegralProblem, alg::VEGAS, sensealg, domain, p;
             # This is an ugly hack that is compatible with both
             f = x -> (prob.f(y, eltype(x) <: SubArray ? parent(first(x)) : x', p); vec(y))
         else
-            y = prob.f(mid isa Number ? typeof(mid)[] :
-                       Matrix{eltype(mid)}(undef, length(mid), 0),
+            y = prob.f(
+                mid isa Number ? typeof(mid)[] :
+                Matrix{eltype(mid)}(undef, length(mid), 0),
                 p)
             f = x -> prob.f(eltype(x) <: SubArray ? parent(first(x)) : x', p)
         end
@@ -221,7 +222,8 @@ function __solvebp_call(prob::IntegralProblem, alg::VEGAS, sensealg, domain, p;
     SciMLBase.build_solution(prob, alg, val, err, chi = chi, retcode = ReturnCode.Success)
 end
 
-export QuadGKJL, HCubatureJL, VEGAS, VEGASMC, GaussLegendre, QuadratureRule, TrapezoidalRule, SimpsonsRule
+export QuadGKJL, HCubatureJL, VEGAS, VEGASMC, GaussLegendre, QuadratureRule,
+       TrapezoidalRule, SimpsonsRule
 export CubaVegas, CubaSUAVE, CubaDivonne, CubaCuhre
 export CubatureJLh, CubatureJLp
 export ArblibJL

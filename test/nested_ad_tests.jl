@@ -11,7 +11,7 @@ my_solution = my_integration(my_parameters)
 @test ForwardDiff.jacobian(my_integration, my_parameters) == [0.0 8.0]
 @test ForwardDiff.jacobian(x -> ForwardDiff.jacobian(my_integration, x), my_parameters) ==
       [0.0 0.0
-    0.0 4.0]
+       0.0 4.0]
 
 ff(x, p) = sum(sin.(x .* p))
 lb = ones(2)

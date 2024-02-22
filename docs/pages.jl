@@ -6,5 +6,5 @@ pages = ["index.md",
         "basics/SampledIntegralProblem.md",
         "basics/solve.md",
         "basics/FAQ.md"],
-    "Solvers" => Any["solvers/IntegralSolvers.md"],
+    "Solvers" => Any["solvers/IntegralSolvers.md"]
 ]
