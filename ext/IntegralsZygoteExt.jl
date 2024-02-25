@@ -89,7 +89,6 @@ function ChainRulesCore.rrule(::typeof(Integrals.__solvebp), cache, alg, senseal
         dp_cache = init(dp_prob,
             alg;
             sensealg = sensealg,
-            do_inf_transformation = Val(false),
             cache.kwargs...)
 
         project_p = ProjectTo(p)

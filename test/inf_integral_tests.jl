@@ -202,7 +202,6 @@ for (alg, req) in pairs(alg_req), (j, (; f, domain, solution)) in enumerate(prob
     do_tests(; f = bfiip, domain, solution, alg, abstol, reltol)
 end
 
-
 @testset "Caching interface" begin
     # two distinct semi-infinite transformations should still work as expected
     (; f, domain, solution) = problems[8]
@@ -210,7 +209,7 @@ end
     cache = init(prob, QuadGKJL(); abstol, reltol)
     sol = solve!(cache).u
     @test abs(only(sol) - solution) < max(abstol, reltol * abs(solution))
-    (;    domain, solution) = problems[9]
+    (; domain, solution) = problems[9]
     cache.domain = domain
     sol = solve!(cache).u
     @test abs(only(sol) - solution) < max(abstol, reltol * abs(solution))

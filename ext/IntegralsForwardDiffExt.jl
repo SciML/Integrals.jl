@@ -21,7 +21,7 @@ function Integrals.__solvebp(cache, alg, sensealg, domain,
         prob = Integrals.build_problem(cache)
         dprob = remake(prob, f = df)
         dcache = init(
-            dprob, alg; sensealg = sensealg, do_inf_transformation = Val(false), kwargs...)
+            dprob, alg; sensealg = sensealg, kwargs...)
         Integrals.__solvebp_call(dcache, alg, sensealg, domain, p; kwargs...)
     else
         Integrals.__solvebp_call(cache, alg, sensealg, domain, p; kwargs...)

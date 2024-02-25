@@ -46,12 +46,12 @@ function substitute_bv(v2ujac, v::AbstractArray, lb::Number, ub::Number)
 end
 function substitute_bv(v2ujac, v::AbstractArray, lb::AbstractVector, ub::AbstractVector)
     x = similar(v, typeof(one(eltype(v)) * (first(lb) + first(ub))))
-    jac = similar(v, typeof(zero(eltype(v))*prod(lb)), size(v)[end])
-    idx = CartesianIndices(axes(v)[begin:end-1])
+    jac = similar(v, typeof(zero(eltype(v)) * prod(lb)), size(v)[end])
+    idx = CartesianIndices(axes(v)[begin:(end - 1)])
     for i in axes(v)[end]
         _jac = one(eltype(jac))
         for (ii, l, u) in zip(idx, lb, ub)
-            x[ii, i], j = v2ujac(v[ii, i] , l, u)
+            x[ii, i], j = v2ujac(v[ii, i], l, u)
             _jac *= j
         end
         jac[i] = _jac

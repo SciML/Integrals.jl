@@ -44,7 +44,9 @@ integrands = [
 iip_integrands = [(dx, x, p) -> (dx .= f(x, p)) for f in integrands]
 
 integrands_v = [(x, p, nout) -> collect(1.0:nout)
-                let f=integrands[2]; (x, p, nout) -> f(x, p) * collect(1.0:nout); end]
+                let f = integrands[2]
+                    (x, p, nout) -> f(x, p) * collect(1.0:nout)
+                end]
 iip_integrands_v = [(dx, x, p, nout) -> (dx .= f(x, p, nout)) for f in integrands_v]
 
 exact_sol = [
@@ -223,7 +225,9 @@ end
     for (alg, req) in pairs(alg_req)
         for i in 1:length(integrands_v)
             for nout in 1:max_nout_test
-                prob = IntegralProblem(let f=integrands_v[i], nout=nout; (x, p) -> f(x, p, nout); end, lb, ub,
+                prob = IntegralProblem(let f = integrands_v[i], nout = nout
+                        (x, p) -> f(x, p, nout)
+                    end, lb, ub,
                     nout = nout)
                 if req.min_dim > 1 || req.nout < nout
                     continue
@@ -250,7 +254,9 @@ end
                     if dim > req.max_dim || dim < req.min_dim || req.nout < nout
                         continue
                     end
-                    prob = IntegralProblem(let f=integrands_v[i], nout=nout; (x, p) -> f(x, p, nout); end, lb, ub,
+                    prob = IntegralProblem(let f = integrands_v[i], nout = nout
+                            (x, p) -> f(x, p, nout)
+                        end, lb, ub,
                         nout = nout)
                     @info "Alg = $(nameof(typeof(alg))), Integrand = $i, Dimension = $dim, Output Dimension = $nout"
                     sol = @inferred solve(prob, alg, reltol = reltol, abstol = abstol)
@@ -272,8 +278,9 @@ end
             for dim in 1:max_dim_test
                 lb, ub = (ones(dim), 3ones(dim))
                 for nout in 1:max_nout_test
-                    prob = IntegralProblem(let f=iip_integrands_v[i];
-                        (dx, x, p) -> f(dx, x, p, nout); end,
+                    prob = IntegralProblem(let f = iip_integrands_v[i]
+                            (dx, x, p) -> f(dx, x, p, nout)
+                        end,
                         lb, ub, nout = nout)
                     if dim > req.max_dim || dim < req.min_dim || req.nout < nout ||
                        !req.allows_iip

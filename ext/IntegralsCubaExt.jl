@@ -2,8 +2,8 @@ module IntegralsCubaExt
 
 using Integrals, Cuba
 import Integrals: transformation_if_inf,
-    scale_x, scale_x!, CubaVegas, AbstractCubaAlgorithm,
-    CubaSUAVE, CubaDivonne, CubaCuhre
+                  scale_x, scale_x!, CubaVegas, AbstractCubaAlgorithm,
+                  CubaSUAVE, CubaDivonne, CubaCuhre
 
 function Integrals.__solvebp_call(prob::IntegralProblem, alg::AbstractCubaAlgorithm,
         sensealg,
