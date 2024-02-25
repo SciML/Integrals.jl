@@ -148,11 +148,11 @@ end
 
 do_tests = function (; f, domain, alg, abstol, reltol, solution)
     prob = IntegralProblem(f, domain)
-    sol = solve(prob, alg; reltol, abstol, do_inf_transformation = Val(true))
+    sol = solve(prob, alg; reltol, abstol)
     @test abs(only(sol) - solution) < max(abstol, reltol * abs(solution))
-    cache = @test_nowarn @inferred init(prob, alg; do_inf_transformation = Val(true))
+    cache = @test_nowarn @inferred init(prob, alg)
     @test_nowarn @inferred solve!(cache)
-    @test_nowarn @inferred solve(prob, alg; do_inf_transformation = Val(true))
+    @test_nowarn @inferred solve(prob, alg)
 end
 
 # IntegralFunction{false}
@@ -200,4 +200,18 @@ for (alg, req) in pairs(alg_req), (j, (; f, domain, solution)) in enumerate(prob
     @info "Batched, iip infinity test" alg=nameof(typeof(alg)) problem=j
     bfiip = BatchIntegralFunction((y, x, p) -> batch_helper!(f, y, x, p), zeros(0))
     do_tests(; f = bfiip, domain, solution, alg, abstol, reltol)
+end
+
+
+@testset "Caching interface" begin
+    # two distinct semi-infinite transformations should still work as expected
+    (; f, domain, solution) = problems[8]
+    prob = IntegralProblem(f, domain)
+    cache = init(prob, QuadGKJL(); abstol, reltol)
+    sol = solve!(cache).u
+    @test abs(only(sol) - solution) < max(abstol, reltol * abs(solution))
+    (;    domain, solution) = problems[9]
+    cache.domain = domain
+    sol = solve!(cache).u
+    @test abs(only(sol) - solution) < max(abstol, reltol * abs(solution))
 end
