@@ -19,15 +19,17 @@ function SciMLBase.init(prob::IntegralProblem{iip},
         sensealg = ReCallVJP(ZygoteVJP()),
         do_inf_transformation = nothing, kwargs...) where {iip}
     checkkwargs(kwargs...)
-    prob = transformation_if_inf(prob, do_inf_transformation)
-    cacheval = init_cacheval(alg, prob)
+    do_inf_transformation === nothing ||
+        @warn "do_inf_transformation is deprecated. All integral problems are transformed"
+    _alg = alg isa ChangeOfVariables ? alg : ChangeOfVariables(transformation_if_inf, alg)
+    cacheval = init_cacheval(_alg, prob)
 
     IntegralCache{iip,
         typeof(prob.f),
         typeof(prob.domain),
         typeof(prob.p),
         typeof(prob.kwargs),
-        typeof(alg),
+        typeof(_alg),
         typeof(sensealg),
         typeof(kwargs),
         typeof(cacheval)}(Val(iip),
@@ -35,7 +37,7 @@ function SciMLBase.init(prob::IntegralProblem{iip},
         prob.domain,
         prob.p,
         prob.kwargs,
-        alg,
+        _alg,
         sensealg,
         kwargs,
         cacheval)
@@ -102,7 +104,7 @@ function SciMLBase.solve(prob::IntegralProblem,
 end
 
 function SciMLBase.solve!(cache::IntegralCache)
-    __solvebp(cache, cache.alg, cache.sensealg, cache.domain, cache.p;
+    __solve(cache, cache.alg, cache.sensealg, cache.domain, cache.p;
         cache.kwargs...)
 end
 
