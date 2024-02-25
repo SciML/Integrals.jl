@@ -34,7 +34,7 @@ alg_req = Dict(
     CubaCuhre() => (nout = Inf, allows_batch = true, min_dim = 2, max_dim = Inf,
         allows_iip = true),
     ArblibJL() => (
-        nout = 1, allows_batch = false, min_dim = 1, max_dim = 1, allows_iip = true)
+        nout = 1, allows_batch = false, min_dim = 1, max_dim = 1, allows_iip = false)
 )
 
 integrands = [
@@ -44,7 +44,7 @@ integrands = [
 iip_integrands = [(dx, x, p) -> (dx .= f(x, p)) for f in integrands]
 
 integrands_v = [(x, p, nout) -> collect(1.0:nout)
-                (x, p, nout) -> integrands[2](x, p) * collect(1.0:nout)]
+                let f=integrands[2]; (x, p, nout) -> f(x, p) * collect(1.0:nout); end]
 iip_integrands_v = [(dx, x, p, nout) -> (dx .= f(x, p, nout)) for f in integrands_v]
 
 exact_sol = [
@@ -103,7 +103,7 @@ end
         for i in 1:length(integrands)
             prob = IntegralProblem(integrands[i], lb, ub)
             @info "Alg = $(nameof(typeof(alg))), Integrand = $i, Dimension = $dim, Output Dimension = $nout"
-            sol = solve(prob, alg, reltol = reltol, abstol = abstol)
+            sol = @inferred solve(prob, alg, reltol = reltol, abstol = abstol)
             @test sol.alg == alg
             @test sol.u≈exact_sol[i](dim, nout, lb, ub) rtol=1e-2
         end
@@ -121,7 +121,7 @@ end
                     continue
                 end
                 @info "Alg = $(nameof(typeof(alg))), Integrand = $i, Dimension = $dim, Output Dimension = $nout"
-                sol = solve(prob, alg, reltol = reltol, abstol = abstol)
+                sol = @inferred solve(prob, alg, reltol = reltol, abstol = abstol)
                 @test sol.alg == alg
                 @test sol.u≈exact_sol[i](dim, nout, lb, ub) rtol=1e-2
             end
@@ -140,7 +140,7 @@ end
                     continue
                 end
                 @info "Alg = $(nameof(typeof(alg))), Integrand = $i, Dimension = $dim, Output Dimension = $nout"
-                sol = solve(prob, alg, reltol = reltol, abstol = abstol)
+                sol = @inferred solve(prob, alg, reltol = reltol, abstol = abstol)
                 @test sol.alg == alg
                 if sol.u isa Number
                     @test sol.u≈exact_sol[i](dim, nout, lb, ub) rtol=1e-2
@@ -162,7 +162,7 @@ end
                 continue
             end
             @info "Alg = $(nameof(typeof(alg))), Integrand = $i, Dimension = $dim, Output Dimension = $nout"
-            sol = solve(prob, alg, reltol = reltol, abstol = abstol)
+            sol = @inferred solve(prob, alg, reltol = reltol, abstol = abstol)
             @test sol.alg == alg
             @test sol.u[1]≈exact_sol[i](dim, nout, lb, ub) rtol=1e-2
         end
@@ -180,7 +180,7 @@ end
                     continue
                 end
                 @info "Alg = $(nameof(typeof(alg))), Integrand = $i, Dimension = $dim, Output Dimension = $nout"
-                sol = solve(prob, alg, reltol = reltol, abstol = abstol)
+                sol = @inferred solve(prob, alg, reltol = reltol, abstol = abstol)
                 @test sol.alg == alg
                 if sol.u isa Number
                     @test sol.u≈exact_sol[i](dim, nout, lb, ub) rtol=1e-2
@@ -204,7 +204,7 @@ end
                     continue
                 end
                 @info "Alg = $(nameof(typeof(alg))), Integrand = $i, Dimension = $dim, Output Dimension = $nout"
-                sol = solve(prob, alg, reltol = reltol, abstol = abstol)
+                sol = @inferred solve(prob, alg, reltol = reltol, abstol = abstol)
                 @test sol.alg == alg
                 if sol.u isa Number
                     @test sol.u≈exact_sol[i](dim, nout, lb, ub) rtol=1e-2
@@ -223,13 +223,13 @@ end
     for (alg, req) in pairs(alg_req)
         for i in 1:length(integrands_v)
             for nout in 1:max_nout_test
-                prob = IntegralProblem((x, p) -> integrands_v[i](x, p, nout), lb, ub,
+                prob = IntegralProblem(let f=integrands_v[i], nout=nout; (x, p) -> f(x, p, nout); end, lb, ub,
                     nout = nout)
                 if req.min_dim > 1 || req.nout < nout
                     continue
                 end
                 @info "Alg = $(nameof(typeof(alg))), Integrand = $i, Dimension = $dim, Output Dimension = $nout"
-                sol = solve(prob, alg, reltol = reltol, abstol = abstol)
+                sol = @inferred solve(prob, alg, reltol = reltol, abstol = abstol)
                 @test sol.alg == alg
                 if nout == 1
                     @test sol.u[1]≈exact_sol_v[i](dim, nout, lb, ub)[1] rtol=1e-2
@@ -250,10 +250,10 @@ end
                     if dim > req.max_dim || dim < req.min_dim || req.nout < nout
                         continue
                     end
-                    prob = IntegralProblem((x, p) -> integrands_v[i](x, p, nout), lb, ub,
+                    prob = IntegralProblem(let f=integrands_v[i], nout=nout; (x, p) -> f(x, p, nout); end, lb, ub,
                         nout = nout)
                     @info "Alg = $(nameof(typeof(alg))), Integrand = $i, Dimension = $dim, Output Dimension = $nout"
-                    sol = solve(prob, alg, reltol = reltol, abstol = abstol)
+                    sol = @inferred solve(prob, alg, reltol = reltol, abstol = abstol)
                     @test sol.alg == alg
                     if nout == 1
                         @test sol.u[1]≈exact_sol_v[i](dim, nout, lb, ub)[1] rtol=1e-2
@@ -272,15 +272,15 @@ end
             for dim in 1:max_dim_test
                 lb, ub = (ones(dim), 3ones(dim))
                 for nout in 1:max_nout_test
-                    prob = IntegralProblem(
-                        (dx, x, p) -> iip_integrands_v[i](dx, x, p, nout),
+                    prob = IntegralProblem(let f=iip_integrands_v[i];
+                        (dx, x, p) -> f(dx, x, p, nout); end,
                         lb, ub, nout = nout)
                     if dim > req.max_dim || dim < req.min_dim || req.nout < nout ||
                        !req.allows_iip
                         continue
                     end
                     @info "Alg = $(nameof(typeof(alg))), Integrand = $i, Dimension = $dim, Output Dimension = $nout"
-                    sol = solve(prob, alg, reltol = reltol, abstol = abstol)
+                    sol = @inferred solve(prob, alg, reltol = reltol, abstol = abstol)
                     @test sol.alg == alg
                     if nout == 1
                         @test sol.u[1]≈exact_sol_v[i](dim, nout, lb, ub)[1] rtol=1e-2
@@ -304,7 +304,7 @@ end
                 continue
             end
             @info "Alg = $(nameof(typeof(alg))), Integrand = $i, Dimension = $dim, Output Dimension = $nout"
-            sol = solve(prob, alg, reltol = reltol, abstol = abstol)
+            sol = @inferred solve(prob, alg, reltol = reltol, abstol = abstol)
             @test sol.alg == alg
             @test sol.u≈exact_sol_v[i](dim, nout, lb, ub) rtol=1e-2
         end
@@ -325,7 +325,7 @@ end
                     continue
                 end
                 @info "Alg = $(nameof(typeof(alg))), Integrand = $i, Dimension = $dim, Output Dimension = $nout"
-                sol = solve(prob, alg, reltol = reltol, abstol = abstol)
+                sol = @inferred solve(prob, alg, reltol = reltol, abstol = abstol)
                 @test sol.alg == alg
                 @test sol.u≈exact_sol_v[i](dim, nout, lb, ub) rtol=1e-2
             end
@@ -346,7 +346,7 @@ end
                     continue
                 end
                 @info "Alg = $(nameof(typeof(alg))), Integrand = $i, Dimension = $dim, Output Dimension = $nout"
-                sol = solve(prob, alg, reltol = reltol, abstol = abstol)
+                sol = @inferred solve(prob, alg, reltol = reltol, abstol = abstol)
                 @test sol.alg == alg
                 @test sol.u≈exact_sol_v[i](dim, nout, lb, ub) rtol=1e-2
             end
