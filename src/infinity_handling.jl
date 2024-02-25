@@ -29,8 +29,8 @@ function substitute_f(f::IntegralFunction{true}, v2ujac, lb, ub)
     vol = prod((ub - lb) / 2) # just to get the type of the jacobian determinant
     IntegralFunction{true}(prototype * vol) do y, v, p
         u, jac = substitute_v(v2ujac, v, lb, ub)
-        _f(prototype, u, p)
-        y .= prototype .* jac
+        _y = _evaluate!(f, prototype, u, p)
+        y .= _y .* jac
         return
     end
 end
@@ -59,7 +59,7 @@ function substitute_bv(v2ujac, v::AbstractArray, lb::AbstractVector, ub::Abstrac
     return x, jac
 end
 
-function substitute_f(f::BatchIntegralFunction{false}, v2ujac::F, lb, ub) where {F}
+function substitute_f(f::BatchIntegralFunction{false}, v2ujac, lb, ub)
     _f = f.f
     BatchIntegralFunction{false}(f.integrand_prototype, max_batch = f.max_batch) do v, p
         u, jac = substitute_bv(v2ujac, v, lb, ub)
@@ -67,21 +67,23 @@ function substitute_f(f::BatchIntegralFunction{false}, v2ujac::F, lb, ub) where 
         return y .* reshape(jac, ntuple(d -> d == ndims(y) ? length(jac) : 1, ndims(y)))
     end
 end
-function substitute_f(f::BatchIntegralFunction{true}, v2ujac::F, lb, ub) where {F}
+function substitute_f(f::BatchIntegralFunction{true}, v2ujac, lb, ub)
     _f = f.f
     prototype = similar(f.integrand_prototype)
     vol = prod((ub - lb) / 2) # just to get the type of the jacobian determinant
     BatchIntegralFunction{true}(prototype * vol, max_batch = f.max_batch) do y, v, p
         u, jac = substitute_bv(v2ujac, v, lb, ub)
         _prototype = similar(prototype, size(y))
-        _f(_prototype, u, p)
-        for (i, j) in zip(axes(y)[end], jac)
-            for iy in CartesianIndices(axes(y)[begin:(end - 1)])
-                y[iy, i] = j * _prototype[iy, i]
-            end
-        end
+        _y = _evaluate!(_f, _prototype, u, p)
+        y .= _y .* reshape(jac, ntuple(d -> d == ndims(y) ? length(jac) : 1, ndims(y)))
         return
     end
+end
+
+# we need this function for autodiff compatibility where internal buffers need special types
+function _evaluate!(f, y, u, p)
+    f(y, u, p)
+    return y
 end
 
 # specific changes of variables

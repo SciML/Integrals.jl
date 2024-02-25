@@ -3,6 +3,12 @@ using Integrals
 isdefined(Base, :get_extension) ? (using ForwardDiff) : (using ..ForwardDiff)
 ### Forward-Mode AD Intercepts
 
+function Integrals._evaluate!(f, y, u, p::Union{D, AbstractArray{<:D}})  where {T, V, P, D <: ForwardDiff.Dual{T, V, P}}
+    dy = similar(y, replace_dualvaltype(eltype(p), eltype(y)))
+    f(dy, u, p)
+    return dy
+end
+
 # Default to direct AD on solvers
 function Integrals.__solvebp(cache, alg, sensealg, domain,
         p::Union{D, AbstractArray{<:D}};
@@ -90,13 +96,11 @@ function Integrals.__solvebp(
 
     prob = Integrals.build_problem(cache)
     dp_prob = remake(prob, f = dfdp, p = rawp)
-    # the infinity transformation was already applied to f so we don't apply it to dfdp
     dp_cache = init(dp_prob,
         alg;
         sensealg = sensealg,
-        do_inf_transformation = Val(false),
         cache.kwargs...)
-    dual = Integrals.__solvebp_call(dp_cache, alg, sensealg, domain, rawp; kwargs...)
+    dual = solve!(dp_cache)
 
     res = reinterpret(reshape, DT, dual.u)
     # unwrap the dual when the primal would return a scalar

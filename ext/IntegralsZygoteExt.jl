@@ -14,6 +14,36 @@ ChainRulesCore.@non_differentiable Integrals.checkkwargs(kwargs...)
 ChainRulesCore.@non_differentiable Integrals.isinplace(f, args...)    # fixes #99
 ChainRulesCore.@non_differentiable Integrals.init_cacheval(alg, prob)
 
+function ChainRulesCore.rrule(::typeof(Integrals.transformation_if_inf), f, domain)
+    function transformation_if_inf_pullback(Δ)
+        return NoTangent(), Δ...
+    end
+    return Integrals.transformation_if_inf(f, domain), transformation_if_inf_pullback
+end
+
+# we will need to implement the following adjoints when we compute ∂f/∂u
+function ChainRulesCore.rrule(::typeof(Integrals.substitute_v), args...)
+    function substitute_v_pullback(_)
+        return NoTangent(), ntuple(_ -> NoTangent(), length(args))...
+    end
+    return Integrals.substitute_v(args...), substitute_v_pullback
+end
+function ChainRulesCore.rrule(::typeof(Integrals.substitute_bv), args...)
+    function substitute_bv_pullback(_)
+        return NoTangent(), ntuple(_ -> NoTangent(), length(args))...
+    end
+    return Integrals.substitute_bv(args...), substitute_bv_pullback
+end
+function ChainRulesCore.rrule(::typeof(Integrals._evaluate!), f, y, u, p)
+    out, back = Zygote.pullback(y, u, p) do y, u, p
+        b = Zygote.Buffer(y)
+        f(b, u, p)
+        return copy(b)
+    end
+    out, Δ -> (NoTangent(), NoTangent(), back(Δ)...)
+end
+
+
 function ChainRulesCore.rrule(::typeof(Integrals.__solvebp), cache, alg, sensealg, domain,
         p;
         kwargs...)
@@ -92,12 +122,7 @@ function ChainRulesCore.rrule(::typeof(Integrals.__solvebp), cache, alg, senseal
             cache.kwargs...)
 
         project_p = ProjectTo(p)
-        dp = project_p(Integrals.__solvebp_call(dp_cache,
-            alg,
-            sensealg,
-            domain,
-            p;
-            kwargs...).u)
+        dp = project_p(solve!(dp_cache).u)
 
         lb, ub = domain
         if lb isa Number
