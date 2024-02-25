@@ -15,7 +15,8 @@ function Integrals.__solvebp_call(
 
     if isinplace(prob)
         res = Acb(0)
-        y_ = similar(prob.f.integrand_prototype, typeof(res))
+        @assert res isa eltype(prob.f.integrand_prototype) "Arblib require inplace prototypes to store Acb elements"
+        y_ = similar(prob.f.integrand_prototype)
         f_ = (y, x; kws...) -> (prob.f(y_, x, p; kws...); Arblib.set!(y, only(y_)))
         val = Arblib.integrate!(f_, res, lb, ub, atol = abstol, rtol = reltol,
             check_analytic = alg.check_analytic, take_prec = alg.take_prec,
