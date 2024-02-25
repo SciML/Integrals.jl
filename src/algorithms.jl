@@ -53,7 +53,7 @@ end
 HCubatureJL(; initdiv = 1, norm = norm) = HCubatureJL(initdiv, norm)
 
 """
-    VEGAS(; nbins = 100, ncalls = 1000, debug=false)
+    VEGAS(; nbins = 100, ncalls = 1000, debug=false, seed = nothing)
 
 Multidimensional adaptive Monte Carlo integration from MonteCarloIntegration.jl.
 Importance sampling is used to reduce variance.
@@ -80,12 +80,13 @@ year={1978},
 publisher={Elsevier}
 }
 """
-struct VEGAS <: SciMLBase.AbstractIntegralAlgorithm
+struct VEGAS{S} <: SciMLBase.AbstractIntegralAlgorithm
     nbins::Int
     ncalls::Int
     debug::Bool
+    seed::S
 end
-VEGAS(; nbins = 100, ncalls = 1000, debug = false) = VEGAS(nbins, ncalls, debug)
+VEGAS(; nbins = 100, ncalls = 1000, debug = false, seed = nothing) = VEGAS(nbins, ncalls, debug, seed)
 
 """
     GaussLegendre{C, N, W}

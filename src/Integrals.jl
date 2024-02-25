@@ -7,6 +7,7 @@ end
 using Reexport, MonteCarloIntegration, QuadGK, HCubature
 @reexport using SciMLBase
 using LinearAlgebra
+using Random
 
 include("algorithms_meta.jl")
 include("common.jl")
@@ -224,6 +225,7 @@ function __solvebp_call(prob::IntegralProblem, alg::VEGAS, sensealg, domain, p;
     lb, ub = domain
     mid = (lb + ub) / 2
     f = prob.f
+    alg.seed !== nothing && Random.seed!(alg.seed)
     if f isa BatchIntegralFunction
         # MonteCarloIntegration v0.0.x passes points as rows of a matrix
         # MonteCarloIntegration v0.1 passes batches as a vector of views of
