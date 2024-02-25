@@ -3,7 +3,8 @@ using Integrals
 isdefined(Base, :get_extension) ? (using ForwardDiff) : (using ..ForwardDiff)
 ### Forward-Mode AD Intercepts
 
-function Integrals._evaluate!(f, y, u, p::Union{D, AbstractArray{<:D}})  where {T, V, P, D <: ForwardDiff.Dual{T, V, P}}
+function Integrals._evaluate!(f, y, u,
+        p::Union{D, AbstractArray{<:D}}) where {T, V, P, D <: ForwardDiff.Dual{T, V, P}}
     dy = similar(y, replace_dualvaltype(eltype(p), eltype(y)))
     f(dy, u, p)
     return dy
