@@ -86,7 +86,9 @@ struct VEGAS{S} <: SciMLBase.AbstractIntegralAlgorithm
     debug::Bool
     seed::S
 end
-VEGAS(; nbins = 100, ncalls = 1000, debug = false, seed = nothing) = VEGAS(nbins, ncalls, debug, seed)
+function VEGAS(; nbins = 100, ncalls = 1000, debug = false, seed = nothing)
+    VEGAS(nbins, ncalls, debug, seed)
+end
 
 """
     GaussLegendre{C, N, W}
