@@ -26,9 +26,16 @@ function Integrals.__solvebp(cache, alg, sensealg, domain,
             IntegralFunction{true}(cache.f.f, dprototype)
         end
         prob = Integrals.build_problem(cache)
-        dprob = remake(prob, f = df)
-        dcache = init(
-            dprob, alg; sensealg = sensealg, kwargs...)
+        dcache = Integrals.IntegralCache(cache.iip,
+            df,
+            domain,
+            p,
+            cache.prob_kwargs,
+            alg,
+            sensealg,
+            cache.kwargs,
+            cache.cacheval
+        )
         Integrals.__solvebp_call(dcache, alg, sensealg, domain, p; kwargs...)
     else
         Integrals.__solvebp_call(cache, alg, sensealg, domain, p; kwargs...)
