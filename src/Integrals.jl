@@ -183,7 +183,8 @@ end
 
 function init_cacheval(alg::HCubatureJL, prob::IntegralProblem)
     alg.buffer === nothing && return
-    HCubature.hcubature_buffer(x -> get_prototype(prob), lb, ub; norm = alg.norm)
+    prototype = get_prototype(prob)
+    HCubature.hcubature_buffer(x -> prototype, lb, ub; norm = alg.norm)
 end
 function __solvebp_call(cache::IntegralCache, alg::HCubatureJL, sensealg, domain, p;
         reltol = 1e-8, abstol = 1e-8,

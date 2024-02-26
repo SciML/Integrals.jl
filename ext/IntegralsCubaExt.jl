@@ -18,8 +18,12 @@ function Integrals.__solvebp_call(prob::IntegralProblem, alg::AbstractCubaAlgori
         throw(ArgumentError("Cuba.jl only supports real-valued integrands"))
     # we could support other types by multiplying by the jacobian determinant at the end
 
-    if prob.f isa BatchIntegralFunction
-        nvec = min(maxiters, prob.f.max_batch)
+    f = prob.f
+    prototype = Integrals.get_prototype(prob)
+    if f isa BatchIntegralFunction
+        fsize = size(prototype)[begin:(end - 1)]
+        ncomp = prod(fsize)
+        nvec = min(maxiters, f.max_batch)
         # nvec == 1 in Cuba will change vectors to matrices, so we won't support it when
         # batching
         nvec > 1 ||
@@ -33,26 +37,21 @@ function Integrals.__solvebp_call(prob::IntegralProblem, alg::AbstractCubaAlgori
             scale = x -> scale_x!(view(_x, :, 1:size(x, 2)), ub, lb, x)
         end
 
-        if isinplace(prob)
-            y = prob.f.integrand_prototype
-            fsize = size(y)[begin:(end - 1)]
-            ax = map(_ -> (:), fsize)
-            f = let y = similar(y, fsize..., nvec)
-                function (x, dx)
-                    dy = @view(y[ax..., begin:(begin + size(dx, 2) - 1)])
-                    prob.f(dy, scale(x), p)
-                    dx .= reshape(dy, :, size(dx, 2)) .* vol
+        if isinplace(f)
+            ax = ntuple(_ -> (:), length(fsize))
+            _f = let y_ = similar(prototype, fsize..., nvec)
+                function (u, _y)
+                    y = @view(y_[ax..., begin:(begin + size(_y, 2) - 1)])
+                    f(y, scale(u), p)
+                    _y .= reshape(y, size(_y)) .* vol
                 end
             end
         else
-            y = mid isa Number ? prob.f(typeof(mid)[], p) :
-                prob.f(Matrix{eltype(mid)}(undef, length(mid), 0), p)
-            fsize = size(y)[begin:(end - 1)]
-            f = (x, dx) -> dx .= reshape(prob.f(scale(x), p), :, size(dx, 2)) .* vol
+            _f = (u, y) -> y .= reshape(f(scale(u), p), size(y)) .* vol
         end
-        ncomp = prod(fsize)
     else
         nvec = 1
+        ncomp = length(prototype)
 
         if mid isa Real
             scale = x -> scale_x(ub, lb, only(x))
@@ -61,36 +60,33 @@ function Integrals.__solvebp_call(prob::IntegralProblem, alg::AbstractCubaAlgori
             scale = x -> scale_x!(_x, ub, lb, x)
         end
 
-        if isinplace(prob)
-            y = prob.f.integrand_prototype
-            f = let y = similar(y)
-                (x, dx) -> begin
-                    prob.f(y, scale(x), p)
-                    dx .= vec(y) .* vol
+        if isinplace(f)
+            _f = let y = similar(prototype)
+                (u, _y) -> begin
+                    f(y, scale(u), p)
+                    _y .= vec(y) .* vol
                 end
             end
         else
-            y = prob.f(mid, p)
-            f = (x, dx) -> dx .= Iterators.flatten(prob.f(scale(x), p)) .* vol
+            _f = (u, y) -> y .= Iterators.flatten(f(scale(u), p)) .* vol
         end
-        ncomp = length(y)
     end
 
     out = if alg isa CubaVegas
-        Cuba.vegas(f, ndim, ncomp; rtol = reltol,
+        Cuba.vegas(_f, ndim, ncomp; rtol = reltol,
             atol = abstol, nvec = nvec,
             maxevals = maxiters,
             flags = alg.flags, seed = alg.seed, minevals = alg.minevals,
             nstart = alg.nstart, nincrease = alg.nincrease,
             gridno = alg.gridno)
     elseif alg isa CubaSUAVE
-        Cuba.suave(f, ndim, ncomp; rtol = reltol,
+        Cuba.suave(_f, ndim, ncomp; rtol = reltol,
             atol = abstol, nvec = nvec,
             maxevals = maxiters,
             flags = alg.flags, seed = alg.seed, minevals = alg.minevals,
             nnew = alg.nnew, nmin = alg.nmin, flatness = alg.flatness)
     elseif alg isa CubaDivonne
-        Cuba.divonne(f, ndim, ncomp; rtol = reltol,
+        Cuba.divonne(_f, ndim, ncomp; rtol = reltol,
             atol = abstol, nvec = nvec,
             maxevals = maxiters,
             flags = alg.flags, seed = alg.seed, minevals = alg.minevals,
@@ -98,26 +94,26 @@ function Integrals.__solvebp_call(prob::IntegralProblem, alg::AbstractCubaAlgori
             maxpass = alg.maxpass, border = alg.border,
             maxchisq = alg.maxchisq, mindeviation = alg.mindeviation)
     elseif alg isa CubaCuhre
-        Cuba.cuhre(f, ndim, ncomp; rtol = reltol,
+        Cuba.cuhre(_f, ndim, ncomp; rtol = reltol,
             atol = abstol, nvec = nvec,
             maxevals = maxiters,
             flags = alg.flags, minevals = alg.minevals, key = alg.key)
     end
 
     # out.integral is a Vector{Float64}, but we want to return it to the shape of the integrand
-    val = if prob.f isa BatchIntegralFunction
-        if y isa AbstractVector
+    val = if f isa BatchIntegralFunction
+        if prototype isa AbstractVector
             out.integral[1]
         else
             reshape(out.integral, fsize)
         end
     else
-        if y isa Real
+        if prototype isa Real
             out.integral[1]
-        elseif y isa AbstractVector
+        elseif prototype isa AbstractVector
             out.integral
         else
-            reshape(out.integral, size(y))
+            reshape(out.integral, size(prototype))
         end
     end
 
