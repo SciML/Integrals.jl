@@ -92,23 +92,30 @@ function __solve(cache::IntegralCache, alg::ChangeOfVariables, sensealg, udomain
     return __solve(_cache, alg.alg, sensealg, vdomain, p; kwargs...)
 end
 
-function quadgk_prob_types(f, lb::T, ub::T, p, nrm) where {T}
-    DT = float(T)   # we need to be careful to infer the same result as `evalrule`
-    RT = Base.promote_op(*, DT, Base.promote_op(f, DT, typeof(p)))    # kernel
-    NT = Base.promote_op(nrm, RT)
-    return DT, RT, NT
+function get_prototype(prob::IntegralProblem)
+    f = prob.f
+    f.integrand_prototype !== nothing && return f.integrand_prototype
+    isinplace(f) && throw(ArgumentError("in-place integral functions require a prototype"))
+    lb, ub = prob.domain
+    mid = (lb + ub) / 2
+    p = prob.p
+    if f isa BatchIntegralFunction
+        mid isa Number ? f(eltype(mid)[], p) :
+        f(Matrix{eltype(mid)}(undef, length(mid), 0), p)
+    else
+        f(mid, p)
+    end
 end
+
 function init_cacheval(alg::QuadGKJL, prob::IntegralProblem)
-    lb, ub = map(first, prob.domain)
-    DT, RT, NT = quadgk_prob_types(prob.f, lb, ub, prob.p, alg.norm)
-    return (isconcretetype(RT) ? QuadGK.alloc_segbuf(DT, RT, NT) : nothing)
-end
-function refresh_cacheval(cacheval, alg::QuadGKJL, prob)
-    lb, ub = map(first, prob.domain)
-    DT, RT, NT = quadgk_prob_types(prob.f, lb, ub, prob.p, alg.norm)
-    isconcretetype(RT) || return nothing
-    T = QuadGK.Segment{DT, RT, NT}
-    return (cacheval isa Vector{T} ? cacheval : QuadGK.alloc_segbuf(DT, RT, NT))
+    alg.buffer === nothing && return
+    lb, ub = prob.domain
+    mid = (lb + ub) / 2
+    prototype = get_prototype(prob) * mid
+    TX = typeof(mid)
+    TI = typeof(prototype)
+    TE = typeof(alg.norm(prototype))
+    QuadGK.alloc_segbuf(TX, TI, TE)
 end
 
 function __solvebp_call(cache::IntegralCache, alg::QuadGKJL, sensealg, domain, p;
@@ -175,14 +182,8 @@ function __solvebp_call(cache::IntegralCache, alg::QuadGKJL, sensealg, domain, p
 end
 
 function init_cacheval(alg::HCubatureJL, prob::IntegralProblem)
-    lb, ub = prob.domain
-    lb isa Number && return
-    if isinplace(prob)
-        f = u -> prob.f.integrand_prototype
-    else
-        f = u -> prob.f(u, prob.p)
-    end
-    return HCubature.hcubature_buffer(f, lb, ub; norm = alg.norm)
+    alg.buffer === nothing && return
+    HCubature.hcubature_buffer(x -> get_prototype(prob), lb, ub; norm = alg.norm)
 end
 function __solvebp_call(cache::IntegralCache, alg::HCubatureJL, sensealg, domain, p;
         reltol = 1e-8, abstol = 1e-8,
