@@ -50,70 +50,85 @@ problems = (
         domain = (@SVector[-Inf, -Inf], @SVector[Inf, 0]),
         solution = 0.5
     ),
-    (; # 5. single-variable infinite limit: Gaussian
+    (; # 5. multi-variate mixed infinite/finite: Gaussian * quadratic
+        f = (x, p) -> pdf(Normal(0.00, 1.00), x[1]) * x[2]^2,
+        domain = (@SVector[-Inf, 1], @SVector[Inf, 4]),
+        solution = 21.0
+    ),
+    (; # 6. multi-variate mixed semi-infinite lower limit/finite: Gaussian * quadratic
+        f = (x, p) -> pdf(Normal(0.00, 1.00), x[1]) * x[2]^2,
+        domain = (@SVector[0.00, 1], @SVector[Inf, 4]),
+        solution = 10.5
+    ),
+    (; # 7. multi-variate mixed semi-infinite upper limit/finite: Gaussian * quadratic
+        f = (x, p) -> pdf(Normal(0.00, 1.00), x[1]) * x[2]^2,
+        domain = (@SVector[-Inf, 1], @SVector[0.00, 4]),
+        solution = 10.5
+    ),
+    (; # 8. single-variable infinite limit: Gaussian
         f = (x, p) -> pdf(Normal(0.00, 1.00), x),
         domain = (-Inf, Inf),
         solution = 1.0
     ),
-    (; # 6. single-variable flipped infinite limit: Gaussian
+    (; # 9. single-variable flipped infinite limit: Gaussian
         f = (x, p) -> pdf(Normal(0.00, 1.00), x),
         domain = (Inf, -Inf),
         solution = -1.0
     ),
-    (; # 7. single-variable semi-infinite upper limit: Gaussian
+    (; # 10. single-variable semi-infinite upper limit: Gaussian
         f = (x, p) -> pdf(Normal(0.00, 1.00), x),
         domain = (0.00, Inf),
         solution = 0.5
     ),
-    (; # 8. single-variable flipped, semi-infinite upper limit: Gaussian
+    (; # 11. single-variable flipped, semi-infinite upper limit: Gaussian
         f = (x, p) -> pdf(Normal(0.00, 1.00), x),
         domain = (0.00, -Inf),
         solution = -0.5
     ),
-    (; # 9. single-variable semi-infinite lower limit: Gaussian
+    (; # 12. single-variable semi-infinite lower limit: Gaussian
         f = (x, p) -> pdf(Normal(0.00, 1.00), x),
         domain = (-Inf, 0.00),
         solution = 0.5
     ),
-    (; # 10. single-variable flipped, semi-infinite lower limit: Gaussian
+    (; # 13. single-variable flipped, semi-infinite lower limit: Gaussian
         f = (x, p) -> pdf(Normal(0.00, 1.00), x),
         domain = (Inf, 0.00),
         solution = -0.5
     ),
-    (; # 11. single-variable infinite limit: Lorentzian
+    (; # 14. single-variable infinite limit: Lorentzian
         f = (x, p) -> 1 / (x^2 + 1),
         domain = (-Inf, Inf),
         solution = pi / 1
     ),
-    (; # 12. single-variable shifted, semi-infinite lower limit: Lorentzian
+    (; # 15. single-variable shifted, semi-infinite lower limit: Lorentzian
         f = (x, p) -> 1 / ((x - 2)^2 + 1),
         domain = (-Inf, 2),
         solution = pi / 2
     ),
-    (; # 13. single-variable shifted, semi-infinite upper limit: Lorentzian
+    (; # 16. single-variable shifted, semi-infinite upper limit: Lorentzian
         f = (x, p) -> 1 / ((x - 2)^2 + 1),
         domain = (2, Inf),
         solution = pi / 2
     ),
-    (; # 14. single-variable flipped, shifted, semi-infinite lower limit: Lorentzian
+    (; # 17. single-variable flipped, shifted, semi-infinite lower limit: Lorentzian
         f = (x, p) -> 1 / ((x - 2)^2 + 1),
         domain = (Inf, 2),
         solution = -pi / 2
     ),
-    (; # 15. single-variable flipped, shifted, semi-infinite upper limit: Lorentzian
+    (; # 18. single-variable flipped, shifted, semi-infinite upper limit: Lorentzian
         f = (x, p) -> 1 / ((x - 2)^2 + 1),
         domain = (2, -Inf),
         solution = -pi / 2
     ),
-    (; # 16. single-variable finite limits: constant
-        f = (x, p) -> 1.0,
-        domain = (1, 3),
-        solution = 2
+    (; # 19. single-variable finite limits: quadratic
+        f = (x, p) -> x^2,
+        domain = (1, 4),
+        solution = 21
     ),
-    (; # 17. single-variable flipped, finite limits: constant
-        f = (x, p) -> 1.0,
-        domain = (3, 1),
-        solution = -2
+    (; # 20. single-variable flipped, finite limits: quadratic
+        f = (x, p) -> x^2,
+        domain = (4, 1),
+        solution = -21
     )
 )
 
