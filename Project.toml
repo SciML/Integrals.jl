@@ -34,7 +34,7 @@ IntegralsZygoteExt = ["Zygote", "ChainRulesCore"]
 [compat]
 Aqua = "0.8"
 Arblib = "1"
-ChainRulesCore = "1.16"
+ChainRulesCore = "1.18"
 CommonSolve = "0.2.4"
 Cuba = "2.2"
 Cubature = "1.5"
