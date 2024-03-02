@@ -15,7 +15,13 @@ Integrals.gausslegendre(n) = FastGaussQuadrature.gausslegendre(n)
 function gauss_legendre(f::F, p, lb, ub, nodes, weights) where {F}
     scale = (ub - lb) / 2
     shift = (lb + ub) / 2
-    I = mapreduce((w, x) -> w * f(scale * x + shift, p), +, weights, nodes)
+    # TODO reuse Integrals.evalrule instead
+    x0, xs = Iterators.peel(nodes)
+    w0, ws = Iterators.peel(weights)
+    I = w0 * f(scale * x0 + shift, p)
+    for (w, x) in zip(ws, xs)
+        I += w * f(scale * x + shift, p)
+    end
     return scale * I
 end
 function composite_gauss_legendre(f::F, p, lb, ub, nodes, weights, subintervals) where {F}
