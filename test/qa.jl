@@ -1,4 +1,5 @@
 using Integrals, Aqua
+using Test
 @testset "Aqua" begin
     Aqua.find_persistent_tasks_deps(Integrals)
     Aqua.test_ambiguities(Integrals, recursive = false)
