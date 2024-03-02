@@ -50,9 +50,8 @@ prob = IntegralProblem(f, -5, 3, 3.3)
 alg = GaussLegendre()
 sol = solve(prob, alg)
 @test isnothing(sol.chi)
-# These tests don't pass with ChangeOfVariables
-# @test sol.alg === alg
-# @test sol.prob === prob
+@test sol.alg === alg
+@test sol.prob === prob
 @test isnothing(sol.resid)
 @test SciMLBase.successful_retcode(sol)
 @test sol.u ≈ -exp(3) * 3.3 + 3.3 / exp(5) - 40 + cos(5) - cos(3)
