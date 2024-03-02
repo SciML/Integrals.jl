@@ -204,7 +204,9 @@ end
 
 @testset "Caching interface" begin
     # two distinct semi-infinite transformations should still work as expected
-    (; f, domain, solution) = problems[8]
+    f = (x, p) -> pdf(Normal(0.00, 1.00), x)
+    domain = (0.0, -Inf)
+    solution = -0.5
     prob = IntegralProblem(f, domain)
     alg = QuadGKJL()
     cache = init(prob, alg; abstol, reltol)
@@ -212,7 +214,8 @@ end
     @test abs(only(sol.u) - solution) < max(abstol, reltol * abs(solution))
     @test sol.prob == IntegralProblem(f, domain)
     @test sol.alg == alg
-    (; domain, solution) = problems[9]
+    domain = (-Inf, 0.0)
+    solution = 0.5
     cache.domain = domain
     sol = solve!(cache)
     @test abs(only(sol.u) - solution) < max(abstol, reltol * abs(solution))
