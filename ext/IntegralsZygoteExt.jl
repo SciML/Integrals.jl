@@ -14,11 +14,19 @@ ChainRulesCore.@non_differentiable Integrals.checkkwargs(kwargs...)
 ChainRulesCore.@non_differentiable Integrals.isinplace(f, args...)    # fixes #99
 ChainRulesCore.@non_differentiable Integrals.init_cacheval(alg, prob)
 
-function ChainRulesCore.rrule(::typeof(Integrals.transformation_if_inf), f, domain)
-    function transformation_if_inf_pullback(Δ)
-        return NoTangent(), Δ...
+function ChainRulesCore.rrule(::typeof(Integrals.__solve), cache::Integrals.IntegralCache,
+        alg::Integrals.ChangeOfVariables, sensealg, udomain, p;
+        kwargs...)
+    _cache, vdomain = Integrals._change_variables(cache, alg, sensealg, udomain, p)
+    sol, back = Zygote.pullback((args...) -> Integrals.__solve(args...; kwargs...),
+        _cache, alg.alg, sensealg, vdomain, p)
+    function change_of_variables_pullback(Δ)
+        return (NoTangent(), back(Δ)...)
     end
-    return Integrals.transformation_if_inf(f, domain), transformation_if_inf_pullback
+    prob = Integrals.build_problem(cache)
+    _sol = SciMLBase.build_solution(
+        prob, alg.alg, sol.u, sol.resid, chi = sol.chi, retcode = sol.retcode, stats = sol.stats)
+    return _sol, change_of_variables_pullback
 end
 
 # we will need to implement the following adjoints when we compute ∂f/∂u
