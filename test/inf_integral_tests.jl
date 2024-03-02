@@ -7,12 +7,12 @@ abstol = 1e-3
 alg_req = Dict(
     QuadratureRule(gausslegendre, n = 50) => (
         nout = Inf, min_dim = 1, max_dim = 1, allows_batch = false,
-        allows_iip = false, allows_inf = true), QuadGKJL() => (
-        nout = Inf, allows_batch = true, min_dim = 1, max_dim = 1,
+        allows_iip = false, allows_inf = true),
+    QuadGKJL() => (nout = Inf, allows_batch = true, min_dim = 1, max_dim = 1,
         allows_iip = true, allows_inf = true),
     HCubatureJL() => (nout = Inf, allows_batch = false, min_dim = 1,
-        max_dim = Inf, allows_iip = true, allows_inf = true), CubatureJLh() => (
-        nout = Inf, allows_batch = true, min_dim = 1,
+        max_dim = Inf, allows_iip = true, allows_inf = true),
+    CubatureJLh() => (nout = Inf, allows_batch = true, min_dim = 1,
         max_dim = Inf, allows_iip = true, allows_inf = true)
 )
 # GaussLegendre(n=50) => (nout = Inf, min_dim = 1, max_dim = 1, allows_batch = false,
@@ -206,11 +206,16 @@ end
     # two distinct semi-infinite transformations should still work as expected
     (; f, domain, solution) = problems[8]
     prob = IntegralProblem(f, domain)
-    cache = init(prob, QuadGKJL(); abstol, reltol)
-    sol = solve!(cache).u
-    @test abs(only(sol) - solution) < max(abstol, reltol * abs(solution))
+    alg = QuadGKJL()
+    cache = init(prob, alg; abstol, reltol)
+    sol = solve!(cache)
+    @test abs(only(sol.u) - solution) < max(abstol, reltol * abs(solution))
+    @test sol.prob == IntegralProblem(f, domain)
+    @test sol.alg == alg
     (; domain, solution) = problems[9]
     cache.domain = domain
-    sol = solve!(cache).u
-    @test abs(only(sol) - solution) < max(abstol, reltol * abs(solution))
+    sol = solve!(cache)
+    @test abs(only(sol.u) - solution) < max(abstol, reltol * abs(solution))
+    @test sol.prob == IntegralProblem(f, domain)
+    @test sol.alg == alg
 end
