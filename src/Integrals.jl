@@ -217,7 +217,7 @@ function __solvebp_call(cache::IntegralCache, alg::HCubatureJL, sensealg, domain
             rtol = reltol, atol = abstol, buffer = cache.cacheval,
             maxevals = maxiters, norm = alg.norm, initdiv = alg.initdiv)
     else
-        ret = _f((lb + ub) / 2) * (prod(ub - lb) / 2) # this calculation for type stability with vector endpoints
+        ret = get_prototype(prob) * (prod(ub - lb) / 2) # this calculation for type stability with vector endpoints
         hcubature(_f, lb, ub;
             rtol = reltol, atol = abstol, buffer = cache.cacheval,
             maxevals = maxiters, norm = alg.norm,
