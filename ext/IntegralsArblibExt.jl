@@ -21,16 +21,13 @@ function Integrals.__solvebp_call(
         val = Arblib.integrate!(f_, res, lb, ub, atol = abstol, rtol = reltol,
             check_analytic = alg.check_analytic, take_prec = alg.take_prec,
             warn_on_no_convergence = alg.warn_on_no_convergence, opts = alg.opts)
-        SciMLBase.build_solution(
-            prob, alg, val, get_radius(val), retcode = ReturnCode.Success)
     else
         f_ = (x; kws...) -> only(prob.f(x, p; kws...))
         val = Arblib.integrate(f_, lb, ub, atol = abstol, rtol = reltol,
             check_analytic = alg.check_analytic, take_prec = alg.take_prec,
             warn_on_no_convergence = alg.warn_on_no_convergence, opts = alg.opts)
-        SciMLBase.build_solution(
-            prob, alg, val, get_radius(val), retcode = ReturnCode.Success)
     end
+    SciMLBase.build_solution(prob, alg, val, get_radius(val), retcode = ReturnCode.Success)
 end
 
 function get_radius(ball)

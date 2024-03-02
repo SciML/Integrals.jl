@@ -156,7 +156,6 @@ function __solvebp_call(cache::IntegralCache, alg::QuadGKJL, sensealg, domain, p
             end
             val, err = quadgk(_f, lb, ub, segbuf = cache.cacheval, maxevals = maxiters,
                 rtol = reltol, atol = abstol, order = alg.order, norm = alg.norm)
-            SciMLBase.build_solution(prob, alg, val, err, retcode = ReturnCode.Success)
         else
             prototype = f(typeof(mid)[], p)
             _f = if prototype isa AbstractVector
@@ -170,7 +169,6 @@ function __solvebp_call(cache::IntegralCache, alg::QuadGKJL, sensealg, domain, p
             end
             val, err = quadgk(_f, lb, ub, segbuf = cache.cacheval, maxevals = maxiters,
                 rtol = reltol, atol = abstol, order = alg.order, norm = alg.norm)
-            SciMLBase.build_solution(prob, alg, val, err, retcode = ReturnCode.Success)
         end
     else
         if isinplace(f)
@@ -179,14 +177,13 @@ function __solvebp_call(cache::IntegralCache, alg::QuadGKJL, sensealg, domain, p
             val, err = quadgk!(_f, result, lb, ub, segbuf = cache.cacheval,
                 maxevals = maxiters,
                 rtol = reltol, atol = abstol, order = alg.order, norm = alg.norm)
-            SciMLBase.build_solution(prob, alg, val, err, retcode = ReturnCode.Success)
         else
             _f = u -> f(u, p)
             val, err = quadgk(_f, lb, ub, segbuf = cache.cacheval, maxevals = maxiters,
                 rtol = reltol, atol = abstol, order = alg.order, norm = alg.norm)
-            SciMLBase.build_solution(prob, alg, val, err, retcode = ReturnCode.Success)
         end
     end
+    SciMLBase.build_solution(prob, alg, val, err, retcode = ReturnCode.Success)
 end
 
 function init_cacheval(alg::HCubatureJL, prob::IntegralProblem)
