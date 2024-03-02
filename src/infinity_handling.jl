@@ -33,7 +33,7 @@ function substitute_t(t::Number, lb::Number, ub::Number)
         lb + t * den * u, den^2 * u
     else
         den = (ub - lb) * oftype(t, 0.5)
-        lb - t * den, den
+        lb + (1 + t) * den, den
     end
 end
 function substitute_t(t::AbstractVector, lb::AbstractVector, ub::AbstractVector)
