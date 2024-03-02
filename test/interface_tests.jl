@@ -386,3 +386,13 @@ end
         end
     end
 end
+
+@testset "issue242" begin
+    f242(x, p) = p / (x^2 + p^2)
+    domain242 = (-1, 1)
+    p242 = 1e-3
+    for abstol in [1e-2, 1e-4, 1e-6, 1e-8]
+        @test solve(IntegralProblem(f242, domain242, p242; abstol), QuadGKJL()).u ==
+              solve(IntegralProblem(f242, domain242, p242), QuadGKJL(); abstol).u
+    end
+end
