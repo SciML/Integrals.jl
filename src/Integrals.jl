@@ -117,7 +117,7 @@ end
 
 function init_cacheval(alg::QuadGKJL, prob::IntegralProblem)
     alg.buffer === nothing && return
-    lb, ub = prob.domain
+    lb, ub = map(first, prob.domain)
     mid = (lb + ub) / 2
     prototype = get_prototype(prob) * mid
     TX = typeof(mid)
@@ -189,6 +189,7 @@ end
 function init_cacheval(alg::HCubatureJL, prob::IntegralProblem)
     alg.buffer === nothing && return
     prototype = get_prototype(prob)
+    lb, ub = map(x -> x isa Number ? tuple(x) : x, prob.domain)
     HCubature.hcubature_buffer(x -> prototype, lb, ub; norm = alg.norm)
 end
 function __solvebp_call(cache::IntegralCache, alg::HCubatureJL, sensealg, domain, p;
