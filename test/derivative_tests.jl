@@ -359,10 +359,10 @@ end
 
 @testset "ChangeOfVariables rrule" begin
     alg = QuadGKJL()
-    # test a simple u-substitution of x = 2u
+    # test a simple u-substitution of x = 2.7u + 1.3
     talg = Integrals.ChangeOfVariables(alg) do f, domain
         if f isa IntegralFunction{false}
-            IntegralFunction((x, p) -> f(x/2, p)/2), domain .* 2
+            IntegralFunction((x, p) -> f((x - 1.3)/2.7, p)/2.7), map(x -> 1.3 + 2.7x, domain)
         else
             error("not implemented")
         end
