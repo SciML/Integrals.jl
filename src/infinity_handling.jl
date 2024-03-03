@@ -29,7 +29,7 @@ function substitute_f(f::IntegralFunction{true}, v2ujac, lb, ub)
     vol = prod((ub - lb) / 2) # just to get the type of the jacobian determinant
     IntegralFunction{true}(prototype * vol) do y, v, p
         u, jac = substitute_v(v2ujac, v, lb, ub)
-        _y = _evaluate!(f, prototype, u, p)
+        _y = _evaluate!(_f, prototype, u, p)
         y .= _y .* jac
         return
     end
