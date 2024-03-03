@@ -7,8 +7,8 @@ Which are the order of the integration rule
 and the norm for calculating the error, respectively.
 Lastly, the `buffer` keyword, if set (e.g. `buffer=true`), will allocate a buffer to reuse
 for multiple integrals and may require evaluating the integrand unless an
-`integrand_prototype` is provided. Unlike the `segbuf` keyword to `quadgk`, you do not have
-to allocate the buffer as this is handled automatically.
+`integrand_prototype` is provided. Unlike the `segbuf` keyword to `quadgk`, you do not
+allocate the buffer as this is handled automatically.
 
 ## References
 
@@ -40,7 +40,7 @@ and the norm for calculating the error, respectively.
 Lastly, the `buffer` keyword, if set (e.g. `buffer=true`), will allocate a buffer to reuse
 for multiple integrals and may require evaluating the integrand unless an
 `integrand_prototype` is provided. Unlike the `buffer` keyword to `hcubature/hquadrature`,
-you do not have to allocate the buffer as this is handled automatically.
+you do not allocate the buffer as this is handled automatically.
 
 ## References
 
