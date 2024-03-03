@@ -5,8 +5,10 @@ One-dimensional Gauss-Kronrod integration from QuadGK.jl.
 This method also takes the optional arguments `order` and `norm`.
 Which are the order of the integration rule
 and the norm for calculating the error, respectively.
-Lastly, the `buffer` keyword, if set, will allocate a buffer to reuse
-for multiple integrals, which may require evaluating the integrand.
+Lastly, the `buffer` keyword, if set (e.g. `buffer=true`), will allocate a buffer to reuse
+for multiple integrals and may require evaluating the integrand unless an
+`integrand_prototype` is provided. Unlike the `segbuf` keyword to `quadgk`, you do not
+allocate the buffer as this is handled automatically.
 
 ## References
 
@@ -35,8 +37,10 @@ This method also takes the optional arguments `initdiv` and `norm`.
 Which are the initial number of segments
 each dimension of the integration domain is divided into,
 and the norm for calculating the error, respectively.
-Lastly, the `buffer` keyword, if set, will allocate a buffer to reuse
-for multiple integrals, which may require evaluating the integrand.
+Lastly, the `buffer` keyword, if set (e.g. `buffer=true`), will allocate a buffer to reuse
+for multiple integrals and may require evaluating the integrand unless an
+`integrand_prototype` is provided. Unlike the `buffer` keyword to `hcubature/hquadrature`,
+you do not allocate the buffer as this is handled automatically.
 
 ## References
 

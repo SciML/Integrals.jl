@@ -78,14 +78,6 @@ end
 
 function __solve(cache::IntegralCache, alg::ChangeOfVariables, sensealg, udomain, p;
         kwargs...)
-    _cache, vdomain = _change_variables(cache, alg, sensealg, udomain, p)
-    sol = __solve(_cache, alg.alg, sensealg, vdomain, p; kwargs...)
-    prob = build_problem(cache)
-    return SciMLBase.build_solution(
-        prob, alg.alg, sol.u, sol.resid, chi = sol.chi, retcode = sol.retcode, stats = sol.stats)
-end
-
-function _change_variables(cache, alg, sensealg, udomain, p)
     cacheval = cache.cacheval.alg
     g, vdomain = alg.fu2gv(cache.f, udomain)
     _cache = IntegralCache(Val(isinplace(g)),
@@ -97,7 +89,10 @@ function _change_variables(cache, alg, sensealg, udomain, p)
         sensealg,
         cache.kwargs,
         cacheval)
-    return _cache, vdomain
+    sol = __solve(_cache, alg.alg, sensealg, vdomain, p; kwargs...)
+    prob = build_problem(cache)
+    return SciMLBase.build_solution(
+        prob, alg.alg, sol.u, sol.resid, chi = sol.chi, retcode = sol.retcode, stats = sol.stats)
 end
 
 function get_prototype(prob::IntegralProblem)
