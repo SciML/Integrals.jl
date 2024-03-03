@@ -356,3 +356,29 @@ for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands),
     do_tests(; f = bfiip, scalarize, lb = ones(dim), ub = 3ones(dim),
         p = [2.0i for i in 1:nout], alg, abstol, reltol)
 end
+
+@testset "ChangeOfVariables rrule" begin
+    alg = QuadGKJL()
+    # test a simple u-substitution of x = 2u
+    talg = Integrals.ChangeOfVariables(alg) do f, domain
+        if f isa IntegralFunction{false}
+            IntegralFunction((x, p) -> f(x/2, p)/2), domain .* 2
+        else
+            error("not implemented")
+        end
+    end
+    testf = (f, lb, ub, p, alg) -> begin
+        prob = IntegralProblem(f, (lb, ub), p)
+        solve(prob, alg; abstol, reltol).u
+    end
+    _testf = (x, p) -> x^2*p
+    lb, ub, p = 1.0, 5.0, 2.0
+    sol = Zygote.withgradient((args...) -> testf(_testf, args..., alg), lb, ub, p)
+    tsol = Zygote.withgradient((args...) -> testf(_testf, args..., talg), lb, ub, p)
+    @test sol.val ≈ tsol.val
+    # Fundamental theorem of Calculus part 1
+    @test sol.grad[1] ≈ tsol.grad[1] ≈ -_testf(lb, p)
+    @test sol.grad[2] ≈ tsol.grad[2] ≈  _testf(ub, p)
+    # This is to check ∂p
+    @test sol.grad[3] ≈ tsol.grad[3]
+end
