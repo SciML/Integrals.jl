@@ -13,143 +13,141 @@ function Integrals.__solvebp_call(prob::IntegralProblem,
     mid = (lb + ub) / 2
 
     # we get to pick fdim or not based on the IntegralFunction and its output dimensions
-    y = if prob.f isa BatchIntegralFunction
-        isinplace(prob.f) ? prob.f.integrand_prototype :
-        mid isa Number ? prob.f(eltype(mid)[], p) :
-        prob.f(Matrix{eltype(mid)}(undef, length(mid), 0), p)
-    else
-        # we evaluate the oop function to decide whether the output should be vectorized
-        isinplace(prob.f) ? prob.f.integrand_prototype : prob.f(mid, p)
-    end
+    f = prob.f
+    prototype = Integrals.get_prototype(prob)
 
-    @assert eltype(y)<:Real "Cubature.jl is only compatible with real-valued integrands"
+    @assert eltype(prototype)<:Real "Cubature.jl is only compatible with real-valued integrands"
 
-    if prob.f isa BatchIntegralFunction
-        if y isa AbstractVector # this branch could be omitted since the following one should work similarly
-            if isinplace(prob)
+    if f isa BatchIntegralFunction
+        if prototype isa AbstractVector # this branch could be omitted since the following one should work similarly
+            if isinplace(f)
                 # dx is a Vector, but we provide the integrand a vector of the same type as
                 # y, which needs to be resized since the number of batch points changes.
-                dy = similar(y)
-                f = (x, dx) -> begin
-                    resize!(dy, length(dx))
-                    prob.f(dy, x, p)
-                    dx .= dy
+                _f = let y = similar(prototype)
+                    (u, v) -> begin
+                        resize!(y, length(v))
+                        f(y, u, p)
+                        v .= y
+                    end
                 end
             else
-                f = (x, dx) -> (dx .= prob.f(x, p))
+                _f = (u, v) -> (v .= f(u, p))
             end
             if mid isa Number
                 if alg isa CubatureJLh
-                    val, err = Cubature.hquadrature_v(f, lb, ub;
+                    val, err = Cubature.hquadrature_v(_f, lb, ub;
                         reltol = reltol, abstol = abstol,
                         maxevals = maxiters)
                 else
-                    val, err = Cubature.pquadrature_v(f, lb, ub;
+                    val, err = Cubature.pquadrature_v(_f, lb, ub;
                         reltol = reltol, abstol = abstol,
                         maxevals = maxiters)
                 end
             else
                 if alg isa CubatureJLh
-                    val, err = Cubature.hcubature_v(f, lb, ub;
+                    val, err = Cubature.hcubature_v(_f, lb, ub;
                         reltol = reltol, abstol = abstol,
                         maxevals = maxiters)
                 else
-                    val, err = Cubature.pcubature_v(f, lb, ub;
+                    val, err = Cubature.pcubature_v(_f, lb, ub;
                         reltol = reltol, abstol = abstol,
                         maxevals = maxiters)
                 end
             end
-        elseif y isa AbstractArray
-            bfsize = size(y)[begin:(end - 1)]
-            bfdim = prod(bfsize)
-            if isinplace(prob)
+        elseif prototype isa AbstractArray
+            fsize = size(prototype)[begin:(end - 1)]
+            fdim = prod(fsize)
+            if isinplace(f)
                 # dx is a Matrix, but to provide a buffer of the same type as y, we make
                 # would like to make views of a larger buffer, but CubatureJL doesn't set
                 # a hard limit for max_batch, so we allocate a new buffer with the needed size
-                f = (x, dx) -> begin
-                    dy = similar(y, bfsize..., size(dx, 2))
-                    prob.f(dy, x, p)
-                    dx .= reshape(dy, bfdim, size(dx, 2))
+                _f = let fsize = fsize
+                    (u, v) -> begin
+                        y = similar(prototype, fsize..., size(v, 2))
+                        f(y, u, p)
+                        v .= reshape(y, fdim, size(v, 2))
+                    end
                 end
             else
-                f = (x, dx) -> (dx .= reshape(prob.f(x, p), bfdim, size(dx, 2)))
+                _f = (u, v) -> (v .= reshape(f(u, p), fdim, size(v, 2)))
             end
             if mid isa Number
                 if alg isa CubatureJLh
-                    val_, err = Cubature.hquadrature_v(bfdim, f, lb, ub;
+                    val_, err = Cubature.hquadrature_v(fdim, _f, lb, ub;
                         reltol = reltol, abstol = abstol,
                         maxevals = maxiters, error_norm = alg.error_norm)
                 else
-                    val_, err = Cubature.pquadrature_v(bfdim, f, lb, ub;
+                    val_, err = Cubature.pquadrature_v(fdim, _f, lb, ub;
                         reltol = reltol, abstol = abstol,
                         maxevals = maxiters, error_norm = alg.error_norm)
                 end
             else
                 if alg isa CubatureJLh
-                    val_, err = Cubature.hcubature_v(bfdim, f, lb, ub;
+                    val_, err = Cubature.hcubature_v(fdim, _f, lb, ub;
                         reltol = reltol, abstol = abstol,
                         maxevals = maxiters, error_norm = alg.error_norm)
                 else
-                    val_, err = Cubature.pcubature_v(bfdim, f, lb, ub;
+                    val_, err = Cubature.pcubature_v(fdim, _f, lb, ub;
                         reltol = reltol, abstol = abstol,
                         maxevals = maxiters, error_norm = alg.error_norm)
                 end
             end
-            val = reshape(val_, bfsize...)
+            val = reshape(val_, fsize...)
         else
             error("BatchIntegralFunction integrands must be arrays for Cubature.jl")
         end
     else
-        if y isa Real
+        if prototype isa Real
             # no inplace in this case, since the integrand_prototype would be mutable
-            f = x -> prob.f(x, p)
+            _f = u -> f(u, p)
             if lb isa Number
                 if alg isa CubatureJLh
-                    val, err = Cubature.hquadrature(f, lb, ub;
+                    val, err = Cubature.hquadrature(_f, lb, ub;
                         reltol = reltol, abstol = abstol,
                         maxevals = maxiters)
                 else
-                    val, err = Cubature.pquadrature(f, lb, ub;
+                    val, err = Cubature.pquadrature(_f, lb, ub;
                         reltol = reltol, abstol = abstol,
                         maxevals = maxiters)
                 end
             else
                 if alg isa CubatureJLh
-                    val, err = Cubature.hcubature(f, lb, ub;
+                    val, err = Cubature.hcubature(_f, lb, ub;
                         reltol = reltol, abstol = abstol,
                         maxevals = maxiters)
                 else
-                    val, err = Cubature.pcubature(f, lb, ub;
+                    val, err = Cubature.pcubature(_f, lb, ub;
                         reltol = reltol, abstol = abstol,
                         maxevals = maxiters)
                 end
             end
-        elseif y isa AbstractArray
-            fsize = size(y)
-            fdim = length(y)
+        elseif prototype isa AbstractArray
+            fsize = size(prototype)
+            fdim = length(prototype)
             if isinplace(prob)
-                dy = similar(y)
-                f = (x, v) -> (prob.f(dy, x, p); v .= vec(dy))
+                _f = let y = similar(prototype)
+                    (u, v) -> (f(y, u, p); v .= vec(y))
+                end
             else
-                f = (x, v) -> (v .= vec(prob.f(x, p)))
+                _f = (u, v) -> (v .= vec(f(u, p)))
             end
             if mid isa Number
                 if alg isa CubatureJLh
-                    val_, err = Cubature.hquadrature(fdim, f, lb, ub;
+                    val_, err = Cubature.hquadrature(fdim, _f, lb, ub;
                         reltol = reltol, abstol = abstol,
                         maxevals = maxiters, error_norm = alg.error_norm)
                 else
-                    val_, err = Cubature.pquadrature(fdim, f, lb, ub;
+                    val_, err = Cubature.pquadrature(fdim, _f, lb, ub;
                         reltol = reltol, abstol = abstol,
                         maxevals = maxiters, error_norm = alg.error_norm)
                 end
             else
                 if alg isa CubatureJLh
-                    val_, err = Cubature.hcubature(fdim, f, lb, ub;
+                    val_, err = Cubature.hcubature(fdim, _f, lb, ub;
                         reltol = reltol, abstol = abstol,
                         maxevals = maxiters, error_norm = alg.error_norm)
                 else
-                    val_, err = Cubature.pcubature(fdim, f, lb, ub;
+                    val_, err = Cubature.pcubature(fdim, _f, lb, ub;
                         reltol = reltol, abstol = abstol,
                         maxevals = maxiters, error_norm = alg.error_norm)
                 end

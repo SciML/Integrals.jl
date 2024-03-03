@@ -8,8 +8,8 @@ function my_integration(p)
     return solve(my_problem, CubatureJLh(), reltol = 1e-3, abstol = 1e-3)  # Errors
 end
 my_solution = my_integration(my_parameters)
-@test ForwardDiff.jacobian(my_integration, my_parameters) == [0.0 8.0]
-@test ForwardDiff.jacobian(x -> ForwardDiff.jacobian(my_integration, x), my_parameters) ==
+@test ForwardDiff.jacobian(my_integration, my_parameters) ≈ [0.0 8.0]
+@test ForwardDiff.jacobian(x -> ForwardDiff.jacobian(my_integration, x), my_parameters) ≈
       [0.0 0.0
        0.0 4.0]
 

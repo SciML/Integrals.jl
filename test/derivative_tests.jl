@@ -18,8 +18,8 @@ alg_req = Dict(
     QuadGKJL() => (nout = Inf, allows_batch = true, min_dim = 1, max_dim = 1,
         allows_iip = true),
     HCubatureJL() => (nout = Inf, allows_batch = false, min_dim = 1,
-        max_dim = Inf, allows_iip = true), CubatureJLh() => (
-        nout = Inf, allows_batch = true, min_dim = 1,
+        max_dim = Inf, allows_iip = true),
+    CubatureJLh() => (nout = Inf, allows_batch = true, min_dim = 1,
         max_dim = Inf, allows_iip = true),
     CubatureJLp() => (nout = Inf, allows_batch = true, min_dim = 1,
         max_dim = Inf, allows_iip = true))

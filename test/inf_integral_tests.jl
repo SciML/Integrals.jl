@@ -7,12 +7,12 @@ abstol = 1e-3
 alg_req = Dict(
     QuadratureRule(gausslegendre, n = 50) => (
         nout = Inf, min_dim = 1, max_dim = 1, allows_batch = false,
-        allows_iip = false, allows_inf = true), QuadGKJL() => (
-        nout = Inf, allows_batch = true, min_dim = 1, max_dim = 1,
+        allows_iip = false, allows_inf = true),
+    QuadGKJL() => (nout = Inf, allows_batch = true, min_dim = 1, max_dim = 1,
         allows_iip = true, allows_inf = true),
     HCubatureJL() => (nout = Inf, allows_batch = false, min_dim = 1,
-        max_dim = Inf, allows_iip = true, allows_inf = true), CubatureJLh() => (
-        nout = Inf, allows_batch = true, min_dim = 1,
+        max_dim = Inf, allows_iip = true, allows_inf = true),
+    CubatureJLh() => (nout = Inf, allows_batch = true, min_dim = 1,
         max_dim = Inf, allows_iip = true, allows_inf = true)
 )
 # GaussLegendre(n=50) => (nout = Inf, min_dim = 1, max_dim = 1, allows_batch = false,
@@ -148,11 +148,11 @@ end
 
 do_tests = function (; f, domain, alg, abstol, reltol, solution)
     prob = IntegralProblem(f, domain)
-    sol = solve(prob, alg; reltol, abstol, do_inf_transformation = Val(true))
+    sol = solve(prob, alg; reltol, abstol)
     @test abs(only(sol) - solution) < max(abstol, reltol * abs(solution))
-    cache = @test_nowarn @inferred init(prob, alg; do_inf_transformation = Val(true))
+    cache = @test_nowarn @inferred init(prob, alg)
     @test_nowarn @inferred solve!(cache)
-    @test_nowarn @inferred solve(prob, alg; do_inf_transformation = Val(true))
+    @test_nowarn @inferred solve(prob, alg)
 end
 
 # IntegralFunction{false}
@@ -200,4 +200,25 @@ for (alg, req) in pairs(alg_req), (j, (; f, domain, solution)) in enumerate(prob
     @info "Batched, iip infinity test" alg=nameof(typeof(alg)) problem=j
     bfiip = BatchIntegralFunction((y, x, p) -> batch_helper!(f, y, x, p), zeros(0))
     do_tests(; f = bfiip, domain, solution, alg, abstol, reltol)
+end
+
+@testset "Caching interface" begin
+    # two distinct semi-infinite transformations should still work as expected
+    f = (x, p) -> pdf(Normal(0.00, 1.00), x)
+    domain = (0.0, -Inf)
+    solution = -0.5
+    prob = IntegralProblem(f, domain)
+    alg = QuadGKJL()
+    cache = init(prob, alg; abstol, reltol)
+    sol = solve!(cache)
+    @test abs(only(sol.u) - solution) < max(abstol, reltol * abs(solution))
+    @test sol.prob == IntegralProblem(f, domain)
+    @test sol.alg == alg
+    domain = (-Inf, 0.0)
+    solution = 0.5
+    cache.domain = domain
+    sol = solve!(cache)
+    @test abs(only(sol.u) - solution) < max(abstol, reltol * abs(solution))
+    @test sol.prob == IntegralProblem(f, domain)
+    @test sol.alg == alg
 end

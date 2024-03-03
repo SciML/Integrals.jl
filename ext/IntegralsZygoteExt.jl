@@ -14,6 +14,43 @@ ChainRulesCore.@non_differentiable Integrals.checkkwargs(kwargs...)
 ChainRulesCore.@non_differentiable Integrals.isinplace(f, args...)    # fixes #99
 ChainRulesCore.@non_differentiable Integrals.init_cacheval(alg, prob)
 
+function ChainRulesCore.rrule(::typeof(Integrals.__solve), cache::Integrals.IntegralCache,
+        alg::Integrals.ChangeOfVariables, sensealg, udomain, p;
+        kwargs...)
+    _cache, vdomain = Integrals._change_variables(cache, alg, sensealg, udomain, p)
+    sol, back = Zygote.pullback((args...) -> Integrals.__solve(args...; kwargs...),
+        _cache, alg.alg, sensealg, vdomain, p)
+    function change_of_variables_pullback(Δ)
+        return (NoTangent(), back(Δ)...)
+    end
+    prob = Integrals.build_problem(cache)
+    _sol = SciMLBase.build_solution(
+        prob, alg.alg, sol.u, sol.resid, chi = sol.chi, retcode = sol.retcode, stats = sol.stats)
+    return _sol, change_of_variables_pullback
+end
+
+# we will need to implement the following adjoints when we compute ∂f/∂u
+function ChainRulesCore.rrule(::typeof(Integrals.substitute_v), args...)
+    function substitute_v_pullback(_)
+        return NoTangent(), ntuple(_ -> NoTangent(), length(args))...
+    end
+    return Integrals.substitute_v(args...), substitute_v_pullback
+end
+function ChainRulesCore.rrule(::typeof(Integrals.substitute_bv), args...)
+    function substitute_bv_pullback(_)
+        return NoTangent(), ntuple(_ -> NoTangent(), length(args))...
+    end
+    return Integrals.substitute_bv(args...), substitute_bv_pullback
+end
+function ChainRulesCore.rrule(::typeof(Integrals._evaluate!), f, y, u, p)
+    out, back = Zygote.pullback(y, u, p) do y, u, p
+        b = Zygote.Buffer(y)
+        f(b, u, p)
+        return copy(b)
+    end
+    out, Δ -> (NoTangent(), NoTangent(), back(Δ)...)
+end
+
 function ChainRulesCore.rrule(::typeof(Integrals.__solvebp), cache, alg, sensealg, domain,
         p;
         kwargs...)
@@ -89,16 +126,10 @@ function ChainRulesCore.rrule(::typeof(Integrals.__solvebp), cache, alg, senseal
         dp_cache = init(dp_prob,
             alg;
             sensealg = sensealg,
-            do_inf_transformation = Val(false),
             cache.kwargs...)
 
         project_p = ProjectTo(p)
-        dp = project_p(Integrals.__solvebp_call(dp_cache,
-            alg,
-            sensealg,
-            domain,
-            p;
-            kwargs...).u)
+        dp = project_p(solve!(dp_cache).u)
 
         lb, ub = domain
         if lb isa Number

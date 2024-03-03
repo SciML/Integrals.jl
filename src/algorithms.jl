@@ -1,10 +1,12 @@
 """
-    QuadGKJL(; order = 7, norm=norm)
+    QuadGKJL(; order = 7, norm = norm, buffer = nothing)
 
 One-dimensional Gauss-Kronrod integration from QuadGK.jl.
 This method also takes the optional arguments `order` and `norm`.
 Which are the order of the integration rule
-and the norm for calculating the error, respectively
+and the norm for calculating the error, respectively.
+Lastly, the `buffer` keyword, if set, will allocate a buffer to reuse
+for multiple integrals, which may require evaluating the integrand.
 
 ## References
 
@@ -18,20 +20,23 @@ pages={1133--1145},
 year={1997}
 }
 """
-struct QuadGKJL{F} <: SciMLBase.AbstractIntegralAlgorithm where {F}
+struct QuadGKJL{F, B} <: SciMLBase.AbstractIntegralAlgorithm
     order::Int
     norm::F
+    buffer::B
 end
-QuadGKJL(; order = 7, norm = norm) = QuadGKJL(order, norm)
+QuadGKJL(; order = 7, norm = norm, buffer = nothing) = QuadGKJL(order, norm, buffer)
 
 """
-    HCubatureJL(; norm=norm, initdiv=1)
+    HCubatureJL(; norm=norm, initdiv=1, buffer = nothing)
 
 Multidimensional "h-adaptive" integration from HCubature.jl.
 This method also takes the optional arguments `initdiv` and `norm`.
 Which are the initial number of segments
 each dimension of the integration domain is divided into,
 and the norm for calculating the error, respectively.
+Lastly, the `buffer` keyword, if set, will allocate a buffer to reuse
+for multiple integrals, which may require evaluating the integrand.
 
 ## References
 
@@ -46,14 +51,17 @@ year={1980},
 publisher={Elsevier}
 }
 """
-struct HCubatureJL{F} <: SciMLBase.AbstractIntegralAlgorithm where {F}
+struct HCubatureJL{F, B} <: SciMLBase.AbstractIntegralAlgorithm
     initdiv::Int
     norm::F
+    buffer::B
 end
-HCubatureJL(; initdiv = 1, norm = norm) = HCubatureJL(initdiv, norm)
+function HCubatureJL(; initdiv = 1, norm = norm, buffer = nothing)
+    HCubatureJL(initdiv, norm, buffer)
+end
 
 """
-    VEGAS(; nbins = 100, ncalls = 1000, debug=false)
+    VEGAS(; nbins = 100, ncalls = 1000, debug=false, seed = nothing)
 
 Multidimensional adaptive Monte Carlo integration from MonteCarloIntegration.jl.
 Importance sampling is used to reduce variance.
@@ -80,12 +88,15 @@ year={1978},
 publisher={Elsevier}
 }
 """
-struct VEGAS <: SciMLBase.AbstractIntegralAlgorithm
+struct VEGAS{S} <: SciMLBase.AbstractIntegralAlgorithm
     nbins::Int
     ncalls::Int
     debug::Bool
+    seed::S
 end
-VEGAS(; nbins = 100, ncalls = 1000, debug = false) = VEGAS(nbins, ncalls, debug)
+function VEGAS(; nbins = 100, ncalls = 1000, debug = false, seed = nothing)
+    VEGAS(nbins, ncalls, debug, seed)
+end
 
 """
     GaussLegendre{C, N, W}
