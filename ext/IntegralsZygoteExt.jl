@@ -18,11 +18,13 @@ ChainRulesCore.@non_differentiable Integrals.substitute_v(args...) # TODO for �
 ChainRulesCore.@non_differentiable Integrals.substitute_bv(args...) # TODO for ∂f/∂u
 
 # TODO move this adjoint to SciMLBase
-function ChainRulesCore.rrule(::typeof(SciMLBase.build_solution), prob::IntegralProblem, alg, u, resid; kwargs...)
+function ChainRulesCore.rrule(
+        ::typeof(SciMLBase.build_solution), prob::IntegralProblem, alg, u, resid; kwargs...)
     function build_integral_solution_pullback(Δ)
         return NoTangent(), NoTangent(), NoTangent(), Δ, NoTangent()
     end
-    return SciMLBase.build_solution(prob, alg, u, resid; kwargs...), build_integral_solution_pullback
+    return SciMLBase.build_solution(prob, alg, u, resid; kwargs...),
+    build_integral_solution_pullback
 end
 
 function ChainRulesCore.rrule(::typeof(Integrals._evaluate!), f, y, u, p)
@@ -39,7 +41,7 @@ function ChainRulesCore.rrule(::typeof(Integrals.u2t), lb, ub)
     function u2t_pullback(Δ)
         _, lbjac = Integrals.t2ujac(tlb, lb, ub)
         _, ubjac = Integrals.t2ujac(tub, lb, ub)
-        return NoTangent(), Δ[1]/lbjac, Δ[2]/ubjac
+        return NoTangent(), Δ[1] / lbjac, Δ[2] / ubjac
     end
     return out, u2t_pullback
 end

@@ -362,7 +362,8 @@ end
     # test a simple u-substitution of x = 2.7u + 1.3
     talg = Integrals.ChangeOfVariables(alg) do f, domain
         if f isa IntegralFunction{false}
-            IntegralFunction((x, p) -> f((x - 1.3)/2.7, p)/2.7), map(x -> 1.3 + 2.7x, domain)
+            IntegralFunction((x, p) -> f((x - 1.3) / 2.7, p) / 2.7),
+            map(x -> 1.3 + 2.7x, domain)
         else
             error("not implemented")
         end
@@ -371,14 +372,14 @@ end
         prob = IntegralProblem(f, (lb, ub), p)
         solve(prob, alg; abstol, reltol).u
     end
-    _testf = (x, p) -> x^2*p
+    _testf = (x, p) -> x^2 * p
     lb, ub, p = 1.0, 5.0, 2.0
     sol = Zygote.withgradient((args...) -> testf(_testf, args..., alg), lb, ub, p)
     tsol = Zygote.withgradient((args...) -> testf(_testf, args..., talg), lb, ub, p)
     @test sol.val ≈ tsol.val
     # Fundamental theorem of Calculus part 1
     @test sol.grad[1] ≈ tsol.grad[1] ≈ -_testf(lb, p)
-    @test sol.grad[2] ≈ tsol.grad[2] ≈  _testf(ub, p)
+    @test sol.grad[2] ≈ tsol.grad[2] ≈ _testf(ub, p)
     # This is to check ∂p
     @test sol.grad[3] ≈ tsol.grad[3]
 end
