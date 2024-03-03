@@ -17,7 +17,8 @@ init_cacheval(::SciMLBase.AbstractIntegralAlgorithm, args...) = nothing
 function SciMLBase.init(prob::IntegralProblem{iip},
         alg::SciMLBase.AbstractIntegralAlgorithm;
         sensealg = ReCallVJP(ZygoteVJP()),
-        do_inf_transformation = nothing, kwargs...) where {iip}
+        do_inf_transformation = nothing, kws...) where {iip}
+    kwargs = pairs((; prob.kwargs..., kws...))
     checkkwargs(kwargs...)
     do_inf_transformation === nothing ||
         @warn "do_inf_transformation is deprecated. All integral problems are transformed"
