@@ -28,7 +28,7 @@ the documentation, which contains the unreleased features.
 ## Examples
 
 To perform one-dimensional quadrature, we can simply construct an `IntegralProblem`. The code below evaluates $\int_{-2}^5 \sin(xp)~\mathrm{d}x$ with $p = 1.7$. This argument $p$ is passed
-into the problem as the fourth argument of `IntegralProblem`.
+into the problem as the third argument of `IntegralProblem`.
 
 ```julia
 using Integrals
@@ -39,7 +39,7 @@ prob = IntegralProblem(f, domain, p)
 sol = solve(prob, QuadGKJL())
 ```
 
-For basic multidimensional quadrature we can construct and solve a `IntegralProblem`. Since we are using no arguments `p` in this example, we omit the fourth argument of `IntegralProblem`
+For basic multidimensional quadrature we can construct and solve a `IntegralProblem`. Since we are using no arguments `p` in this example, we omit the third argument of `IntegralProblem`
 from above. The lower and upper bounds are now passed as vectors, with the `i`th elements of
 the bounds giving the interval of integration for `x[i]`.
 
