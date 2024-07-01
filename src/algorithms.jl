@@ -12,6 +12,7 @@ allocate the buffer as this is handled automatically.
 
 ## References
 
+```tex
 @article{laurie1997calculation,
 title={Calculation of Gauss-Kronrod quadrature rules},
 author={Laurie, Dirk},
@@ -21,6 +22,7 @@ number={219},
 pages={1133--1145},
 year={1997}
 }
+```
 """
 struct QuadGKJL{F, B} <: SciMLBase.AbstractIntegralAlgorithm
     order::Int
@@ -44,6 +46,7 @@ you do not allocate the buffer as this is handled automatically.
 
 ## References
 
+```tex
 @article{genz1980remarks,
 title={Remarks on algorithm 006: An adaptive algorithm for numerical integration over an N-dimensional rectangular region},
 author={Genz, Alan C and Malik, Aftab Ahmad},
@@ -54,6 +57,7 @@ pages={295--302},
 year={1980},
 publisher={Elsevier}
 }
+```
 """
 struct HCubatureJL{F, B} <: SciMLBase.AbstractIntegralAlgorithm
     initdiv::Int
@@ -81,6 +85,7 @@ This algorithm can only integrate `Float64`-valued functions
 
 ## References
 
+```tex
 @article{lepage1978new,
 title={A new algorithm for adaptive multidimensional integration},
 author={Lepage, G Peter},
@@ -91,6 +96,7 @@ pages={192--203},
 year={1978},
 publisher={Elsevier}
 }
+```
 """
 struct VEGAS{S} <: SciMLBase.AbstractIntegralAlgorithm
     nbins::Int
