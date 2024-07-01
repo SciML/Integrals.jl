@@ -24,7 +24,7 @@ method = TrapezoidalRule()
 solve(problem, method)
 ```
 
-The exact answer is of course \$ 1/3 \$.
+The exact answer is of course ``1/3``.
 
 ## Details
 
