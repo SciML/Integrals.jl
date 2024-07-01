@@ -13,6 +13,7 @@ Importance sampling is used to reduce variance.
 
 ## References
 
+```tex
 @article{lepage1978new,
 title={A new algorithm for adaptive multidimensional integration},
 author={Lepage, G Peter},
@@ -23,6 +24,7 @@ pages={192--203},
 year={1978},
 publisher={Elsevier}
 }
+```
 """
 struct CubaVegas <: AbstractCubaAlgorithm
     flags::Int
@@ -42,6 +44,7 @@ Importance sampling and subdivision are thus used to reduce variance.
 
 ## References
 
+```tex
 @article{hahn2005cuba,
 title={Cuba—a library for multidimensional numerical integration},
 author={Hahn, Thomas},
@@ -52,6 +55,7 @@ pages={78--95},
 year={2005},
 publisher={Elsevier}
 }
+```
 """
 struct CubaSUAVE{R} <: AbstractCubaAlgorithm where {R <: Real}
     flags::Int
@@ -70,6 +74,7 @@ Stratified sampling is used to reduce variance.
 
 ## References
 
+```tex
 @article{friedman1981nested,
 title={A nested partitioning procedure for numerical multiple integration},
 author={Friedman, Jerome H and Wright, Margaret H},
@@ -80,6 +85,7 @@ pages={76--92},
 year={1981},
 publisher={ACM New York, NY, USA}
 }
+```
 """
 struct CubaDivonne{R1, R2, R3, R4} <:
        AbstractCubaAlgorithm where {R1 <: Real, R2 <: Real, R3 <: Real, R4 <: Real}
@@ -105,6 +111,7 @@ Multidimensional h-adaptive integration from Cuba.jl.
 
 ## References
 
+```tex
 @article{berntsen1991adaptive,
 title={An adaptive algorithm for the approximate calculation of multiple integrals},
 author={Berntsen, Jarle and Espelid, Terje O and Genz, Alan},
@@ -115,6 +122,7 @@ pages={437--451},
 year={1991},
 publisher={ACM New York, NY, USA}
 }
+```
 """
 struct CubaCuhre <: AbstractCubaAlgorithm
     flags::Int
@@ -165,6 +173,7 @@ Defaults to `Cubature.INDIVIDUAL`, other options are
 
 ## References
 
+```tex
 @article{genz1980remarks,
 title={Remarks on algorithm 006: An adaptive algorithm for numerical integration over an N-dimensional rectangular region},
 author={Genz, Alan C and Malik, Aftab Ahmad},
@@ -175,6 +184,7 @@ pages={295--302},
 year={1980},
 publisher={Elsevier}
 }
+```
 """
 struct CubatureJLh <: AbstractCubatureJLAlgorithm
     error_norm::Int32
