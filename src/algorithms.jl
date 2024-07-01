@@ -143,7 +143,7 @@ function GaussLegendre(; n = 250, subintervals = 1, nodes = nothing, weights = n
 end
 
 """
-QuadratureRule(q; n=250)
+    QuadratureRule(q; n=250)
 
 Algorithm to construct and evaluate a quadrature rule `q` of `n` points computed from the
 inputs as `x, w = q(n)`. It assumes the nodes and weights are for the standard interval
