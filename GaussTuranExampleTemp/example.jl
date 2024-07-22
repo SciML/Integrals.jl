@@ -1,13 +1,13 @@
 using Optim
+using DoubleFloats
 using TaylorDiff
 using PreallocationTools
 using Integrals
-using DoubleFloats
 
 # This fix is needed to avoid crashing: https://github.com/JuliaLang/julia/pull/54201
 include("linear_algebra_fix.jl")
 
-FT = Float64 # Double64
+FT = Double64
 n = 5
 s = 1
 a = FT(0.0)
@@ -44,7 +44,7 @@ I = Integrals.GaussTuran(
 max_int_error_upper = maximum(abs(I(x -> f(x, j)) - I.cache.rhs_upper[j])
 for j in 1:(I.cache.N))
 @show max_int_error_upper
-# max_int_error_upper = 2.220446049250313e-16
+# max_int_error_upper = 2.465190328815662e-32
 
 # Integration error |I(fⱼ) - ₐ∫ᵇfⱼ(x)dx| last n functions fⱼ
 max_int_error_lower = maximum(
@@ -53,9 +53,9 @@ for
 j in (I.cache.N + 1):(I.cache.N + I.cache.n)
 )
 @show max_int_error_lower
-# max_int_error_lower = 2.0211055051788662e-12
+# max_int_error_lower = 9.079315240327527e-30
 
 # Example with eˣ
 exp_error = abs(I(Base.exp) - (Base.exp(1) - 1))
 @show exp_error;
-# exp_error = 1.5543122344752192e-15
+# exp_error = 6.43662141695295e-18

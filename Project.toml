@@ -32,8 +32,8 @@ IntegralsCubaExt = "Cuba"
 IntegralsCubatureExt = "Cubature"
 IntegralsFastGaussQuadratureExt = "FastGaussQuadrature"
 IntegralsForwardDiffExt = "ForwardDiff"
-IntegralsMCIntegrationExt = "MCIntegration"
 IntegralsGaussTuranExt = ["Optim", "TaylorDiff", "PreallocationTools"]
+IntegralsMCIntegrationExt = "MCIntegration"
 IntegralsZygoteExt = ["Zygote", "ChainRulesCore"]
 
 [compat]

@@ -87,14 +87,14 @@ function GaussTuranLoss!(f, ΔX::AbstractVector{T}, cache) where {T}
     cumsum!(X, ΔX)
     X .+= a
 
-    # Evaluating f!
+    # Evaluating f
     for (i, x) in enumerate(X)
         # Threads.@threads for j = 1:N
         for j in 1:N
-            M_upper[j, i:n:N] .= derivatives(x -> f(x, j), x, one(T), Val(2s + 1)).value
+            M_upper[j, i:n:N] .= derivatives(x -> f(x, j), x, 1, Val(2s + 1)).value
         end
         Threads.@threads for j in (N + 1):(N + n)
-            M_lower[j - N, i:n:N] .= derivatives(x -> f(x, j), x, one(T), Val(2s + 1)).value
+            M_lower[j - N, i:n:N] .= derivatives(x -> f(x, j), x, 1, Val(2s + 1)).value
         end
     end
 
