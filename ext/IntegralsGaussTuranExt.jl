@@ -1,14 +1,14 @@
 
-module IntegralsOptimExt
+module IntegralsGaussTuranExt
 using Base.Threads
 using Integrals
 if isdefined(Base, :get_extension)
     using Optim
-    using ForwardDiff
+    using TaylorDiff
     using PreallocationTools
 else
     using ..Optim
-    using ..ForwardDiff
+    using ..TaylorDiff
     using ..PreallocationTools
 end
 
@@ -36,14 +36,14 @@ struct GaussTuranCache{T}
     X_buffer::LazyBufferCache{typeof(identity)}
     A_buffer::LazyBufferCache{typeof(identity)}
     function GaussTuranCache(
-        n,
-        s,
-        N,
-        a::T,
-        b::T,
-        ε::T,
-        rhs_upper::Vector{T},
-        rhs_lower::Vector{T},
+            n,
+            s,
+            N,
+            a::T,
+            b::T,
+            ε::T,
+            rhs_upper::Vector{T},
+            rhs_lower::Vector{T}
     ) where {T}
         new{T}(
             n,
@@ -57,7 +57,7 @@ struct GaussTuranCache{T}
             LazyBufferCache(),
             LazyBufferCache(),
             LazyBufferCache(),
-            LazyBufferCache(),
+            LazyBufferCache()
         )
     end
 end
@@ -65,19 +65,19 @@ end
 """
 Function whose root defines the quadrature rule.
 """
-function GaussTuranLoss!(f!, ΔX, cache)
+function GaussTuranLoss!(f, ΔX::AbstractVector{T}, cache) where {T}
     (;
-        n,
-        s,
-        N,
-        a,
-        rhs_upper,
-        rhs_lower,
-        M_upper_buffer,
-        M_lower_buffer,
-        A_buffer,
-        X_buffer,
-    ) = cache
+    n,
+    s,
+    N,
+    a,
+    rhs_upper,
+    rhs_lower,
+    M_upper_buffer,
+    M_lower_buffer,
+    A_buffer,
+    X_buffer
+) = cache
     M_upper = M_upper_buffer[ΔX, (N, N)]
     M_lower = M_lower_buffer[ΔX, (n, N)]
     A = A_buffer[ΔX, N]
@@ -89,11 +89,12 @@ function GaussTuranLoss!(f!, ΔX, cache)
 
     # Evaluating f!
     for (i, x) in enumerate(X)
-        Threads.@threads for j = 1:N
-            f!(view(M_upper, j, i:n:N), x, j)
+        # Threads.@threads for j = 1:N
+        for j in 1:N
+            M_upper[j, i:n:N] .= derivatives(x -> f(x, j), x, one(T), Val(2s + 1)).value
         end
-        Threads.@threads for j = (N+1):(N+n)
-            f!(view(M_lower, j - N, i:n:N), x, j)
+        Threads.@threads for j in (N + 1):(N + n)
+            M_lower[j - N, i:n:N] .= derivatives(x -> f(x, j), x, one(T), Val(2s + 1)).value
         end
     end
 
@@ -116,22 +117,19 @@ end
     Callable result object of the Gauss-Turán quadrature rule
     computation algorithm.
 """
-struct GaussTuranResult{T,RType,dfType,deriv!Type}
+struct GaussTuranResult{T, RType, dfType}
     X::Vector{T}
     A::Matrix{T}
     res::RType
     cache::GaussTuranCache
     df::dfType
-    deriv!::deriv!Type
-    f_tmp::Vector{T}
 
-    function GaussTuranResult(res, cache::GaussTuranCache{T}, df, deriv!) where {T}
+    function GaussTuranResult(res, cache::GaussTuranCache{T}, df) where {T}
         (; A_buffer, s, n, N, a) = cache
         X = cumsum(res.minimizer) .+ a
         df.f(res.minimizer)
         A = reshape(A_buffer[T[], N], (n, 2s + 1))
-        f_tmp = zeros(T, 2s + 1)
-        new{T,typeof(res),typeof(df),typeof(deriv!)}(X, A, res, cache, df, deriv!, f_tmp)
+        new{T, typeof(res), typeof(df)}(X, A, res, cache, df)
     end
 end
 
@@ -139,19 +137,20 @@ end
     Input: function f(x, d) which gives the dth derivative of f
 """
 function (I::GaussTuranResult{T} where {T})(integrand)
-    (; X, A, cache, deriv!, f_tmp) = I
+    (; X, A, cache) = I
+    (; s) = cache
     out = zero(eltype(X))
     for (i, x) in enumerate(X)
-        deriv!(f_tmp, integrand, x)
-        for m = 1:(2*cache.s+1)
-            out += A[i, m] * f_tmp[m]
+        derivs = derivatives(integrand, x, 1.0, Val(2s + 1)).value
+        for (m, deriv) in enumerate(derivs)
+            out += A[i, m] * deriv
         end
     end
     out
 end
 
 """
-    GaussTuran(f!, a, b, n, s; w = DEFAULT_w, ε = nothing, X₀ = nothing)
+    GaussTuran(f, a, b, n, s; w = DEFAULT_w, ε = nothing, X₀ = nothing)
 
 Determine a quadrature rule
 
@@ -161,7 +160,7 @@ that gives the precise integral ₐ∫ᵇf(x)dx for given linearly independent f
 
 Method:
 
-The equations 
+The equations
 
 ∑ₘ∑ᵢ Aₘᵢ * ∂ᵐ⁻¹fⱼ(xᵢ) = ₐ∫ᵇw(x)fⱼ(x)dx        j = 1, …, 2(s+1)n
 
@@ -183,8 +182,7 @@ M_upper singular.
 
 ## Inputs
 
-  - `f`: Function with signature `f(x::T, j)::T` that returns the d-th derivative of fⱼ at x
-  - `deriv!`: Function generated with @generate_derivs(2s) for automatically computing the derivatives of the fⱼ
+  - `f`: Function with signature `f(x::T, j)::T` that returns fⱼ at x
   - `a`: Integration lower bound
   - `b`: Integration upper bound
   - `n`: The number of nodes in the quadrature rule
@@ -197,24 +195,23 @@ M_upper singular.
   - `X₀`: The initial guess for the nodes. Defaults to uniformly distributed over (a, b).
   - `integration_kwargs`: The key word arguments passed to `solve` for integrating w * fⱼ
   - `optimization_kwargs`: The key word arguments passed to `Optim.Options` for the minization problem
-        for finding X.
+    for finding X.
 """
 function Integrals.GaussTuran(
-    f,
-    deriv!,
-    a::T,
-    b::T,
-    n,
-    s;
-    w = DEFAULT_w,
-    ε = nothing,
-    X₀ = nothing,
-    integration_kwargs::NamedTuple = (; reltol = 1e-120),
-    optimization_options::Optim.Options = Optim.Options(),
-) where {T<:AbstractFloat}
+        f,
+        a::T,
+        b::T,
+        n,
+        s;
+        w = DEFAULT_w,
+        ε = nothing,
+        X₀ = nothing,
+        integration_kwargs::NamedTuple = (; reltol = 1e-120),
+        optimization_options::Optim.Options = Optim.Options()
+) where {T <: AbstractFloat}
     # Initial guess
     if isnothing(X₀)
-        X₀ = collect(range(a, b, length = n + 2)[2:(end-1)])
+        X₀ = collect(range(a, b, length = n + 2)[2:(end - 1)])
     else
         @assert length(X₀) == n
     end
@@ -237,8 +234,8 @@ function Integrals.GaussTuran(
         res.u[]
     end
     N = (2s + 1) * n
-    rhs_upper = [integrate(j) for j = 1:N]
-    rhs_lower = [integrate(j) for j = (N+1):(N+n)]
+    rhs_upper = [integrate(j) for j in 1:N]
+    rhs_lower = [integrate(j) for j in (N + 1):(N + n)]
 
     # Solving constrained non linear problem for ΔX, see
     # https://julianlsolvers.github.io/Optim.jl/stable/examples/generated/ipnewton_basics/
@@ -246,15 +243,10 @@ function Integrals.GaussTuran(
     # The cache for evaluating GaussTuranLoss
     cache = GaussTuranCache(n, s, N, a, b, ε, rhs_upper, rhs_lower)
 
-    # In-place derivative computation of f
-    function f!(out, x, j::Int)::Nothing
-        deriv!(out, x -> f(x, j), x)
-    end
-
     # The function whose root defines the quadrature rule
     # Note: the optimization method requires a Hessian, 
     # which brings the highest order derivative required to 2s + 2
-    func(ΔX) = GaussTuranLoss!(f!, ΔX, cache)
+    func(ΔX) = GaussTuranLoss!(f, ΔX, cache)
     df = TwiceDifferentiable(func, ΔX₀; autodiff = :forward)
 
     # The constraints on ΔX
@@ -274,13 +266,13 @@ function Integrals.GaussTuran(
         ΔX_lb,
         ΔX_ub,
         sum_lb,
-        sum_ub,
+        sum_ub
     )
 
     # Solve for the quadrature rule by minimizing the loss function
     res = Optim.optimize(df, constraints, T.(ΔX₀), IPNewton(), optimization_options)
 
-    GaussTuranResult(res, cache, df, deriv!)
+    GaussTuranResult(res, cache, df)
 end
 
-end # module IntegralsOptimExt
+end # module IntegralsGaussTuranExt
