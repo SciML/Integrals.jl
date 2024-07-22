@@ -21,6 +21,8 @@ Cubature = "667455a9-e2ce-5579-9412-b964f529a492"
 FastGaussQuadrature = "442a2c76-b920-505d-bb47-c5924d526838"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 MCIntegration = "ea1e2de9-7db7-4b42-91ee-0cd1bf6df167"
+Optim = "429524aa-4258-5aef-a3af-852621145aeb"
+PreallocationTools = "d236fae5-4411-538c-8e31-a6e3d9e00b46"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [extensions]
@@ -29,6 +31,7 @@ IntegralsCubaExt = "Cuba"
 IntegralsCubatureExt = "Cubature"
 IntegralsFastGaussQuadratureExt = "FastGaussQuadrature"
 IntegralsForwardDiffExt = "ForwardDiff"
+IntegralsOptimExt = ["Optim", "PreallocationTools", "ForwardDiff"]
 IntegralsMCIntegrationExt = "MCIntegration"
 IntegralsZygoteExt = ["Zygote", "ChainRulesCore"]
 
