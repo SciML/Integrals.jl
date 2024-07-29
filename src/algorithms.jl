@@ -162,3 +162,13 @@ struct QuadratureRule{Q} <: SciMLBase.AbstractIntegralAlgorithm
     end
 end
 QuadratureRule(q; n = 250) = QuadratureRule(q, n)
+
+
+"""
+Gauss Turan Quadrature using xgt51 and agt51
+"""
+struct GaussTuran{B} <: SciMLBase.AbstractIntegralAlgorithm
+    n::Int # number of points
+    s::Int # order of derivative
+    ad_backend::B # for now ForwardDiff
+end
