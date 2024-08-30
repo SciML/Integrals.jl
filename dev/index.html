@@ -3,13 +3,13 @@
 Pkg.add(&quot;Integrals&quot;)</code></pre><h2 id="Contributing"><a class="docs-heading-anchor" href="#Contributing">Contributing</a><a id="Contributing-1"></a><a class="docs-heading-anchor-permalink" href="#Contributing" title="Permalink"></a></h2><ul><li><p>Please refer to the <a href="https://github.com/SciML/ColPrac/blob/master/README.md">SciML ColPrac: Contributor&#39;s Guide on Collaborative Practices for Community Packages</a> for guidance on PRs, issues, and other matters relating to contributing to SciML.</p></li><li><p>See the <a href="https://github.com/SciML/SciMLStyle">SciML Style Guide</a> for common coding practices and other style decisions.</p></li><li><p>There are a few community forums:</p><ul><li>The #diffeq-bridged and #sciml-bridged channels in the <a href="https://julialang.org/slack/">Julia Slack</a></li><li>The #diffeq-bridged and #sciml-bridged channels in the <a href="https://julialang.zulipchat.com/#narrow/stream/279055-sciml-bridged">Julia Zulip</a></li><li>On the <a href="https://discourse.julialang.org">Julia Discourse forums</a></li><li>See also <a href="https://sciml.ai/community/">SciML Community page</a></li></ul></li></ul><h2 id="Reproducibility"><a class="docs-heading-anchor" href="#Reproducibility">Reproducibility</a><a id="Reproducibility-1"></a><a class="docs-heading-anchor-permalink" href="#Reproducibility" title="Permalink"></a></h2><details><summary>The documentation of this SciML package was built using these direct dependencies,</summary><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Status `~/work/Integrals.jl/Integrals.jl/docs/Project.toml`
   [8a292aeb] Cuba v2.3.0
   [667455a9] Cubature v1.5.1
-  [31c24e10] Distributions v0.25.109
-  [e30172f5] Documenter v1.5.0
-  [6a86dc24] FiniteDiff v2.23.1
+  [31c24e10] Distributions v0.25.111
+  [e30172f5] Documenter v1.6.0
+  [6a86dc24] FiniteDiff v2.24.0
   [f6369f11] ForwardDiff v0.10.36
-  [de52edbc] Integrals v4.4.1 `~/work/Integrals.jl/Integrals.jl`
-  [e88e6eb3] Zygote v0.6.70</code></pre></details><details><summary>and using this machine and Julia version.</summary><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Julia Version 1.10.4
-Commit 48d4fd48430 (2024-06-04 10:41 UTC)
+  [de52edbc] Integrals v4.5.0 `~/work/Integrals.jl/Integrals.jl`
+  [e88e6eb3] Zygote v0.6.70</code></pre></details><details><summary>and using this machine and Julia version.</summary><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Julia Version 1.10.5
+Commit 6f3fdf7b362 (2024-08-27 14:19 UTC)
 Build Info:
   Official https://julialang.org/ release
 Platform Info:
@@ -19,26 +19,25 @@ Platform Info:
   LIBM: libopenlibm
   LLVM: libLLVM-15.0.7 (ORCJIT, znver3)
 Threads: 1 default, 0 interactive, 1 GC (on 4 virtual cores)</code></pre></details><details><summary>A more complete overview of all dependencies and their versions is also provided.</summary><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Status `~/work/Integrals.jl/Integrals.jl/docs/Manifest.toml`
-  [47edcb42] ADTypes v1.5.2
+  [47edcb42] ADTypes v1.7.1
   [a4c015fc] ANSIColoredPrinters v0.0.1
   [621f4979] AbstractFFTs v1.5.0
   [1520ce14] AbstractTrees v0.4.5
-  [7d9f7c33] Accessors v0.1.36
+  [7d9f7c33] Accessors v0.1.37
   [79e6a3ab] Adapt v4.0.4
   [66dad0bd] AliasTables v1.1.3
-  [4fba245c] ArrayInterface v7.11.0
+  [4fba245c] ArrayInterface v7.15.0
   [fa961155] CEnum v0.5.0
-  [49dc2e85] Calculus v0.5.1
   [082447d4] ChainRules v1.69.0
   [d360d2e6] ChainRulesCore v1.24.0
-  [944b1d66] CodecZlib v0.7.4
+  [944b1d66] CodecZlib v0.7.6
   [861a8166] Combinatorics v1.0.2
   [38540f10] CommonSolve v0.2.4
-  [bbf7d656] CommonSubexpressions v0.3.0
-  [34da2185] Compat v4.15.0
+  [bbf7d656] CommonSubexpressions v0.3.1
+  [34da2185] Compat v4.16.0
   [a33af91c] CompositionsBase v0.1.2
   [2569d6c7] ConcreteStructs v0.2.3
-  [187b0558] ConstructionBase v1.5.5
+  [187b0558] ConstructionBase v1.5.7
   [8a292aeb] Cuba v2.3.0
   [667455a9] Cubature v1.5.1
   [9a962f9c] DataAPI v1.16.0
@@ -47,35 +46,36 @@ Threads: 1 default, 0 interactive, 1 GC (on 4 virtual cores)</code></pre></detai
   [8bb1440f] DelimitedFiles v1.9.1
   [163ba53b] DiffResults v1.1.0
   [b552c78f] DiffRules v1.15.1
-  [31c24e10] Distributions v0.25.109
+  [31c24e10] Distributions v0.25.111
   [ffbed154] DocStringExtensions v0.9.3
-  [e30172f5] Documenter v1.5.0
-  [fa6b7ba4] DualNumbers v0.6.8
+  [e30172f5] Documenter v1.6.0
   [4e289a0a] EnumX v1.0.4
   [e2ba6199] ExprTools v0.1.10
-  [1a297f60] FillArrays v1.11.0
-  [6a86dc24] FiniteDiff v2.23.1
+⌅ [6b7a57c9] Expronicon v0.8.5
+  [1a297f60] FillArrays v1.13.0
+  [6a86dc24] FiniteDiff v2.24.0
   [f6369f11] ForwardDiff v0.10.36
   [069b7b12] FunctionWrappers v1.1.3
   [77dc65aa] FunctionWrappersWrappers v0.1.3
-  [0c68f7d7] GPUArrays v10.2.2
+  [0c68f7d7] GPUArrays v10.3.1
   [46192b85] GPUArraysCore v0.1.6
   [d7ba0133] Git v1.3.1
   [19dc6840] HCubature v1.6.0
-  [34004b35] HypergeometricFunctions v0.3.23
+  [34004b35] HypergeometricFunctions v0.3.24
   [b5f81e59] IOCapture v0.2.5
   [7869d1d1] IRTools v0.4.14
   [18e54dd8] IntegerMathUtils v0.1.2
-  [de52edbc] Integrals v4.4.1 `~/work/Integrals.jl/Integrals.jl`
-  [3587e190] InverseFunctions v0.1.14
+  [de52edbc] Integrals v4.5.0 `~/work/Integrals.jl/Integrals.jl`
+  [3587e190] InverseFunctions v0.1.16
   [92d709cd] IrrationalConstants v0.2.2
   [82899510] IteratorInterfaceExtensions v1.0.0
   [692b3bcd] JLLWrappers v1.5.0
   [682c06a0] JSON v0.21.4
-  [929cbde3] LLVM v8.0.0
+  [929cbde3] LLVM v9.0.0
   [73f95e8e] LatticeRules v0.0.1
   [0e77f7df] LazilyInitializedFields v1.2.2
   [2ab3a3ac] LogExpFunctions v0.3.28
+  [d8e11817] MLStyle v0.4.17
   [1914dd2f] MacroTools v0.5.13
   [d0879d2d] MarkdownAST v0.1.2
   [e1d29d7a] Missings v1.2.0
@@ -87,46 +87,46 @@ Threads: 1 default, 0 interactive, 1 GC (on 4 virtual cores)</code></pre></detai
   [aea7be01] PrecompileTools v1.2.1
   [21216c6a] Preferences v1.4.3
   [27ebfcd6] Primes v0.5.6
-  [43287f4e] PtrArrays v1.2.0
-  [1fd47b50] QuadGK v2.9.4
+  [43287f4e] PtrArrays v1.2.1
+  [1fd47b50] QuadGK v2.10.1
   [8a4e6c94] QuasiMonteCarlo v0.3.3
   [c1ae055f] RealDot v0.1.0
   [3cdcf5f2] RecipesBase v1.3.4
-  [731186ca] RecursiveArrayTools v3.23.1
+  [731186ca] RecursiveArrayTools v3.27.0
   [189a3867] Reexport v1.2.2
   [2792f1a3] RegistryInstances v0.1.0
   [ae029012] Requires v1.3.0
   [79098fc4] Rmath v0.7.1
   [7e49a35a] RuntimeGeneratedFunctions v0.5.13
-  [0bca4576] SciMLBase v2.41.3
-  [c0aeaf25] SciMLOperators v0.3.8
-  [53ae85a6] SciMLStructures v1.4.1
+  [0bca4576] SciMLBase v2.50.6
+  [c0aeaf25] SciMLOperators v0.3.10
+  [53ae85a6] SciMLStructures v1.4.2
   [efcf1570] Setfield v1.1.1
   [ed01d8cd] Sobol v1.5.0
   [a2af1166] SortingAlgorithms v1.2.1
   [dc90abb0] SparseInverseSubset v0.1.2
   [276daf66] SpecialFunctions v2.4.0
-  [90137ffa] StaticArrays v1.9.6
+  [90137ffa] StaticArrays v1.9.7
   [1e83bf80] StaticArraysCore v1.4.3
   [82ae8749] StatsAPI v1.7.0
   [2913bbd2] StatsBase v0.34.3
   [4c63d2b9] StatsFuns v1.3.1
   [09ab397b] StructArrays v0.6.18
-  [2efcf032] SymbolicIndexingInterface v0.3.22
+  [2efcf032] SymbolicIndexingInterface v0.3.28
   [3783bdb8] TableTraits v1.0.1
-  [bd369af6] Tables v1.11.1
-  [3bb67fe8] TranscodingStreams v0.10.10
+  [bd369af6] Tables v1.12.0
+  [3bb67fe8] TranscodingStreams v0.11.2
   [e88e6eb3] Zygote v0.6.70
   [700de1a5] ZygoteRules v0.2.5
   [3bed1096] Cuba_jll v4.2.2+1
   [7bc98958] Cubature_jll v1.0.5+0
   [2e619515] Expat_jll v2.6.2+0
   [f8c6e375] Git_jll v2.44.0+2
-  [dad2f222] LLVMExtra_jll v0.0.30+0
+  [dad2f222] LLVMExtra_jll v0.0.33+0
   [94ce4f54] Libiconv_jll v1.17.0+0
   [458c3c95] OpenSSL_jll v3.0.14+0
   [efe28fd5] OpenSpecFun_jll v0.5.5+0
-  [f50d1b31] Rmath_jll v0.4.2+0
+⌅ [f50d1b31] Rmath_jll v0.4.3+0
   [0dad84c5] ArgTools v1.1.1
   [56f22d72] Artifacts
   [2a0f44e3] Base64
@@ -171,6 +171,7 @@ Threads: 1 default, 0 interactive, 1 GC (on 4 virtual cores)</code></pre></detai
   [efcefdf7] PCRE2_jll v10.42.0+1
   [bea87d4a] SuiteSparse_jll v7.2.1+1
   [83775a58] Zlib_jll v1.2.13+1
-  [8e850b90] libblastrampoline_jll v5.8.0+1
+  [8e850b90] libblastrampoline_jll v5.11.0+0
   [8e850ede] nghttp2_jll v1.52.0+1
-  [3f19e933] p7zip_jll v17.4.0+2</code></pre></details><p>You can also download the <a href="https://github.com/SciML/Integrals.jl/tree/gh-pages/v4.4.1/assets/Manifest.toml">manifest</a> file and the <a href="https://github.com/SciML/Integrals.jl/tree/gh-pages/v4.4.1/assets/Project.toml">project</a> file.</p></article><nav class="docs-footer"><a class="docs-footer-nextpage" href="tutorials/numerical_integrals/">Numerically Solving Integrals »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.5.0 on <span class="colophon-date" title="Monday 1 July 2024 11:58">Monday 1 July 2024</span>. Using Julia version 1.10.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+  [3f19e933] p7zip_jll v17.4.0+2
+Info Packages marked with ⌅ have new versions available but compatibility constraints restrict them from upgrading. To see why use `status --outdated -m`</code></pre></details><p>You can also download the <a href="https://github.com/SciML/Integrals.jl/tree/gh-pages/v4.5.0/assets/Manifest.toml">manifest</a> file and the <a href="https://github.com/SciML/Integrals.jl/tree/gh-pages/v4.5.0/assets/Project.toml">project</a> file.</p></article><nav class="docs-footer"><a class="docs-footer-nextpage" href="tutorials/numerical_integrals/">Numerically Solving Integrals »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.6.0 on <span class="colophon-date" title="Friday 30 August 2024 14:42">Friday 30 August 2024</span>. Using Julia version 1.10.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
