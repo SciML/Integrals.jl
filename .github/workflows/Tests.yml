@@ -1,18 +1,23 @@
-name: "Documentation"
+name: "Tests"
 
 on:
+  pull_request:
+    branches:
+      - master
+    paths-ignore:
+      - 'docs/**'
   push:
     branches:
       - master
-    tags: '*'
-  pull_request:
+    paths-ignore:
+      - 'docs/**'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.ref_name != github.event.repository.default_branch || github.ref != 'refs/tags/v*' }}
 
 jobs:
-  build-and-deploy-docs:
-    name: "Documentation"
-    uses: "SciML/.github/.github/workflows/documentation.yml@v1"
+  tests:
+    name: "Tests"
+    uses: "SciML/.github/.github/workflows/tests.yml@v1"
     secrets: "inherit"
