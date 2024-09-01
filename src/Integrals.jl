@@ -20,6 +20,8 @@ include("sampled.jl")
 include("trapezoidal.jl")
 include("simpsons.jl")
 
+function GaussTuran end
+
 abstract type QuadSensitivityAlg end
 struct ReCallVJP{V}
     vjp::V
