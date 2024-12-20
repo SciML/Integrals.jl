@@ -1,7 +1,9 @@
-using Integrals, Zygote, FiniteDiff, ForwardDiff#, SciMLSensitivity
+using Integrals
 using Cuba, Cubature
 using FastGaussQuadrature
 using Test
+using DifferentiationInterface
+import Zygote, FiniteDiff, ForwardDiff
 
 max_dim_test = 2
 max_nout_test = 2
@@ -95,9 +97,9 @@ end
 
 # helper function / test runner
 do_tests = function (; f, scalarize, lb, ub, p, alg, abstol, reltol)
-    testf = function (lb, ub, p)
+    testf = function (lb, ub, p; kws...)
         prob = IntegralProblem(f, (lb, ub), p)
-        scalarize(solve(prob, alg; reltol, abstol))
+        scalarize(solve(prob, alg; reltol, abstol, kws...))
     end
     testf(lb, ub, p)
 
@@ -135,6 +137,20 @@ do_tests = function (; f, scalarize, lb, ub, p, alg, abstol, reltol)
     @test dp1≈dp2 atol=abstol rtol=reltol
     @test dp2≈dp3 atol=abstol rtol=reltol
 
+    # DI tests
+    for sensealg in [AutoForwardDiff(), AutoZygote()]
+        dlb_di, dub_di, dp_di = let sensealg=sensealg
+            Zygote.gradient((args...) -> testf(args...; sensealg), lb, ub, p isa Number && f isa BatchIntegralFunction ? Scalar(p) : p)
+        end
+        if lb isa Number
+            @test dlb1≈dlb_di atol=abstol rtol=reltol
+            @test dub1≈dub_di atol=abstol rtol=reltol
+        else # TODO: implement multivariate limit derivatives in ZygoteExt
+            @test_broken dlb1≈dlb_di atol=abstol rtol=reltol
+            @test_broken dub1≈dub_di atol=abstol rtol=reltol
+        end
+        @test dp1≈dp_di atol=abstol rtol=reltol
+    end
     return
 end
 
