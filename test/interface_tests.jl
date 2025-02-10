@@ -4,8 +4,8 @@ using Test
 
 max_dim_test = 2
 max_nout_test = 2
-reltol = 1e-4
-abstol = 1e-4
+reltol = 1e-5
+abstol = 1e-5
 
 alg_req = Dict(
     QuadGKJL() => (nout = Inf, allows_batch = true, min_dim = 1, max_dim = 1,
