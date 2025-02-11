@@ -6,7 +6,7 @@ _oftype(::Number, x) = only(x)
 _oftype(y, x) = oftype(y, x)
 
 function Integrals.__solvebp_call(prob::IntegralProblem, alg::VEGASMC, sensealg, domain, p;
-        reltol = nothing, abstol = nothing, maxiters = 10)
+        reltol = nothing, abstol = nothing, maxiters = 1000)
     lb, ub = domain
     mid = (lb + ub) / 2
     tmp = vec(collect(mid))
