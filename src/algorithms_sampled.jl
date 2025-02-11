@@ -10,7 +10,7 @@ Example with sampled data:
 ```julia
 using Integrals
 f = x -> x^2
-x = range(0, 1, length=20)
+x = range(0, 1, length = 20)
 y = f.(x)
 problem = SampledIntegralProblem(y, x)
 method = TrapezoidalRule()
@@ -31,7 +31,7 @@ Example with equidistant data:
 ```julia
 using Integrals
 f = x -> x^2
-x = range(0, 1, length=20)
+x = range(0, 1, length = 20)
 y = f.(x)
 problem = SampledIntegralProblem(y, x)
 method = SimpsonsRule()

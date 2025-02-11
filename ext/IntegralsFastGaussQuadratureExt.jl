@@ -27,7 +27,7 @@ end
 function composite_gauss_legendre(f::F, p, lb, ub, nodes, weights, subintervals) where {F}
     h = (ub - lb) / subintervals
     I = gauss_legendre(f, p, lb, lb + h, nodes, weights)
-    for i in 1:subintervals-1
+    for i in 1:(subintervals - 1)
         _lb = lb + i * h
         _ub = _lb + h
         I += gauss_legendre(f, p, _lb, _ub, nodes, weights)

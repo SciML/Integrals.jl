@@ -99,19 +99,19 @@ sol = solve(prob, alg)
 @test sol.u ≈ -240.25235266303063249920743158729
 
 # Gauss-Legendre with array-valued integrands
-prob = IntegralProblem((x,p)->[1,2], (-1,1))
-sol = solve(prob, GaussLegendre(;n=5))
-@test sol.u ≈ 2*[1,2]
+prob = IntegralProblem((x, p) -> [1, 2], (-1, 1))
+sol = solve(prob, GaussLegendre(; n = 5))
+@test sol.u ≈ 2 * [1, 2]
 
-prob = IntegralProblem((x,p)->[1 2; 3 4], (-1,1))
-sol = solve(prob, GaussLegendre(;n=5))
-@test sol.u ≈ 2*[1 2; 3 4]
+prob = IntegralProblem((x, p) -> [1 2; 3 4], (-1, 1))
+sol = solve(prob, GaussLegendre(; n = 5))
+@test sol.u ≈ 2 * [1 2; 3 4]
 
 # Composite Gauss-Legendre with array-valued integrands
-prob = IntegralProblem((x,p)->[1,2], (-1,1))
-sol = solve(prob, GaussLegendre(;n=5, subintervals=5))
-@test sol.u ≈ 2*[1,2]
+prob = IntegralProblem((x, p) -> [1, 2], (-1, 1))
+sol = solve(prob, GaussLegendre(; n = 5, subintervals = 5))
+@test sol.u ≈ 2 * [1, 2]
 
-prob = IntegralProblem((x,p)->[1 2; 3 4], (-1,1))
-sol = solve(prob, GaussLegendre(;n=5, subintervals=5))
-@test sol.u ≈ 2*[1 2; 3 4]
+prob = IntegralProblem((x, p) -> [1 2; 3 4], (-1, 1))
+sol = solve(prob, GaussLegendre(; n = 5, subintervals = 5))
+@test sol.u ≈ 2 * [1 2; 3 4]
