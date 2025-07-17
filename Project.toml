@@ -1,7 +1,7 @@
 name = "Integrals"
 uuid = "de52edbc-65ea-441a-8357-d3a637375a31"
 authors = ["Chris Rackauckas <accounts@chrisrackauckas.com>"]
-version = "4.6.0"
+version = "4.6.1"
 
 [deps]
 CommonSolve = "38540f10-b2f7-11e9-35d8-d573e4eb0ff2"
