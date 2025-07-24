@@ -1,6 +1,19 @@
+"""
+    AbstractWeights
+
+Abstract supertype for all quadrature weight types used in sampled integration methods.
+"""
 abstract type AbstractWeights end
 
-# must have field `n` for length, and a field `h` for stepsize
+"""
+    UniformWeights <: AbstractWeights
+
+Abstract type for quadrature weights with uniform (equally-spaced) sampling points.
+
+Implementations must have:
+- field `n` for the number of points
+- field `h` for the step size between points
+"""
 abstract type UniformWeights <: AbstractWeights end
 @inline Base.iterate(w::UniformWeights) = (0 == w.n) ? nothing : (w[1], 1)
 @inline Base.iterate(w::UniformWeights, i) = (i == w.n) ? nothing : (w[i + 1], i + 1)
@@ -8,7 +21,14 @@ Base.length(w::UniformWeights) = w.n
 Base.eltype(w::UniformWeights) = typeof(w.h)
 Base.size(w::UniformWeights) = (length(w),)
 
-# must contain field `x` which are the sampling points
+"""
+    NonuniformWeights <: AbstractWeights
+
+Abstract type for quadrature weights with non-uniform (arbitrarily-spaced) sampling points.
+
+Implementations must have:
+- field `x` containing the sampling points
+"""
 abstract type NonuniformWeights <: AbstractWeights end
 @inline Base.iterate(w::NonuniformWeights) = (0 == length(w.x)) ? nothing :
                                              (w[firstindex(w.x)], firstindex(w.x))
