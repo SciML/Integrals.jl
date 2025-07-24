@@ -1,8 +1,23 @@
 ## Extension Algorithms
 
+"""
+    AbstractIntegralExtensionAlgorithm <: SciMLBase.AbstractIntegralAlgorithm
+
+Abstract type for integration algorithms provided through package extensions.
+"""
 abstract type AbstractIntegralExtensionAlgorithm <: SciMLBase.AbstractIntegralAlgorithm end
+"""
+    AbstractIntegralCExtensionAlgorithm <: AbstractIntegralExtensionAlgorithm
+
+Abstract type for integration algorithms that use C or C++ libraries through package extensions.
+"""
 abstract type AbstractIntegralCExtensionAlgorithm <: AbstractIntegralExtensionAlgorithm end
 
+"""
+    AbstractCubaAlgorithm <: AbstractIntegralCExtensionAlgorithm
+
+Abstract type for integration algorithms from the Cuba.jl package.
+"""
 abstract type AbstractCubaAlgorithm <: AbstractIntegralCExtensionAlgorithm end
 
 """
@@ -161,6 +176,11 @@ function CubaCuhre(; flags = 0, minevals = 0, key = 0)
     return CubaCuhre(flags, minevals, key)
 end
 
+"""
+    AbstractCubatureJLAlgorithm <: AbstractIntegralCExtensionAlgorithm
+
+Abstract type for integration algorithms from the Cubature.jl package.
+"""
 abstract type AbstractCubatureJLAlgorithm <: AbstractIntegralCExtensionAlgorithm end
 
 """

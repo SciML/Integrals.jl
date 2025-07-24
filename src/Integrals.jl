@@ -20,14 +20,46 @@ include("sampled.jl")
 include("trapezoidal.jl")
 include("simpsons.jl")
 
+"""
+    QuadSensitivityAlg
+
+Abstract type for quadrature sensitivity algorithms.
+"""
 abstract type QuadSensitivityAlg end
+"""
+    ReCallVJP{V}
+
+Wrapper for custom vector-Jacobian product functions in automatic differentiation.
+
+# Fields
+- `vjp::V`: The vector-Jacobian product function
+"""
 struct ReCallVJP{V}
     vjp::V
 end
 
+"""
+    IntegralVJP
+
+Abstract type for vector-Jacobian product (VJP) methods used in automatic differentiation
+of integrals.
+"""
 abstract type IntegralVJP end
-struct ZygoteVJP end
-struct ReverseDiffVJP
+"""
+    ZygoteVJP <: IntegralVJP
+
+Uses Zygote.jl for vector-Jacobian products in automatic differentiation of integrals.
+"""
+struct ZygoteVJP <: IntegralVJP end
+"""
+    ReverseDiffVJP <: IntegralVJP
+
+Uses ReverseDiff.jl for vector-Jacobian products in automatic differentiation of integrals.
+
+# Fields
+- `compile::Bool`: Whether to compile the tape for better performance
+"""
+struct ReverseDiffVJP <: IntegralVJP
     compile::Bool
 end
 
@@ -47,6 +79,14 @@ const KWARGERROR_MESSAGE = """
                            $allowedkeywords
                            See https://docs.sciml.ai/Integrals/stable/basics/solve/ for more details.
                            """
+"""
+    CommonKwargError <: Exception
+
+Exception thrown when unrecognized keyword arguments are passed to `solve`.
+
+# Fields
+- `kwargs`: The keyword arguments that were passed
+"""
 struct CommonKwargError <: Exception
     kwargs::Any
 end

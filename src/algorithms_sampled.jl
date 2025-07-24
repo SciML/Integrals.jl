@@ -1,3 +1,9 @@
+"""
+    AbstractSampledIntegralAlgorithm <: SciMLBase.AbstractIntegralAlgorithm
+
+Abstract type for integration algorithms that work with sampled data points,
+such as the trapezoidal rule and Simpson's rule.
+"""
 abstract type AbstractSampledIntegralAlgorithm <: SciMLBase.AbstractIntegralAlgorithm end
 
 """

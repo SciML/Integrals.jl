@@ -1,3 +1,9 @@
+"""
+    AbstractIntegralMetaAlgorithm <: SciMLBase.AbstractIntegralAlgorithm
+
+Abstract type for meta-algorithms that wrap other integration algorithms,
+typically to apply transformations or preprocessing steps.
+"""
 abstract type AbstractIntegralMetaAlgorithm <: SciMLBase.AbstractIntegralAlgorithm end
 
 """
