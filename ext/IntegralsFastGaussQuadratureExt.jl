@@ -1,12 +1,8 @@
 module IntegralsFastGaussQuadratureExt
 using Integrals
-    import FastGaussQuadrature
-    import FastGaussQuadrature: gausslegendre
-    # and eventually gausschebyshev, etc.
-else
-    import ..FastGaussQuadrature
-    import ..FastGaussQuadrature: gausslegendre
-end
+import FastGaussQuadrature
+import FastGaussQuadrature: gausslegendre
+
 using LinearAlgebra
 
 Integrals.gausslegendre(n) = FastGaussQuadrature.gausslegendre(n)
