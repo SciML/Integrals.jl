@@ -1,7 +1,6 @@
 module IntegralsZygoteExt
 using LinearAlgebra: dot
 using Integrals
-if isdefined(Base, :get_extension)
     using Zygote
     import ChainRulesCore
     import ChainRulesCore: Tangent, NoTangent, ProjectTo

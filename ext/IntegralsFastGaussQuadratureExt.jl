@@ -1,6 +1,5 @@
 module IntegralsFastGaussQuadratureExt
 using Integrals
-if isdefined(Base, :get_extension)
     import FastGaussQuadrature
     import FastGaussQuadrature: gausslegendre
     # and eventually gausschebyshev, etc.
