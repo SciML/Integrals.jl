@@ -1,9 +1,5 @@
 module Integrals
 
-if !isdefined(Base, :get_extension)
-    using Requires
-end
-
 using Reexport, MonteCarloIntegration, QuadGK, HCubature
 @reexport using SciMLBase
 using LinearAlgebra

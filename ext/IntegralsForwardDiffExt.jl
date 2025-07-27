@@ -1,6 +1,6 @@
 module IntegralsForwardDiffExt
 using Integrals
-isdefined(Base, :get_extension) ? (using ForwardDiff) : (using ..ForwardDiff)
+using ForwardDiff
 ### Forward-Mode AD Intercepts
 
 function Integrals._evaluate!(f, y, u,

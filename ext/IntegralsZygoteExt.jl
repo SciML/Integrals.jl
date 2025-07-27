@@ -1,15 +1,10 @@
 module IntegralsZygoteExt
 using LinearAlgebra: dot
 using Integrals
-if isdefined(Base, :get_extension)
-    using Zygote
-    import ChainRulesCore
-    import ChainRulesCore: Tangent, NoTangent, ProjectTo
-else
-    using ..Zygote
-    import ..Zygote.ChainRulesCore
-    import ..Zygote.ChainRulesCore: Tangent, NoTangent, ProjectTo
-end
+using Zygote
+import ChainRulesCore
+import ChainRulesCore: Tangent, NoTangent, ProjectTo
+
 ChainRulesCore.@non_differentiable Integrals.checkkwargs(kwargs...)
 ChainRulesCore.@non_differentiable Integrals.isinplace(f, args...)    # fixes #99
 ChainRulesCore.@non_differentiable Integrals.init_cacheval(alg, prob)
