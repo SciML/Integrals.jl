@@ -28,7 +28,8 @@ abstract type QuadSensitivityAlg end
 Wrapper for custom vector-Jacobian product functions in automatic differentiation.
 
 # Fields
-- `vjp::V`: The vector-Jacobian product function
+
+  - `vjp::V`: The vector-Jacobian product function
 """
 struct ReCallVJP{V}
     vjp::V
@@ -53,7 +54,8 @@ struct ZygoteVJP <: IntegralVJP end
 Uses ReverseDiff.jl for vector-Jacobian products in automatic differentiation of integrals.
 
 # Fields
-- `compile::Bool`: Whether to compile the tape for better performance
+
+  - `compile::Bool`: Whether to compile the tape for better performance
 """
 struct ReverseDiffVJP <: IntegralVJP
     compile::Bool
@@ -81,7 +83,8 @@ const KWARGERROR_MESSAGE = """
 Exception thrown when unrecognized keyword arguments are passed to `solve`.
 
 # Fields
-- `kwargs`: The keyword arguments that were passed
+
+  - `kwargs`: The keyword arguments that were passed
 """
 struct CommonKwargError <: Exception
     kwargs::Any

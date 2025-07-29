@@ -4,8 +4,9 @@
 Quadrature weights for Simpson's composite 1/3-3/8 rule with uniformly spaced points.
 
 # Fields
-- `n::Int`: Number of points
-- `h::T`: Step size between points
+
+  - `n::Int`: Number of points
+  - `h::T`: Step size between points
 """
 struct SimpsonUniformWeights{T} <: UniformWeights
     n::Int
@@ -29,7 +30,8 @@ end
 Quadrature weights for Simpson's composite 1/3 rule with non-uniformly spaced points.
 
 # Fields
-- `x::X`: Array of sampling points
+
+  - `x::X`: Array of sampling points
 """
 struct SimpsonNonuniformWeights{X <: AbstractArray} <: NonuniformWeights
     x::X
