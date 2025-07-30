@@ -103,7 +103,7 @@ end
             continue
         end
         for i in 1:length(integrands)
-            prob = IntegralProblem(integrands[i], lb, ub)
+            prob = IntegralProblem(integrands[i], (lb, ub))
             @info "Alg = $(nameof(typeof(alg))), Integrand = $i, Dimension = $dim, Output Dimension = $nout"
             sol = @inferred solve(prob, alg, reltol = reltol, abstol = abstol)
             @test sol.alg == alg
@@ -118,7 +118,7 @@ end
         for i in 1:length(integrands)
             for dim in 1:max_dim_test
                 lb, ub = (ones(dim), 3ones(dim))
-                prob = IntegralProblem(integrands[i], lb, ub)
+                prob = IntegralProblem(integrands[i], (lb, ub))
                 if dim > req.max_dim || dim < req.min_dim
                     continue
                 end
@@ -137,7 +137,7 @@ end
         for i in 1:length(iip_integrands)
             for dim in 1:max_dim_test
                 lb, ub = (ones(dim), 3ones(dim))
-                prob = IntegralProblem(iip_integrands[i], lb, ub)
+                prob = IntegralProblem(iip_integrands[i], (lb, ub))
                 if dim > req.max_dim || dim < req.min_dim || !req.allows_iip
                     continue
                 end
@@ -159,7 +159,7 @@ end
     (dim, nout) = (1, 1)
     for (alg, req) in pairs(alg_req)
         for i in 1:length(integrands)
-            prob = IntegralProblem(batch_f(integrands[i]), lb, ub, batch = 1000)
+            prob = IntegralProblem(BatchIntegralFunction(batch_f(integrands[i])), (lb, ub))
             if req.min_dim > 1 || !req.allows_batch
                 continue
             end
@@ -177,7 +177,7 @@ end
         for i in 1:length(integrands)
             for dim in 1:max_dim_test
                 (lb, ub) = (ones(dim), 3ones(dim))
-                prob = IntegralProblem(batch_f(integrands[i]), lb, ub, batch = 1000)
+                prob = IntegralProblem(BatchIntegralFunction(batch_f(integrands[i])), (lb, ub))
                 if dim > req.max_dim || dim < req.min_dim || !req.allows_batch
                     continue
                 end
@@ -200,7 +200,7 @@ end
         for i in 1:length(iip_integrands)
             for dim in 1:max_dim_test
                 (lb, ub) = (ones(dim), 3ones(dim))
-                prob = IntegralProblem(batch_iip_f(integrands[i]), lb, ub, batch = 1000)
+                prob = IntegralProblem(BatchIntegralFunction(batch_iip_f(integrands[i]), zeros(0)), (lb, ub))
                 if dim > req.max_dim || dim < req.min_dim || !req.allows_batch ||
                    !req.allows_iip
                     continue
@@ -225,10 +225,10 @@ end
     for (alg, req) in pairs(alg_req)
         for i in 1:length(integrands_v)
             for nout in 1:max_nout_test
-                prob = IntegralProblem(let f = integrands_v[i], nout = nout
-                        (x, p) -> f(x, p, nout)
-                    end, lb, ub,
-                    nout = nout)
+                integrand_f = let f = integrands_v[i], nout = nout
+                    IntegralFunction((x, p) -> f(x, p, nout), zeros(nout))
+                end
+                prob = IntegralProblem(integrand_f, (lb, ub))
                 if req.min_dim > 1 || req.nout < nout
                     continue
                 end
@@ -254,10 +254,10 @@ end
                     if dim > req.max_dim || dim < req.min_dim || req.nout < nout
                         continue
                     end
-                    prob = IntegralProblem(let f = integrands_v[i], nout = nout
-                            (x, p) -> f(x, p, nout)
-                        end, lb, ub,
-                        nout = nout)
+                    integrand_f = let f = integrands_v[i], nout = nout
+                        IntegralFunction((x, p) -> f(x, p, nout), zeros(nout))
+                    end
+                    prob = IntegralProblem(integrand_f, (lb, ub))
                     @info "Alg = $(nameof(typeof(alg))), Integrand = $i, Dimension = $dim, Output Dimension = $nout"
                     sol = @inferred solve(prob, alg, reltol = reltol, abstol = abstol)
                     @test sol.alg == alg
@@ -278,10 +278,10 @@ end
             for dim in 1:max_dim_test
                 lb, ub = (ones(dim), 3ones(dim))
                 for nout in 1:max_nout_test
-                    prob = IntegralProblem(let f = iip_integrands_v[i]
-                            (dx, x, p) -> f(dx, x, p, nout)
-                        end,
-                        lb, ub, nout = nout)
+                    integrand_f = let f = iip_integrands_v[i]
+                        IntegralFunction((dx, x, p) -> f(dx, x, p, nout), zeros(nout))
+                    end
+                    prob = IntegralProblem(integrand_f, (lb, ub))
                     if dim > req.max_dim || dim < req.min_dim || req.nout < nout ||
                        !req.allows_iip
                         continue
@@ -305,8 +305,7 @@ end
     (dim, nout) = (1, 2)
     for (alg, req) in pairs(alg_req)
         for i in 1:length(integrands_v)
-            prob = IntegralProblem(batch_f_v(integrands_v[i], nout), lb, ub, batch = 1000,
-                nout = nout)
+            prob = IntegralProblem(BatchIntegralFunction(batch_f_v(integrands_v[i], nout)), (lb, ub))
             if req.min_dim > 1 || !req.allows_batch || req.nout < nout
                 continue
             end
@@ -324,9 +323,7 @@ end
         for i in 1:length(integrands_v)
             for dim in 1:max_dim_test
                 (lb, ub) = (ones(dim), 3ones(dim))
-                prob = IntegralProblem(batch_f_v(integrands_v[i], nout), lb, ub,
-                    batch = 1000,
-                    nout = nout)
+                prob = IntegralProblem(BatchIntegralFunction(batch_f_v(integrands_v[i], nout)), (lb, ub))
                 if dim > req.max_dim || dim < req.min_dim || !req.allows_batch ||
                    req.nout < nout
                     continue
@@ -346,8 +343,7 @@ end
         for i in 1:length(iip_integrands_v)
             for dim in 1:max_dim_test
                 (lb, ub) = (ones(dim), 3ones(dim))
-                prob = IntegralProblem(batch_iip_f_v(integrands_v[i], nout), lb, ub,
-                    batch = 10, nout = nout)
+                prob = IntegralProblem(BatchIntegralFunction(batch_iip_f_v(integrands_v[i], nout), zeros(nout, 0)), (lb, ub))
                 if dim > req.max_dim || dim < req.min_dim || !req.allows_batch ||
                    !req.allows_iip || req.nout < nout
                     continue
@@ -381,7 +377,7 @@ end
             continue
         end
         for i in 1:length(integrands)
-            prob = IntegralProblem(integrands[i], lb, ub, p)
+            prob = IntegralProblem(integrands[i], (lb, ub), p)
             cache = init(prob, alg, reltol = reltol, abstol = abstol)
             @test solve!(cache).u≈exact_sol[i](dim, nout, lb, ub) rtol=1e-2
             cache.lb = lb = 0.5
