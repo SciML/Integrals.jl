@@ -28,7 +28,8 @@ abstract type QuadSensitivityAlg end
 Wrapper for custom vector-Jacobian product functions in automatic differentiation.
 
 # Fields
-- `vjp::V`: The vector-Jacobian product function
+
+  - `vjp::V`: The vector-Jacobian product function
 """
 struct ReCallVJP{V}
     vjp::V
@@ -53,7 +54,8 @@ struct ZygoteVJP <: IntegralVJP end
 Uses ReverseDiff.jl for vector-Jacobian products in automatic differentiation of integrals.
 
 # Fields
-- `compile::Bool`: Whether to compile the tape for better performance
+
+  - `compile::Bool`: Whether to compile the tape for better performance
 """
 struct ReverseDiffVJP <: IntegralVJP
     compile::Bool
@@ -81,7 +83,8 @@ const KWARGERROR_MESSAGE = """
 Exception thrown when unrecognized keyword arguments are passed to `solve`.
 
 # Fields
-- `kwargs`: The keyword arguments that were passed
+
+  - `kwargs`: The keyword arguments that were passed
 """
 struct CommonKwargError <: Exception
     kwargs::Any
@@ -185,7 +188,8 @@ function __solvebp_call(cache::IntegralCache, alg::QuadGKJL, sensealg, domain, p
                     return
                 end
             end
-            val, err = quadgk(_f, lb, ub, segbuf = cache.cacheval, maxevals = maxiters,
+            val,
+            err = quadgk(_f, lb, ub, segbuf = cache.cacheval, maxevals = maxiters,
                 rtol = reltol, atol = abstol, order = alg.order, norm = alg.norm)
         else
             prototype = f(typeof(mid)[], p)
@@ -198,19 +202,22 @@ function __solvebp_call(cache::IntegralCache, alg::QuadGKJL, sensealg, domain, p
                     return
                 end
             end
-            val, err = quadgk(_f, lb, ub, segbuf = cache.cacheval, maxevals = maxiters,
+            val,
+            err = quadgk(_f, lb, ub, segbuf = cache.cacheval, maxevals = maxiters,
                 rtol = reltol, atol = abstol, order = alg.order, norm = alg.norm)
         end
     else
         if isinplace(f)
             result = f.integrand_prototype * mid   # result may have different units than prototype
             _f = (y, u) -> f(y, u, p)
-            val, err = quadgk!(_f, result, lb, ub, segbuf = cache.cacheval,
+            val,
+            err = quadgk!(_f, result, lb, ub, segbuf = cache.cacheval,
                 maxevals = maxiters,
                 rtol = reltol, atol = abstol, order = alg.order, norm = alg.norm)
         else
             _f = u -> f(u, p)
-            val, err = quadgk(_f, lb, ub, segbuf = cache.cacheval, maxevals = maxiters,
+            val,
+            err = quadgk(_f, lb, ub, segbuf = cache.cacheval, maxevals = maxiters,
                 rtol = reltol, atol = abstol, order = alg.order, norm = alg.norm)
         end
     end
@@ -244,7 +251,8 @@ function __solvebp_call(cache::IntegralCache, alg::HCubatureJL, sensealg, domain
         end
     end
 
-    val, err = if lb isa Number
+    val,
+    err = if lb isa Number
         hquadrature(_f, lb, ub;
             rtol = reltol, atol = abstol, buffer = cache.cacheval,
             maxevals = maxiters, norm = alg.norm, initdiv = alg.initdiv)
@@ -307,8 +315,9 @@ function __solvebp_call(prob::IntegralProblem, alg::VEGAS, sensealg, domain, p;
     out = vegas(_f, lb, ub, rtol = reltol, atol = abstol,
         maxiter = maxiters, nbins = alg.nbins, debug = alg.debug,
         ncalls = ncalls, batch = prob.f isa BatchIntegralFunction)
-    val, err, chi = out isa Tuple ? out :
-                    (out.integral_estimate, out.standard_deviation, out.chi_squared_average)
+    val, err,
+    chi = out isa Tuple ? out :
+          (out.integral_estimate, out.standard_deviation, out.chi_squared_average)
     SciMLBase.build_solution(prob, alg, val, err, chi = chi, retcode = ReturnCode.Success)
 end
 

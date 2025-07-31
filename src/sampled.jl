@@ -11,8 +11,9 @@ abstract type AbstractWeights end
 Abstract type for quadrature weights with uniform (equally-spaced) sampling points.
 
 Implementations must have:
-- field `n` for the number of points
-- field `h` for the step size between points
+
+  - field `n` for the number of points
+  - field `h` for the step size between points
 """
 abstract type UniformWeights <: AbstractWeights end
 @inline Base.iterate(w::UniformWeights) = (0 == w.n) ? nothing : (w[1], 1)
@@ -27,7 +28,8 @@ Base.size(w::UniformWeights) = (length(w),)
 Abstract type for quadrature weights with non-uniform (arbitrarily-spaced) sampling points.
 
 Implementations must have:
-- field `x` containing the sampling points
+
+  - field `x` containing the sampling points
 """
 abstract type NonuniformWeights <: AbstractWeights end
 @inline Base.iterate(w::NonuniformWeights) = (0 == length(w.x)) ? nothing :

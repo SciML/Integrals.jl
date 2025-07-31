@@ -42,7 +42,8 @@ function Integrals.__solvebp_call(prob::IntegralProblem, alg::VEGASMC, sensealg,
         res = integrate(_f; var, dof, inplace = isinplace(prob), type = eltype(prototype),
             solver = :vegasmc, niter = maxiters, verbose = -2, print = -2, alg.kws...)
         # the package itself is not type-stable
-        out::typeof(prototype), err::typeof(prototype), chi2 = if prototype isa Number
+        out::typeof(prototype), err::typeof(prototype),
+        chi2 = if prototype isa Number
             map(only, (res.mean, res.stdev, res.chi2))
         else
             map(a -> reshape(a, size(prototype)), (res.mean, res.stdev, res.chi2))

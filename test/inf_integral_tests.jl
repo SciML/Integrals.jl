@@ -5,7 +5,8 @@ abstol = 1e-3
 
 # not all quadratures are compatible with infinities if they evaluate the endpoints
 alg_req = Dict(
-    QuadratureRule(gausslegendre, n = 50) => (
+    QuadratureRule(gausslegendre,
+        n = 50) => (
         nout = Inf, min_dim = 1, max_dim = 1, allows_batch = false,
         allows_iip = false, allows_inf = true),
     QuadGKJL() => (nout = Inf, allows_batch = true, min_dim = 1, max_dim = 1,
@@ -157,6 +158,7 @@ end
 
 # IntegralFunction{false}
 for (alg, req) in pairs(alg_req), (j, (; f, domain, solution)) in enumerate(problems)
+
     req.allows_inf || continue
     req.nout >= length(solution) || continue
     req.min_dim <= length(first(domain)) <= req.max_dim || continue
@@ -167,6 +169,7 @@ end
 
 # IntegralFunction{true}
 for (alg, req) in pairs(alg_req), (j, (; f, domain, solution)) in enumerate(problems)
+
     req.allows_inf || continue
     req.nout >= length(solution) || continue
     req.allows_iip || continue
@@ -179,6 +182,7 @@ end
 
 # BatchIntegralFunction{false}
 for (alg, req) in pairs(alg_req), (j, (; f, domain, solution)) in enumerate(problems)
+
     req.allows_inf || continue
     req.nout >= length(solution) || continue
     req.allows_batch || continue
@@ -191,6 +195,7 @@ end
 
 # BatchIntegralFunction{true}
 for (alg, req) in pairs(alg_req), (j, (; f, domain, solution)) in enumerate(problems)
+
     req.allows_inf || continue
     req.nout >= length(solution) || continue
     req.allows_batch || continue
