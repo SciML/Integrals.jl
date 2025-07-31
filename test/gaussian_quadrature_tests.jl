@@ -46,7 +46,7 @@ alg = GaussLegendre(nodes = nd, weights = wt, subintervals = 20)
 @test alg.subintervals == 20
 
 f = (x, p) -> 5x + sin(x) - p * exp(x)
-prob = IntegralProblem(f, -5, 3, 3.3)
+prob = IntegralProblem(f, (-5, 3), 3.3)
 alg = GaussLegendre()
 sol = solve(prob, alg)
 @test isnothing(sol.chi)
@@ -60,7 +60,7 @@ sol = solve(prob, alg)
 @test sol.u ≈ -exp(3) * 3.3 + 3.3 / exp(5) - 40 + cos(5) - cos(3)
 
 f = (x, p) -> exp(-x^2)
-prob = IntegralProblem(f, 0.0, Inf)
+prob = IntegralProblem(f, (0.0, Inf))
 alg = GaussLegendre()
 sol = solve(prob, alg)
 @test sol.u ≈ sqrt(π) / 2
@@ -69,7 +69,7 @@ alg = GaussLegendre(subintervals = 1)
 alg = GaussLegendre(subintervals = 17)
 @test sol.u ≈ sqrt(π) / 2
 
-prob = IntegralProblem(f, -Inf, Inf)
+prob = IntegralProblem(f, (-Inf, Inf))
 alg = GaussLegendre()
 sol = solve(prob, alg)
 @test sol.u ≈ sqrt(π)
@@ -78,7 +78,7 @@ alg = GaussLegendre(subintervals = 1)
 alg = GaussLegendre(subintervals = 17)
 @test sol.u ≈ sqrt(π)
 
-prob = IntegralProblem(f, -Inf, 0.0)
+prob = IntegralProblem(f, (-Inf, 0.0))
 alg = GaussLegendre()
 sol = solve(prob, alg)
 @test sol.u ≈ sqrt(π) / 2
@@ -90,7 +90,7 @@ alg = GaussLegendre(subintervals = 17)
 # Make sure broadcasting correctly handles the argument p
 f = (x, p) -> 1 + x + x^p[1] - cos(x * p[2]) + exp(x) * p[3]
 p = [0.3, 1.3, -0.5]
-prob = IntegralProblem(f, 2.0, 6.3, p)
+prob = IntegralProblem(f, (2.0, 6.3), p)
 alg = GaussLegendre()
 sol = solve(prob, alg)
 @test sol.u ≈ -240.25235266303063249920743158729

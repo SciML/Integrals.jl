@@ -3,7 +3,7 @@ using Integrals, FiniteDiff, ForwardDiff, Cubature, Cuba, Zygote, Test
 my_parameters = [1.0, 2.0]
 my_function(x, p) = x^2 + p[1]^3 * x + p[2]^2
 function my_integration(p)
-    my_problem = IntegralProblem(my_function, -1.0, 1.0, p)
+    my_problem = IntegralProblem(my_function, (-1.0, 1.0), p)
     # return solve(my_problem, HCubatureJL(), reltol=1e-3, abstol=1e-3)  # Works
     return solve(my_problem, CubatureJLh(), reltol = 1e-3, abstol = 1e-3)  # Errors
 end
@@ -19,7 +19,7 @@ ub = 3ones(2)
 p = [1.5, 2.0]
 
 function testf(p)
-    prob = IntegralProblem(ff, lb, ub, p)
+    prob = IntegralProblem(ff, (lb, ub), p)
     sin(solve(prob, CubaCuhre(), reltol = 1e-6, abstol = 1e-6)[1])
 end
 
@@ -32,10 +32,10 @@ lb = 1.0
 ub = 3.0
 p = [2.0, 3.0, 4.0]
 _ff3 = BatchIntegralFunction(ff2)
-prob = IntegralProblem(_ff3, lb, ub, p)
+prob = IntegralProblem(_ff3, (lb, ub), p)
 
 function testf3(lb, ub, p; f = _ff3)
-    prob = IntegralProblem(_ff3, lb, ub, p)
+    prob = IntegralProblem(_ff3, (lb, ub), p)
     solve(prob, CubatureJLh(); reltol = 1e-3, abstol = 1e-3)[1]
 end
 

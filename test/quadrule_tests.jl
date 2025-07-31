@@ -30,7 +30,7 @@ lb = -1.2
 ub = 3.5
 p = 2.0
 
-prob = IntegralProblem(f, lb, ub, p)
+prob = IntegralProblem(f, (lb, ub), p)
 u = solve(prob, alg).u
 
 @test u≈exact_f(lb, ub, p) rtol=1e-3
@@ -49,7 +49,7 @@ lb = SVector(-1.2, -1.0)
 ub = SVector(3.5, 3.7)
 p = 1.2
 
-prob = IntegralProblem(f, lb, ub, p)
+prob = IntegralProblem(f, (lb, ub), p)
 u = solve(prob, alg).u
 
 @test u≈exact_f(lb, ub, p) rtol=1e-3
@@ -64,7 +64,7 @@ lb = -Inf
 ub = Inf
 p = 1.0
 
-prob = IntegralProblem(g, lb, ub, p)
+prob = IntegralProblem(g, (lb, ub), p)
 
 @test solve(prob, alg).u≈pi rtol=1e-4
 
@@ -78,7 +78,7 @@ lb = -Inf
 ub = Inf
 p = (1.0, 1.3)
 
-prob = IntegralProblem(g2, lb, ub, p)
+prob = IntegralProblem(g2, (lb, ub), p)
 
 @test solve(prob, alg).u≈[pi, pi] rtol=1e-4
 
@@ -87,7 +87,7 @@ prob = IntegralProblem(g2, lb, ub, p)
 using Zygote
 
 function testf(lb, ub, p, f = f)
-    prob = IntegralProblem(f, lb, ub, p)
+    prob = IntegralProblem(f, (lb, ub), p)
     solve(prob, QuadratureRule(trapz, n=200))[1]
 end
 
