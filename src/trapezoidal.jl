@@ -4,8 +4,9 @@
 Quadrature weights for the trapezoidal rule with uniformly spaced points.
 
 # Fields
-- `n::Int`: Number of points
-- `h::T`: Step size between points
+
+  - `n::Int`: Number of points
+  - `h::T`: Step size between points
 """
 struct TrapezoidalUniformWeights{T} <: UniformWeights
     n::Int
@@ -22,7 +23,8 @@ end
 Quadrature weights for the trapezoidal rule with non-uniformly spaced points.
 
 # Fields
-- `x::X`: Array of sampling points
+
+  - `x::X`: Array of sampling points
 """
 struct TrapezoidalNonuniformWeights{X <: AbstractArray} <: NonuniformWeights
     x::X

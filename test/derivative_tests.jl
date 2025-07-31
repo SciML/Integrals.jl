@@ -10,12 +10,14 @@ reltol = 1e-3
 abstol = 1e-3
 
 alg_req = Dict(
-    QuadratureRule(gausslegendre, n = 50) => (
+    QuadratureRule(gausslegendre,
+        n = 50) => (
         nout = Inf, min_dim = 1, max_dim = 1, allows_batch = false,
         allows_iip = false),
     GaussLegendre(n = 50) => (nout = Inf, min_dim = 1, max_dim = 1, allows_batch = false,
         allows_iip = false),
-    GaussLegendre(n = 50, subintervals = 3) => (
+    GaussLegendre(n = 50,
+        subintervals = 3) => (
         nout = Inf, min_dim = 1, max_dim = 1, allows_batch = false,
         allows_iip = false),
     QuadGKJL() => (nout = Inf, allows_batch = true, min_dim = 1, max_dim = 1,
@@ -104,7 +106,8 @@ do_tests = function (; f, scalarize, lb, ub, p, alg, abstol, reltol)
     end
     testf(lb, ub, p)
 
-    dlb1, dub1, dp1 = Zygote.gradient(
+    dlb1, dub1,
+    dp1 = Zygote.gradient(
         testf, lb, ub, p isa Number && f isa BatchIntegralFunction ? Scalar(p) : p)
 
     f_lb = lb -> testf(lb, ub, p)
@@ -144,7 +147,6 @@ end
 ### One Dimensional
 for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands),
     (i, scalarize) in enumerate(scalarize_solution)
-
     req.nout > 1 || continue
     req.min_dim <= 1 || continue
 
@@ -155,7 +157,6 @@ end
 ## One-dimensional nout
 for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands),
     (i, scalarize) in enumerate(scalarize_solution), nout in 1:max_nout_test
-
     req.nout > 1 || continue
     req.min_dim <= 1 || continue
 
@@ -167,7 +168,6 @@ end
 ### N-dimensional
 for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands),
     (i, scalarize) in enumerate(scalarize_solution), dim in 1:max_dim_test
-
     req.nout > 1 || continue
     req.min_dim <= dim <= req.max_dim || continue
 
@@ -179,7 +179,6 @@ end
 for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands),
     (i, scalarize) in enumerate(scalarize_solution), dim in 1:max_dim_test,
     nout in 1:max_nout_test
-
     req.nout > 1 || continue
     req.min_dim <= dim <= req.max_dim || continue
 
@@ -191,7 +190,6 @@ end
 ### One Dimensional
 for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands),
     (i, scalarize) in enumerate(scalarize_solution)
-
     req.allows_iip || continue
     req.nout > 1 || continue
     req.min_dim <= 1 || continue
@@ -204,7 +202,6 @@ end
 ## One-dimensional nout
 for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands),
     (i, scalarize) in enumerate(scalarize_solution), nout in 1:max_nout_test
-
     req.allows_iip || continue
     req.nout > 1 || continue
     req.min_dim <= 1 || continue
@@ -218,7 +215,6 @@ end
 ### N-dimensional
 for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands),
     (i, scalarize) in enumerate(scalarize_solution), dim in 1:max_dim_test
-
     req.allows_iip || continue
     req.nout > 1 || continue
     req.min_dim <= dim <= req.max_dim || continue
@@ -233,7 +229,6 @@ end
 for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands),
     (i, scalarize) in enumerate(scalarize_solution), dim in 1:max_dim_test,
     nout in 1:max_nout_test
-
     req.allows_iip || continue
     req.nout > 1 || continue
     req.min_dim <= dim <= req.max_dim || continue
@@ -247,7 +242,6 @@ end
 ### Batch, One Dimensional
 for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands),
     (i, scalarize) in enumerate(scalarize_solution)
-
     req.allows_batch || continue
     req.nout > 1 || continue
     req.min_dim <= 1 || continue
@@ -260,7 +254,6 @@ end
 ## Batch, One-dimensional nout
 for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands),
     (i, scalarize) in enumerate(scalarize_solution), nout in 1:max_nout_test
-
     req.allows_batch || continue
     req.nout > 1 || continue
     req.min_dim <= 1 || continue
@@ -274,7 +267,6 @@ end
 ### Batch, N-dimensional
 for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands),
     (i, scalarize) in enumerate(scalarize_solution), dim in 1:max_dim_test
-
     req.allows_batch || continue
     req.nout > 1 || continue
     req.min_dim <= dim <= req.max_dim || continue
@@ -289,7 +281,6 @@ end
 for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands),
     (i, scalarize) in enumerate(scalarize_solution), dim in 1:max_dim_test,
     nout in 1:max_nout_test
-
     req.allows_batch || continue
     req.nout > 1 || continue
     req.min_dim <= dim <= req.max_dim || continue
@@ -303,7 +294,6 @@ end
 ### Batch, one-dimensional
 for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands),
     (i, scalarize) in enumerate(scalarize_solution)
-
     req.allows_batch || continue
     req.allows_iip || continue
     req.nout > 1 || continue
@@ -317,7 +307,6 @@ end
 ## Batch, one-dimensional nout
 for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands),
     (i, scalarize) in enumerate(scalarize_solution), nout in 1:max_nout_test
-
     req.allows_batch || continue
     req.allows_iip || continue
     req.nout > 1 || continue
@@ -332,7 +321,6 @@ end
 ### Batch, N-dimensional
 for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands),
     (i, scalarize) in enumerate(scalarize_solution), dim in 1:max_dim_test
-
     req.allows_batch || continue
     req.allows_iip || continue
     req.nout > 1 || continue
@@ -348,7 +336,6 @@ end
 for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands),
     (i, scalarize) in enumerate(scalarize_solution), dim in 1:max_dim_test,
     nout in 1:max_nout_test
-
     req.allows_batch || continue
     req.allows_iip || continue
     req.nout > 1 || continue

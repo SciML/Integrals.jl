@@ -10,7 +10,8 @@ abstol = 1e-5
 alg_req = Dict(
     QuadGKJL() => (nout = Inf, allows_batch = true, min_dim = 1, max_dim = 1,
         allows_iip = true),
-    QuadratureRule(gausslegendre, n = 50) => (
+    QuadratureRule(gausslegendre,
+        n = 50) => (
         nout = Inf, min_dim = 1, max_dim = 1, allows_batch = false,
         allows_iip = false),
     GaussLegendre() => (nout = Inf, min_dim = 1, max_dim = 1, allows_batch = false,
@@ -177,7 +178,8 @@ end
         for i in 1:length(integrands)
             for dim in 1:max_dim_test
                 (lb, ub) = (ones(dim), 3ones(dim))
-                prob = IntegralProblem(BatchIntegralFunction(batch_f(integrands[i])), (lb, ub))
+                prob = IntegralProblem(BatchIntegralFunction(batch_f(integrands[i])), (
+                    lb, ub))
                 if dim > req.max_dim || dim < req.min_dim || !req.allows_batch
                     continue
                 end
@@ -200,7 +202,9 @@ end
         for i in 1:length(iip_integrands)
             for dim in 1:max_dim_test
                 (lb, ub) = (ones(dim), 3ones(dim))
-                prob = IntegralProblem(BatchIntegralFunction(batch_iip_f(integrands[i]), zeros(0), max_batch = 1000), (lb, ub))
+                prob = IntegralProblem(
+                    BatchIntegralFunction(batch_iip_f(integrands[i]), zeros(0), max_batch = 1000),
+                    (lb, ub))
                 if dim > req.max_dim || dim < req.min_dim || !req.allows_batch ||
                    !req.allows_iip
                     continue
@@ -305,7 +309,8 @@ end
     (dim, nout) = (1, 2)
     for (alg, req) in pairs(alg_req)
         for i in 1:length(integrands_v)
-            prob = IntegralProblem(BatchIntegralFunction(batch_f_v(integrands_v[i], nout)), (lb, ub))
+            prob = IntegralProblem(BatchIntegralFunction(batch_f_v(integrands_v[i], nout)), (
+                lb, ub))
             if req.min_dim > 1 || !req.allows_batch || req.nout < nout
                 continue
             end
@@ -323,7 +328,8 @@ end
         for i in 1:length(integrands_v)
             for dim in 1:max_dim_test
                 (lb, ub) = (ones(dim), 3ones(dim))
-                prob = IntegralProblem(BatchIntegralFunction(batch_f_v(integrands_v[i], nout)), (lb, ub))
+                prob = IntegralProblem(BatchIntegralFunction(batch_f_v(integrands_v[i], nout)), (
+                    lb, ub))
                 if dim > req.max_dim || dim < req.min_dim || !req.allows_batch ||
                    req.nout < nout
                     continue
@@ -343,7 +349,9 @@ end
         for i in 1:length(iip_integrands_v)
             for dim in 1:max_dim_test
                 (lb, ub) = (ones(dim), 3ones(dim))
-                prob = IntegralProblem(BatchIntegralFunction(batch_iip_f_v(integrands_v[i], nout), zeros(nout, 0)), (lb, ub))
+                prob = IntegralProblem(
+                    BatchIntegralFunction(batch_iip_f_v(integrands_v[i], nout), zeros(nout, 0)),
+                    (lb, ub))
                 if dim > req.max_dim || dim < req.min_dim || !req.allows_batch ||
                    !req.allows_iip || req.nout < nout
                     continue

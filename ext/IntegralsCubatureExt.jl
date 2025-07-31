@@ -35,21 +35,25 @@ function Integrals.__solvebp_call(prob::IntegralProblem,
             end
             if mid isa Number
                 if alg isa CubatureJLh
-                    val, err = Cubature.hquadrature_v(_f, lb, ub;
+                    val,
+                    err = Cubature.hquadrature_v(_f, lb, ub;
                         reltol = reltol, abstol = abstol,
                         maxevals = maxiters)
                 else
-                    val, err = Cubature.pquadrature_v(_f, lb, ub;
+                    val,
+                    err = Cubature.pquadrature_v(_f, lb, ub;
                         reltol = reltol, abstol = abstol,
                         maxevals = maxiters)
                 end
             else
                 if alg isa CubatureJLh
-                    val, err = Cubature.hcubature_v(_f, lb, ub;
+                    val,
+                    err = Cubature.hcubature_v(_f, lb, ub;
                         reltol = reltol, abstol = abstol,
                         maxevals = maxiters)
                 else
-                    val, err = Cubature.pcubature_v(_f, lb, ub;
+                    val,
+                    err = Cubature.pcubature_v(_f, lb, ub;
                         reltol = reltol, abstol = abstol,
                         maxevals = maxiters)
                 end
@@ -73,21 +77,25 @@ function Integrals.__solvebp_call(prob::IntegralProblem,
             end
             if mid isa Number
                 if alg isa CubatureJLh
-                    val_, err = Cubature.hquadrature_v(fdim, _f, lb, ub;
+                    val_,
+                    err = Cubature.hquadrature_v(fdim, _f, lb, ub;
                         reltol = reltol, abstol = abstol,
                         maxevals = maxiters, error_norm = alg.error_norm)
                 else
-                    val_, err = Cubature.pquadrature_v(fdim, _f, lb, ub;
+                    val_,
+                    err = Cubature.pquadrature_v(fdim, _f, lb, ub;
                         reltol = reltol, abstol = abstol,
                         maxevals = maxiters, error_norm = alg.error_norm)
                 end
             else
                 if alg isa CubatureJLh
-                    val_, err = Cubature.hcubature_v(fdim, _f, lb, ub;
+                    val_,
+                    err = Cubature.hcubature_v(fdim, _f, lb, ub;
                         reltol = reltol, abstol = abstol,
                         maxevals = maxiters, error_norm = alg.error_norm)
                 else
-                    val_, err = Cubature.pcubature_v(fdim, _f, lb, ub;
+                    val_,
+                    err = Cubature.pcubature_v(fdim, _f, lb, ub;
                         reltol = reltol, abstol = abstol,
                         maxevals = maxiters, error_norm = alg.error_norm)
                 end
@@ -102,21 +110,25 @@ function Integrals.__solvebp_call(prob::IntegralProblem,
             _f = u -> f(u, p)
             if lb isa Number
                 if alg isa CubatureJLh
-                    val, err = Cubature.hquadrature(_f, lb, ub;
+                    val,
+                    err = Cubature.hquadrature(_f, lb, ub;
                         reltol = reltol, abstol = abstol,
                         maxevals = maxiters)
                 else
-                    val, err = Cubature.pquadrature(_f, lb, ub;
+                    val,
+                    err = Cubature.pquadrature(_f, lb, ub;
                         reltol = reltol, abstol = abstol,
                         maxevals = maxiters)
                 end
             else
                 if alg isa CubatureJLh
-                    val, err = Cubature.hcubature(_f, lb, ub;
+                    val,
+                    err = Cubature.hcubature(_f, lb, ub;
                         reltol = reltol, abstol = abstol,
                         maxevals = maxiters)
                 else
-                    val, err = Cubature.pcubature(_f, lb, ub;
+                    val,
+                    err = Cubature.pcubature(_f, lb, ub;
                         reltol = reltol, abstol = abstol,
                         maxevals = maxiters)
                 end
@@ -133,21 +145,25 @@ function Integrals.__solvebp_call(prob::IntegralProblem,
             end
             if mid isa Number
                 if alg isa CubatureJLh
-                    val_, err = Cubature.hquadrature(fdim, _f, lb, ub;
+                    val_,
+                    err = Cubature.hquadrature(fdim, _f, lb, ub;
                         reltol = reltol, abstol = abstol,
                         maxevals = maxiters, error_norm = alg.error_norm)
                 else
-                    val_, err = Cubature.pquadrature(fdim, _f, lb, ub;
+                    val_,
+                    err = Cubature.pquadrature(fdim, _f, lb, ub;
                         reltol = reltol, abstol = abstol,
                         maxevals = maxiters, error_norm = alg.error_norm)
                 end
             else
                 if alg isa CubatureJLh
-                    val_, err = Cubature.hcubature(fdim, _f, lb, ub;
+                    val_,
+                    err = Cubature.hcubature(fdim, _f, lb, ub;
                         reltol = reltol, abstol = abstol,
                         maxevals = maxiters, error_norm = alg.error_norm)
                 else
-                    val_, err = Cubature.pcubature(fdim, _f, lb, ub;
+                    val_,
+                    err = Cubature.pcubature(fdim, _f, lb, ub;
                         reltol = reltol, abstol = abstol,
                         maxevals = maxiters, error_norm = alg.error_norm)
                 end
