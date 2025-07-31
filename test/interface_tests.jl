@@ -200,7 +200,7 @@ end
         for i in 1:length(iip_integrands)
             for dim in 1:max_dim_test
                 (lb, ub) = (ones(dim), 3ones(dim))
-                prob = IntegralProblem(BatchIntegralFunction(batch_iip_f(integrands[i]), zeros(0)), (lb, ub))
+                prob = IntegralProblem(BatchIntegralFunction(batch_iip_f(integrands[i]), zeros(0), max_batch = 1000), (lb, ub))
                 if dim > req.max_dim || dim < req.min_dim || !req.allows_batch ||
                    !req.allows_iip
                     continue
