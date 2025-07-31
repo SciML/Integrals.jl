@@ -380,9 +380,11 @@ end
             prob = IntegralProblem(integrands[i], (lb, ub), p)
             cache = init(prob, alg, reltol = reltol, abstol = abstol)
             @test solve!(cache).u≈exact_sol[i](dim, nout, lb, ub) rtol=1e-2
-            cache.lb = lb = 0.5
+            lb = 0.5
+            cache.domain = (lb, ub)
             @test solve!(cache).u≈exact_sol[i](dim, nout, lb, ub) rtol=1e-2
-            cache.ub = ub = 3.5
+            ub = 3.5
+            cache.domain = (lb, ub)
             @test solve!(cache).u≈exact_sol[i](dim, nout, lb, ub) rtol=1e-2
             cache.p = Inf
             @test solve!(cache).u≈exact_sol[i](dim, nout, lb, ub) rtol=1e-2
