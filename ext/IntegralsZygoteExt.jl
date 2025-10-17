@@ -16,9 +16,9 @@ ChainRulesCore.@non_differentiable Integrals.substitute_bv(args...) # TODO for �
 function ChainRulesCore.rrule(::Type{<:IntegralProblem}, f, domain, p; kwargs...)
     prob = IntegralProblem(f, domain, p; kwargs...)
     function IntegralProblem_pullback(Δ)
-        # For the constructor, we only need to propagate gradients for the parameters
-        # The function f and domain are treated as non-differentiable structural components
-        return NoTangent(), NoTangent(), NoTangent(), Δ.p
+        ddomain = hasproperty(Δ, :domain) ? Δ.domain : NoTangent()
+        dp = hasproperty(Δ, :p) ? Δ.p : NoTangent()
+        return NoTangent(), NoTangent(), ddomain, dp
     end
     return prob, IntegralProblem_pullback
 end
@@ -27,9 +27,9 @@ end
 function ChainRulesCore.rrule(::Type{IntegralProblem{iip}}, f, domain, p; kwargs...) where {iip}
     prob = IntegralProblem{iip}(f, domain, p; kwargs...)
     function IntegralProblem_iip_pullback(Δ)
-        # Extract the parameter gradient from the tangent
+        ddomain = hasproperty(Δ, :domain) ? Δ.domain : NoTangent()
         dp = hasproperty(Δ, :p) ? Δ.p : NoTangent()
-        return NoTangent(), NoTangent(), NoTangent(), dp
+        return NoTangent(), NoTangent(), ddomain, dp
     end
     return prob, IntegralProblem_iip_pullback
 end
