@@ -12,7 +12,6 @@ ChainRulesCore.@non_differentiable Integrals.substitute_f(args...) # use ∂f/�
 ChainRulesCore.@non_differentiable Integrals.substitute_v(args...) # TODO for ∂f/∂u
 ChainRulesCore.@non_differentiable Integrals.substitute_bv(args...) # TODO for ∂f/∂u
 
-# Add custom rrule for IntegralProblem to avoid segfault
 function ChainRulesCore.rrule(::Type{<:IntegralProblem}, f, domain, p; kwargs...)
     prob = IntegralProblem(f, domain, p; kwargs...)
     function IntegralProblem_pullback(Δ)
@@ -23,7 +22,6 @@ function ChainRulesCore.rrule(::Type{<:IntegralProblem}, f, domain, p; kwargs...
     return prob, IntegralProblem_pullback
 end
 
-# Handle both the inner constructor call patterns that might occur
 function ChainRulesCore.rrule(::Type{IntegralProblem{iip}}, f, domain, p; kwargs...) where {iip}
     prob = IntegralProblem{iip}(f, domain, p; kwargs...)
     function IntegralProblem_iip_pullback(Δ)
