@@ -12,6 +12,28 @@ ChainRulesCore.@non_differentiable Integrals.substitute_f(args...) # use ∂f/�
 ChainRulesCore.@non_differentiable Integrals.substitute_v(args...) # TODO for ∂f/∂u
 ChainRulesCore.@non_differentiable Integrals.substitute_bv(args...) # TODO for ∂f/∂u
 
+# Add custom rrule for IntegralProblem to avoid segfault
+function ChainRulesCore.rrule(::Type{<:IntegralProblem}, f, domain, p; kwargs...)
+    prob = IntegralProblem(f, domain, p; kwargs...)
+    function IntegralProblem_pullback(Δ)
+        # For the constructor, we only need to propagate gradients for the parameters
+        # The function f and domain are treated as non-differentiable structural components
+        return NoTangent(), NoTangent(), NoTangent(), Δ.p
+    end
+    return prob, IntegralProblem_pullback
+end
+
+# Handle both the inner constructor call patterns that might occur
+function ChainRulesCore.rrule(::Type{IntegralProblem{iip}}, f, domain, p; kwargs...) where {iip}
+    prob = IntegralProblem{iip}(f, domain, p; kwargs...)
+    function IntegralProblem_iip_pullback(Δ)
+        # Extract the parameter gradient from the tangent
+        dp = hasproperty(Δ, :p) ? Δ.p : NoTangent()
+        return NoTangent(), NoTangent(), NoTangent(), dp
+    end
+    return prob, IntegralProblem_iip_pullback
+end
+
 # TODO move this adjoint to SciMLBase
 function ChainRulesCore.rrule(
         ::typeof(SciMLBase.build_solution), prob::IntegralProblem, alg, u, resid; kwargs...)
