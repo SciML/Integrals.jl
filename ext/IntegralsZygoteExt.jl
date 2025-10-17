@@ -12,6 +12,27 @@ ChainRulesCore.@non_differentiable Integrals.substitute_f(args...) # use ∂f/�
 ChainRulesCore.@non_differentiable Integrals.substitute_v(args...) # TODO for ∂f/∂u
 ChainRulesCore.@non_differentiable Integrals.substitute_bv(args...) # TODO for ∂f/∂u
 
+function ChainRulesCore.rrule(::Type{<:IntegralProblem}, f, domain, p; kwargs...)
+    prob = IntegralProblem(f, domain, p; kwargs...)
+    function IntegralProblem_pullback(Δ)
+        ddomain = hasproperty(Δ, :domain) ? Δ.domain : NoTangent()
+        dp = hasproperty(Δ, :p) ? Δ.p : NoTangent()
+        return NoTangent(), NoTangent(), ddomain, dp
+    end
+    return prob, IntegralProblem_pullback
+end
+
+function ChainRulesCore.rrule(
+        ::Type{IntegralProblem{iip}}, f, domain, p; kwargs...) where {iip}
+    prob = IntegralProblem{iip}(f, domain, p; kwargs...)
+    function IntegralProblem_iip_pullback(Δ)
+        ddomain = hasproperty(Δ, :domain) ? Δ.domain : NoTangent()
+        dp = hasproperty(Δ, :p) ? Δ.p : NoTangent()
+        return NoTangent(), NoTangent(), ddomain, dp
+    end
+    return prob, IntegralProblem_iip_pullback
+end
+
 # TODO move this adjoint to SciMLBase
 function ChainRulesCore.rrule(
         ::typeof(SciMLBase.build_solution), prob::IntegralProblem, alg, u, resid; kwargs...)
