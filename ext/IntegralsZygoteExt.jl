@@ -22,7 +22,8 @@ function ChainRulesCore.rrule(::Type{<:IntegralProblem}, f, domain, p; kwargs...
     return prob, IntegralProblem_pullback
 end
 
-function ChainRulesCore.rrule(::Type{IntegralProblem{iip}}, f, domain, p; kwargs...) where {iip}
+function ChainRulesCore.rrule(
+        ::Type{IntegralProblem{iip}}, f, domain, p; kwargs...) where {iip}
     prob = IntegralProblem{iip}(f, domain, p; kwargs...)
     function IntegralProblem_iip_pullback(Δ)
         ddomain = hasproperty(Δ, :domain) ? Δ.domain : NoTangent()
