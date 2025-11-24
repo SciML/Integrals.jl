@@ -8,6 +8,9 @@ ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 Integrals = "de52edbc-65ea-441a-8357-d3a637375a31"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
+[sources]
+Integrals = {path = "/home/runner/work/Integrals.jl/Integrals.jl"}
+
 [compat]
 Cuba = "2"
 Cubature = "1"
