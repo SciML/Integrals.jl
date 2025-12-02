@@ -9,7 +9,7 @@ Integrals = "de52edbc-65ea-441a-8357-d3a637375a31"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [sources]
-Integrals = {path = "/home/runner/work/Integrals.jl/Integrals.jl"}
+Integrals = {path = "/home/chrisrackauckas/github-runners/deepsea4-6/_work/Integrals.jl/Integrals.jl"}
 
 [compat]
 Cuba = "2"
