@@ -61,6 +61,13 @@ struct ReverseDiffVJP <: IntegralVJP
     compile::Bool
 end
 
+"""
+    MooncakeVJP <: IntegralVJP
+
+Uses Mooncake.jl for vector-Jacobian products in automatic differentiation of integrals.
+"""
+struct MooncakeVJP <: IntegralVJP end
+
 function scale_x!(_x, ub, lb, x)
     _x .= (ub .- lb) .* x .+ lb
     _x
