@@ -1,11 +1,18 @@
 module IntegralsMooncakeExt
 using Mooncake
+using LinearAlgebra: dot
 using Integrals
-using Zygote
-using SciMLBase
-using Mooncake: @from_chainrules, @zero_derivative, MinimalCtx, rrule!!, Dual, CoDual
+using SciMLBase, QuadGK
+using Mooncake: @from_chainrules, @zero_derivative, @is_primitive, increment!!, increment_and_get_rdata!, MinimalCtx, rrule!!, NoFData, CoDual, primal, NoRData, zero_fcodual
 using Integrals: AbstractIntegralMetaAlgorithm, IntegralProblem
+import ChainRulesCore
+import ChainRulesCore: Tangent, NoTangent, ProjectTo
+using Zygote # use chainrules defined in ZygoteExt
 
+batch_unwrap(x::AbstractArray) = dropdims(x; dims=ndims(x))
+
+@zero_derivative MinimalCtx Tuple{typeof(QuadGK.quadgk),Vararg}
+@zero_derivative MinimalCtx Tuple{typeof(QuadGK.cachedrule),Any,Integer}
 @zero_derivative MinimalCtx Tuple{typeof(Integrals.checkkwargs),Vararg}
 @zero_derivative MinimalCtx Tuple{typeof(Integrals.isinplace),Vararg}
 @zero_derivative MinimalCtx Tuple{typeof(Integrals.init_cacheval),Union{<:SciMLBase.AbstractIntegralAlgorithm,<:AbstractIntegralMetaAlgorithm},Union{<:IntegralProblem,<:SampledIntegralProblem}}
@@ -13,13 +20,49 @@ using Integrals: AbstractIntegralMetaAlgorithm, IntegralProblem
 @zero_derivative MinimalCtx Tuple{typeof(Integrals.substitute_v),Any,Any,Union{<:AbstractVector,<:Number},Union{<:AbstractVector,<:Number}}
 @zero_derivative MinimalCtx Tuple{typeof(Integrals.substitute_bv),Any,AbstractArray,Union{<:AbstractVector,<:Number},Union{<:AbstractVector,<:Number}}
 
+# @from_chainrules MinimalCtx Tuple{Type{IntegralProblem{iip}},Any,Any,Any} where {iip} true
+@is_primitive MinimalCtx Tuple{Type{IntegralProblem{iip}},Any,Any,Any} where {iip}
+function Mooncake.rrule!!(::CoDual{Type{IntegralProblem{iip}}}, f::CoDual, domain::CoDual, p::CoDual; kwargs...) where {iip}
+    f_prim, domain_prim, p_prim = map(primal, (f, domain, p))
+    prob = IntegralProblem{iip}(f_prim, domain_prim, p_prim; kwargs...)
+
+    function IntegralProblem_iip_pullback(Δ)
+        data = Δ isa NoRData ? Δ : Δ.data
+        ddomain = hasproperty(data, :domain) ? data.domain : NoRData()
+        dp = hasproperty(data, :p) ? data.p : NoRData()
+        dkwargs = Δ isa NoRData ? Δ : data.kwargs
+
+        # domain is always a Tuple, so it always has NoFData
+        # below conditional is in case p is an Array or similar
+        if Mooncake.rdata_type(typeof(p_prim)) == NoRData()
+            p.dx .+= dp
+            grad_p = NoRData()
+        else
+            grad_p = dp
+        end
+
+        return NoRData(), NoRData(), ddomain, grad_p, dkwargs
+    end
+    return zero_fcodual(prob), IntegralProblem_iip_pullback
+end
+
+@is_primitive MinimalCtx Tuple{typeof(SciMLBase.build_solution),IntegralProblem,Any,Any,Any}
+function Mooncake.rrule!!(::CoDual{typeof(SciMLBase.build_solution)}, prob::CoDual{IntegralProblem}, alg::CoDual, u::CoDual, resid::CoDual; kwargs)
+    kwargs_fp = map(primal, kwargs)
+    function pb!!(Δ)
+        return NoRData(),
+        NoRData(),
+        NoRData(),
+        Δ,
+        NoRData()
+    end
+    return SciMLBase.build_solution(prob.primal, alg.primal, u.primal, resid.primal; kwargs_fp...), pb!!
+end
+
+# Mooncake does not need chainrule for evaluate! as it supports mutation.
 @from_chainrules MinimalCtx Tuple{Type{IntegralProblem},Any,Any,Any} true
-@from_chainrules MinimalCtx Tuple{Type{IntegralProblem{iip}},Any,Any,Any} where {iip} true
 @from_chainrules MinimalCtx Tuple{typeof(SciMLBase.build_solution),IntegralProblem,Any,Any,Any} true
 @from_chainrules MinimalCtx Tuple{typeof(Integrals.u2t),Any,Any} true
-
-# evaluate doesnt need rrules as Mooncake supports mutation
-# @is_primitive MinimalCtx Tuple{typeof(Integrals._evaluate!),Any,Any,Any,Any}
 @from_chainrules MinimalCtx Tuple{typeof(Integrals.__solvebp),Any,Any,Any,Any,Any} true
 
 function ChainRulesCore.rrule(::typeof(Integrals.__solvebp), cache, alg, sensealg, domain,
@@ -89,15 +132,18 @@ function ChainRulesCore.rrule(::typeof(Integrals.__solvebp), cache, alg, senseal
                 dfdp_ = function (x, p)
                     x_ = x isa AbstractArray ? reshape(x, size(x)..., 1) : [x]
                     clos = p -> cache.f(x_, p)
-                    z, back = Mooncake.value_and_gradient!!(Mooncake.prepare_gradient_cache(clos, p), clos, p)
-                    return back(Δ isa AbstractArray ? reshape(Δ, size(Δ)..., 1) : [Δ])[1]
+                    cache_z = Mooncake.prepare_pullback_cache(clos, p)
+                    z, grads = Mooncake.value_and_pullback!!(cache_z, [Δ.u], clos, p)
+                    return grads[2]
                 end
                 dfdp = IntegralFunction{false}(dfdp_, nothing)
             else
                 dfdp_ = function (x, p)
-                    clos = p -> cache.f(x_, p)
-                    z, back = Mooncake.value_and_gradient!!(Mooncake.prepare_gradient_cache(clos, p), clos, p)
-                    back(z isa Number ? only(Δ) : Δ)[1]
+                    clos = p -> cache.f(x, p)
+                    cache_z = Mooncake.prepare_pullback_cache(clos, p)
+                    # Δ.u is integrand function's output sensitivity which we pass into Mooncake's pullback
+                    z, grads = Mooncake.value_and_pullback!!(cache_z, Δ.u, clos, p)
+                    return grads[2]
                 end
                 dfdp = IntegralFunction{false}(dfdp_, nothing)
             end
@@ -116,6 +162,9 @@ function ChainRulesCore.rrule(::typeof(Integrals.__solvebp), cache, alg, senseal
 
         project_p = ProjectTo(p)
         dp = project_p(solve!(dp_cache).u)
+    
+        # Because Mooncake tangent structure vs Zygote, Chainrules, ReverseDiff
+        du_adj = sensealg.vjp isa Integrals.MooncakeVJP ? Δ.u : Δ
 
         lb, ub = domain
         if lb isa Number
@@ -127,7 +176,7 @@ function ChainRulesCore.rrule(::typeof(Integrals.__solvebp), cache, alg, senseal
                 NoTangent(),
                 NoTangent(),
                 NoTangent(),
-                Tangent{typeof(domain)}(dot(dlb, Δ), dot(dub, Δ)),
+                Tangent{typeof(domain)}(dot(dlb, du_adj), dot(dub,  du_adj)),
                 dp)
         else
             # we need to compute 2*length(lb) integrals on the faces of the hypercube, as we
@@ -145,5 +194,29 @@ function ChainRulesCore.rrule(::typeof(Integrals.__solvebp), cache, alg, senseal
     end
     out, quadrature_adjoint
 end
-# Test files: tests/ - derivative_tests,nested_ad_tests.jl, Quadrule_tests.jl
+
+function Mooncake.increment_and_get_rdata!(
+    f::Tuple{Vector{Float64},Vector{Float64}},
+    r::Mooncake.NoRData,
+    t::Tangent{Any,Tuple{Vector{Float64},Vector{Float64}}},
+)
+    Mooncake.increment!!(f[1], t[1])
+    Mooncake.increment!!(f[2], t[2])
+    return NoRData()
+end
+
+function Mooncake.increment_and_get_rdata!(
+    f::NoFData, r::Tuple{T,T}, t::Union{Tangent{Any,Tuple{T,T}},Tangent{Tuple{T,T},Tuple{T,T}}}
+) where {T<:Base.IEEEFloat}
+    return r .+ t.backing
+end
+
+function Mooncake.increment_and_get_rdata!(
+    f::NoFData,
+    r::T,
+    t::Tangent{Any,@NamedTuple{u::T, resid::T, prob::Tangent{Any,@NamedTuple{f::NoTangent, domain::Tangent{Any,Tuple{T,T}}, p::T, kwargs::NoTangent}},
+        alg::NoTangent, retcode::NoTangent, chi::NoTangent, stats::NoTangent}}) where T<:Number
+    return Mooncake.increment!!(t.u, r)
+end
+
 end

@@ -1,4 +1,4 @@
-using Integrals, Zygote, FiniteDiff, ForwardDiff#, SciMLSensitivity
+using Integrals, Mooncake, Zygote, FiniteDiff, ForwardDiff#, SciMLSensitivity
 using Cuba, Cubature
 using FastGaussQuadrature
 using Test
@@ -84,6 +84,10 @@ Base.axes(::Scalar) = ScalarAxes()
 Base.iterate(::ScalarAxes) = nothing
 Base.reshape(A::AbstractArray, ::ScalarAxes) = Scalar(only(A))
 
+# Scalar struct defined around Real Numbers (test/derivative_tests.jl)
+# Mooncake, like Zygote also treats 0-D data wrt to the type of datastructure.
+Mooncake.rdata_type(::Type{Scalar{T}}) where {T<:Real} = Mooncake.rdata_type(T)
+
 # here we assume f evaluated at scalar inputs gives a scalar output
 # p will be able to be a number  after https://github.com/FluxML/Zygote.jl/pull/1489
 # p will be able to be a 0-array after https://github.com/FluxML/Zygote.jl/pull/1491
@@ -144,6 +148,52 @@ do_tests = function (; f, scalarize, lb, ub, p, alg, abstol, reltol)
     return
 end
 
+# Mooncake Sensealg testing helper function
+do_tests_mooncake = function (; f, scalarize, lb, ub, p, alg, abstol, reltol)
+    testf = function (lb, ub, p)
+        prob = IntegralProblem(f, (lb, ub), p)
+        scalarize(solve(prob, alg; reltol, abstol, sensealg=Integrals.ReCallVJP{Integrals.MooncakeVJP}(Integrals.MooncakeVJP())))
+    end
+    sol_fp = testf(lb, ub, p)
+
+    # sensealg when non zygoet?
+    cache = Mooncake.prepare_gradient_cache(testf, lb, ub, p isa Number && f isa BatchIntegralFunction ? Scalar(p) : p)
+    forwpassval, gradients = Mooncake.value_and_gradient!!(cache, testf, lb, ub, p isa Number && f isa BatchIntegralFunction ? Scalar(p) : p)
+
+    @test forwpassval == sol_fp
+
+    f_lb = lb -> testf(lb, ub, p)
+    f_ub = ub -> testf(lb, ub, p)
+
+    dlb = lb isa AbstractArray ? :gradient : :derivative
+    dub = ub isa AbstractArray ? :gradient : :derivative
+
+    dlb2 = getproperty(FiniteDiff, Symbol(:finite_difference_, dlb))(f_lb, lb)
+    dub2 = getproperty(FiniteDiff, Symbol(:finite_difference_, dub))(f_ub, ub)
+
+    if lb isa Number
+        @test gradients[2] ≈ dlb2 atol = abstol rtol = reltol
+        @test gradients[3] ≈ dub2 atol = abstol rtol = reltol
+    else # TODO: implement multivariate limit derivatives in MooncakeExt
+        @test_broken gradients[2] ≈ dlb2 atol = abstol rtol = reltol
+        @test_broken gradients[3] ≈ dub2 atol = abstol rtol = reltol
+    end
+
+    f_p = p -> testf(lb, ub, p)
+    dp = p isa AbstractArray ? :gradient : :derivative
+
+    dp2 = getproperty(FiniteDiff, Symbol(:finite_difference_, dp))(f_p, p)
+    dp3 = getproperty(ForwardDiff, dp)(f_p, p)
+
+    @test dp2 ≈ dp3 atol = abstol rtol = reltol
+
+    # test Mooncake for parameter p
+    @test gradients[4] ≈ dp2 atol = abstol rtol = reltol
+    @test dp2 ≈ dp3 atol = abstol rtol = reltol
+
+    return
+end
+
 ### One Dimensional
 for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands),
     (i, scalarize) in enumerate(scalarize_solution)
@@ -152,6 +202,7 @@ for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands),
 
     @info "One-dimensional, scalar, oop derivative test" alg=nameof(typeof(alg)) integrand=j scalarize=i
     do_tests(; f, scalarize, lb = 1.0, ub = 3.0, p = 2.0, alg, abstol, reltol)
+    do_tests_mooncake(; f, scalarize, lb = 1.0, ub = 3.0, p = 2.0, alg, abstol, reltol)
 end
 
 ## One-dimensional nout
@@ -163,6 +214,8 @@ for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands),
     @info "One-dimensional, multivariate, oop derivative test" alg=nameof(typeof(alg)) integrand=j scalarize=i nout
     do_tests(;
         f, scalarize, lb = 1.0, ub = 3.0, p = [2.0i for i in 1:nout], alg, abstol, reltol)
+    do_tests_mooncake(;
+        f, scalarize, lb=1.0, ub=3.0, p=[2.0i for i in 1:nout], alg, abstol, reltol)
 end
 
 ### N-dimensional
@@ -173,6 +226,7 @@ for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands),
 
     @info "Multi-dimensional, scalar, oop derivative test" alg=nameof(typeof(alg)) integrand=j scalarize=i dim
     do_tests(; f, scalarize, lb = ones(dim), ub = 3ones(dim), p = 2.0, alg, abstol, reltol)
+    do_tests_mooncake(; f, scalarize, lb=ones(dim), ub=3ones(dim), p=2.0, alg, abstol, reltol)
 end
 
 ### N-dimensional nout
@@ -185,6 +239,8 @@ for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands),
     @info "Multi-dimensional, multivariate, oop derivative test" alg=nameof(typeof(alg)) integrand=j scalarize=i dim nout
     do_tests(; f, scalarize, lb = ones(dim), ub = 3ones(dim),
         p = [2.0i for i in 1:nout], alg, abstol, reltol)
+    do_tests_mooncake(; f, scalarize, lb=ones(dim), ub=3ones(dim),
+        p=[2.0i for i in 1:nout], alg, abstol, reltol)
 end
 
 ### One Dimensional
@@ -347,7 +403,7 @@ for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands),
         p = [2.0i for i in 1:nout], alg, abstol, reltol)
 end
 
-@testset "ChangeOfVariables rrule" begin
+@testset "ChangeOfVariables rrules" begin
     alg = QuadGKJL()
     # test a simple u-substitution of x = 2.7u + 1.3
     talg = Integrals.ChangeOfVariables(alg) do f, domain
@@ -358,18 +414,43 @@ end
             error("not implemented")
         end
     end
-    testf = (f, lb, ub, p, alg) -> begin
+
+    testf = (f, lb, ub, p, alg, sensealg) -> begin
         prob = IntegralProblem(f, (lb, ub), p)
-        solve(prob, alg; abstol, reltol).u
+        solve(prob, alg; abstol, reltol, sensealg = sensealg).u
     end
     _testf = (x, p) -> x^2 * p
     lb, ub, p = 1.0, 5.0, 2.0
-    sol = Zygote.withgradient((args...) -> testf(_testf, args..., alg), lb, ub, p)
-    tsol = Zygote.withgradient((args...) -> testf(_testf, args..., talg), lb, ub, p)
-    @test sol.val ≈ tsol.val
-    # Fundamental theorem of Calculus part 1
-    @test sol.grad[1] ≈ tsol.grad[1] ≈ -_testf(lb, p)
-    @test sol.grad[2] ≈ tsol.grad[2] ≈ _testf(ub, p)
-    # This is to check ∂p
-    @test sol.grad[3] ≈ tsol.grad[3]
+
+    @testset "Sensitivity using Zygote" begin
+        sensealg = Integrals.ReCallVJP{IntegralZygoteVJP}(IntegralZygoteVJP())
+        sol = Zygote.withgradient((args...) -> testf(_testf, args..., alg), lb, ub, p, sensealg)
+        tsol = Zygote.withgradient((args...) -> testf(_testf, args..., talg), lb, ub, p, sensealg)
+        @test sol.val ≈ tsol.val
+        # Fundamental theorem of Calculus part 1
+        @test sol.grad[1] ≈ tsol.grad[1] ≈ -_testf(lb, p)
+        @test sol.grad[2] ≈ tsol.grad[2] ≈ _testf(ub, p)
+        # This is to check ∂p
+        @test sol.grad[3] ≈ tsol.grad[3]
+    end
+
+    @testset "Sensitivity using Mooncake" begin
+        sensealg = Integrals.ReCallVJP{Integrals.MooncakeVJP}(Integrals.MooncakeVJP())
+        # anonymous function for cache creation and gradient evaluation call must be the same.
+        func = (args...) -> testf(_testf, args..., alg, sensealg)
+        cache = Mooncake.prepare_gradient_cache(func, lb, ub, p, sensealg)
+        sol = Mooncake.value_and_gradient!!(cache, func,
+            lb, ub, p, sensealg)
+
+        cache = Mooncake.prepare_gradient_cache(func, lb, ub, p, sensealg)
+        tsol = Mooncake.value_and_gradient!!(
+            cache, func, lb, ub, p, sensealg)
+
+        @test sol[1] ≈ tsol[1]
+        # Fundamental theorem of Calculus part 1
+        @test sol[2][2] ≈ tsol[2][2] ≈ -_testf(lb, p)
+        @test sol[2][3] ≈ tsol[2][3] ≈ _testf(ub, p)
+        # To check ∂p
+        @test sol[2][4] ≈ tsol[2][4]
+    end
 end
