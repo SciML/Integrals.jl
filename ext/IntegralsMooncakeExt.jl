@@ -130,18 +130,18 @@ function ChainRulesCore.rrule(::typeof(Integrals.__solvebp), cache, alg, senseal
                 # TODO: let the user pass a batched jacobian so we can return a BatchIntegralFunction
                 dfdp_ = function (x, p)
                     x_ = x isa AbstractArray ? reshape(x, size(x)..., 1) : [x]
-                    clos = p -> cache.f(x_, p)
-                    cache_z = Mooncake.prepare_pullback_cache(clos, p)
-                    z, grads = Mooncake.value_and_pullback!!(cache_z, [Δ.u], clos, p)
+                    integralfunc_closure_p = p -> cache.f(x_, p)
+                    cache_z = Mooncake.prepare_pullback_cache(integralfunc_closure_p, p)
+                    z, grads = Mooncake.value_and_pullback!!(cache_z, [Δ.u], integralfunc_closure_p, p)
                     return grads[2]
                 end
                 dfdp = IntegralFunction{false}(dfdp_, nothing)
             else
                 dfdp_ = function (x, p)
-                    clos = p -> cache.f(x, p)
-                    cache_z = Mooncake.prepare_pullback_cache(clos, p)
+                    integralfunc_closure_p = p -> cache.f(x, p)
+                    cache_z = Mooncake.prepare_pullback_cache(integralfunc_closure_p, p)
                     # Δ.u is integrand function's output sensitivity which we pass into Mooncake's pullback
-                    z, grads = Mooncake.value_and_pullback!!(cache_z, Δ.u, clos, p)
+                    z, grads = Mooncake.value_and_pullback!!(cache_z, Δ.u, integralfunc_closure_p, p)
                     return grads[2]
                 end
                 dfdp = IntegralFunction{false}(dfdp_, nothing)
@@ -161,7 +161,7 @@ function ChainRulesCore.rrule(::typeof(Integrals.__solvebp), cache, alg, senseal
 
         project_p = ProjectTo(p)
         dp = project_p(solve!(dp_cache).u)
-    
+
         # Because Mooncake tangent structure vs Zygote, Chainrules, ReverseDiff
         du_adj = sensealg.vjp isa Integrals.MooncakeVJP ? Δ.u : Δ
 
@@ -175,7 +175,7 @@ function ChainRulesCore.rrule(::typeof(Integrals.__solvebp), cache, alg, senseal
                 NoTangent(),
                 NoTangent(),
                 NoTangent(),
-                Tangent{typeof(domain)}(dot(dlb, du_adj), dot(dub,  du_adj)),
+                Tangent{typeof(domain)}(dot(dlb, du_adj), dot(dub, du_adj)),
                 dp)
         else
             # we need to compute 2*length(lb) integrals on the faces of the hypercube, as we
