@@ -1,9 +1,8 @@
 module IntegralsMooncakeExt
 using Mooncake
 using LinearAlgebra: dot
-using Integrals
-using SciMLBase, QuadGK
-using Mooncake: @from_chainrules, @zero_derivative, @is_primitive, increment!!, increment_and_get_rdata!, MinimalCtx, rrule!!, NoFData, CoDual, primal, NoRData, zero_fcodual
+using Integrals, SciMLBase, QuadGK
+using Mooncake: @from_chainrules, @zero_derivative, @is_primitive, increment!!, increment_and_get_rdata!, MinimalCtx, rrule!!, NoFData, NoRData, CoDual, primal, NoRData, zero_fcodual
 using Integrals: AbstractIntegralMetaAlgorithm, IntegralProblem
 import ChainRulesCore
 import ChainRulesCore: Tangent, NoTangent, ProjectTo
@@ -197,7 +196,7 @@ end
 
 function Mooncake.increment_and_get_rdata!(
     f::Tuple{Vector{Float64},Vector{Float64}},
-    r::Mooncake.NoRData,
+    r::NoRData,
     t::Tangent{Any,Tuple{Vector{Float64},Vector{Float64}}},
 )
     Mooncake.increment!!(f[1], t[1])
@@ -215,8 +214,62 @@ function Mooncake.increment_and_get_rdata!(
     f::NoFData,
     r::T,
     t::Tangent{Any,@NamedTuple{u::T, resid::T, prob::Tangent{Any,@NamedTuple{f::NoTangent, domain::Tangent{Any,Tuple{T,T}}, p::T, kwargs::NoTangent}},
-        alg::NoTangent, retcode::NoTangent, chi::NoTangent, stats::NoTangent}}) where T<:Number
-    return Mooncake.increment!!(t.u, r)
+        alg::NoTangent, retcode::NoTangent, chi::NoTangent, stats::NoTangent}}) where {T<:Base.IEEEFloat}
+
+    # rdata component of t + r (u field)
+    return t.u + r
+end
+
+function Mooncake.increment_and_get_rdata!(
+    f::Vector{T},
+    r::NoRData,
+    t::Tangent{
+        Any,
+        @NamedTuple{
+            u::Vector{T},
+            resid::Vector{T},
+            prob::Tangent{
+                Any,
+                @NamedTuple{
+                    f::NoTangent,
+                    domain::Tangent{Any,Tuple{T,T}},
+                    p::Vector{Float64},
+                    kwargs::NoTangent,
+                }
+            },
+            alg::NoTangent,
+            retcode::NoTangent,
+            chi::NoTangent,
+            stats::NoTangent,
+        }
+    },
+) where {T<:Base.IEEEFloat}
+
+    f .+= t.u
+    # rdata component of t + r
+    return t.prob.domain
+end
+
+function Mooncake.increment_and_get_rdata!(
+    f::Vector{T},
+    r::NoRData,
+    t::Tangent{Any,@NamedTuple{u::Vector{T}, resid::Vector{T},
+        prob::Tangent{Any,@NamedTuple{f::NoTangent, domain::Tangent{Any,Tuple{Vector{T},Vector{T}}},
+            p::Vector{T}, kwargs::NoTangent}}, alg::NoTangent, retcode::NoTangent,
+        chi::NoTangent, stats::NoTangent}}) where {T<:Base.IEEEFloat}
+
+    f .+= t.u
+    # rdata component of t + r
+    return NoRData()
+end
+
+function Mooncake.increment_and_get_rdata!(
+    f::NoFData,
+    r::T,
+    t::Tangent{Any,@NamedTuple{u::T, resid::T, prob::Tangent{Any,@NamedTuple{f::NoTangent, domain::Tangent{Any,Tuple{Vector{T},Vector{T}}}, p::T, kwargs::NoTangent}}, alg::NoTangent, retcode::NoTangent, chi::NoTangent, stats::NoTangent}}
+) where {T<:Base.IEEEFloat}
+    # rdata component of t + r (u field)
+    return r + t.u
 end
 
 end
