@@ -195,7 +195,7 @@ function ChainRulesCore.rrule(::typeof(Integrals.__solvebp), cache, alg, senseal
     out, quadrature_adjoint
 end
 
-# Internal Mooncake overloads to accomodate IntegralSolution etc. Struct's Tangent Types.
+# Internal Mooncake overloads to accommodate IntegralSolution etc. Struct's Tangent Types.
 # Allows clear translation from ChainRules -> Mooncake's tangent.
 function Mooncake.increment_and_get_rdata!(
     f::NoFData, r::Tuple{T,T}, t::Union{Tangent{Any,Tuple{T,T}},Tangent{Tuple{T,T},Tuple{T,T}}}
