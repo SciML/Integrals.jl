@@ -228,13 +228,26 @@ function Mooncake.increment_and_get_rdata!(
                     kwargs::NoTangent
                 }
             },
-            alg::NoTangent,
+            alg::A,
             retcode::NoTangent,
             chi::NoTangent,
             stats::NoTangent
         }
     }
-) where {T<:Base.IEEEFloat,R<:Union{NoTangent,T},P<:Union{T,Vector{T}},M<:Union{T,Vector{T}}}
+) where {T<:Base.IEEEFloat,
+    R<:Union{NoTangent,T},
+    P<:Union{T,Vector{T}},
+    M<:Union{T,Vector{T}},
+    A<:Union{NoTangent,
+        Tangent{Any,
+            @NamedTuple{
+                nodes::Vector{T},
+                weights::Vector{T},
+                subintervals::NoTangent
+            }
+        }
+    }
+}
     # rdata component of t + r (u field)
     return Mooncake.increment_and_get_rdata!(f, r, t.u)
 end
@@ -259,7 +272,7 @@ function Mooncake.increment_and_get_rdata!(
                         kwargs::NoTangent
                     }
                 },
-                alg::NoTangent,
+                alg::A,
                 retcode::NoTangent,
                 chi::NoTangent,
                 stats::NoTangent
@@ -267,7 +280,7 @@ function Mooncake.increment_and_get_rdata!(
         }
     }
 ) where {T<:Base.IEEEFloat,
-    R<:Union{T,Vector{T}},
+    R<:Union{NoTangent,T,Vector{T}},
     P<:Union{T,Vector{T}},
     M<:Union{Tuple{T,T},Tuple{Vector{T},Vector{T}}},
     F<:Union{NoTangent,
@@ -276,6 +289,15 @@ function Mooncake.increment_and_get_rdata!(
             @NamedTuple{
                 f::NoTangent,
                 integrand_prototype::Vector{T}
+            }
+        }
+    },
+    A<:Union{NoTangent,
+        Tangent{Any,
+            @NamedTuple{
+                nodes::Vector{T},
+                weights::Vector{T},
+                subintervals::NoTangent
             }
         }
     }
