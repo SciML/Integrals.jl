@@ -219,7 +219,7 @@ function Mooncake.increment_and_get_rdata!(
     t::Tangent{Any,
         @NamedTuple{
             u::T,
-            resid::T,
+            resid::R,
             prob::Tangent{Any,
                 @NamedTuple{
                     f::NoTangent,
@@ -234,7 +234,7 @@ function Mooncake.increment_and_get_rdata!(
             stats::NoTangent
         }
     }
-) where {T<:Base.IEEEFloat,P<:Union{T,Vector{T}},M<:Union{T,Vector{T}}}
+) where {T<:Base.IEEEFloat,R<:Union{NoTangent,T},P<:Union{T,Vector{T}},M<:Union{T,Vector{T}}}
     # rdata component of t + r (u field)
     return Mooncake.increment_and_get_rdata!(f, r, t.u)
 end
