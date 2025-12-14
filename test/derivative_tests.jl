@@ -243,6 +243,7 @@ for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands),
         p=[2.0i for i in 1:nout], alg, abstol, reltol)
 end
 
+#### in place IntegralCache, IntegralFunction Tests
 ### One Dimensional
 for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands),
     (i, scalarize) in enumerate(scalarize_solution)
@@ -253,6 +254,7 @@ for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands),
     @info "One-dimensional, scalar, iip derivative test" alg=nameof(typeof(alg)) integrand=j scalarize=i
     fiip = IntegralFunction((y, x, p) -> f_helper!(f, y, x, p), zeros(1))
     do_tests(; f = fiip, scalarize, lb = 1.0, ub = 3.0, p = 2.0, alg, abstol, reltol)
+    do_tests_mooncake(; f=fiip, scalarize, lb = 1.0, ub = 3.0, p = 2.0, alg, abstol, reltol)
 end
 
 ## One-dimensional nout
@@ -265,6 +267,8 @@ for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands),
     @info "One-dimensional, multivariate, iip derivative test" alg=nameof(typeof(alg)) integrand=j scalarize=i nout
     fiip = IntegralFunction((y, x, p) -> f_helper!(f, y, x, p), zeros(nout))
     do_tests(; f = fiip, scalarize, lb = 1.0, ub = 3.0,
+        p = [2.0i for i in 1:nout], alg, abstol, reltol)
+    do_tests_mooncake(; f=fiip, scalarize, lb = 1.0, ub = 3.0,
         p = [2.0i for i in 1:nout], alg, abstol, reltol)
 end
 
@@ -279,6 +283,8 @@ for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands),
     fiip = IntegralFunction((y, x, p) -> f_helper!(f, y, x, p), zeros(1))
     do_tests(;
         f = fiip, scalarize, lb = ones(dim), ub = 3ones(dim), p = 2.0, alg, abstol, reltol)
+    do_tests_mooncake(;
+        f=fiip, scalarize, lb = ones(dim), ub = 3ones(dim), p = 2.0, alg, abstol, reltol)
 end
 
 ### N-dimensional nout iip
@@ -292,6 +298,8 @@ for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands),
     @info "Multi-dimensional, multivariate, iip derivative test" alg=nameof(typeof(alg)) integrand=j scalarize=i dim nout
     fiip = IntegralFunction((y, x, p) -> f_helper!(f, y, x, p), zeros(nout))
     do_tests(; f = fiip, scalarize, lb = ones(dim), ub = 3ones(dim),
+        p = [2.0i for i in 1:nout], alg, abstol, reltol)
+    do_tests_mooncake(; f = fiip, scalarize, lb = ones(dim), ub = 3ones(dim),
         p = [2.0i for i in 1:nout], alg, abstol, reltol)
 end
 
