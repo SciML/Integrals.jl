@@ -198,7 +198,7 @@ end
 # Internal Mooncake overloads to accommodate IntegralSolution etc. Struct's Tangent Types.
 # Allows clear translation from ChainRules -> Mooncake's tangent.
 function Mooncake.increment_and_get_rdata!(
-    f::NoFData, r::Tuple{T,T}, t::Tangent{Any,Union{Tuple{T,T},Tangent{Tuple{T,T},Tuple{T,T}}}}
+    f::NoFData, r::Tuple{T,T}, t::Union{Tangent{Tuple{T,T},Tuple{T,T}},Tangent{Any,Tuple{Float64,Float64}}}
 ) where {T<:Base.IEEEFloat}
     return r .+ t.backing
 end
@@ -216,32 +216,31 @@ end
 function Mooncake.increment_and_get_rdata!(
     f::NoFData,
     r::T,
-    t::Union{
-        Tangent{Any,
-            @NamedTuple{
-                u::T,
-                resid::T,
-                prob::Tangent{Any,
-                    @NamedTuple{
-                        f::S,
-                        domain::Tangent{Any,Union{Tuple{T,T},Tuple{Vector{T},Vector{T}}}},
-                        p::T,
-                        kwargs::S
-                    }
-                },
-                alg::S,
-                retcode::S,
-                chi::S,
-                stats::S
-            }
+    t::Tangent{Any,
+        @NamedTuple{
+            u::T,
+            resid::T,
+            prob::Tangent{Any,
+                @NamedTuple{
+                    f::NoTangent,
+                    domain::Tangent{Any,Tuple{M,M}},
+                    p::P,
+                    kwargs::NoTangent
+                }
+            },
+            alg::NoTangent,
+            retcode::NoTangent,
+            chi::NoTangent,
+            stats::NoTangent
         }
-    }) where {T<:Base.IEEEFloat,S<:NoTangent}
+    }
+) where {T<:Base.IEEEFloat,P<:Union{T,Vector{T}},M<:Union{T,Vector{T}}}
     # rdata component of t + r (u field)
     return Mooncake.increment_and_get_rdata!(f, r, t.u)
 end
 
-# sol.u is vector valued, p is vector valued, domain can be single/multi - variate
-#  resid can be single/vector valued, integrand_prototype field in prob for inplace integrals (iip true)
+# sol.u is vector valued, p is scalar/vector valued, domain can be single/multi - variate
+#  resid can be single/vector valued. For inplace integrals (iip true) : included integrand_prototype field in typeof{prob.f}
 function Mooncake.increment_and_get_rdata!(
     f::Vector{T},
     r::NoRData,
@@ -250,37 +249,44 @@ function Mooncake.increment_and_get_rdata!(
             Any,
             @NamedTuple{
                 u::Vector{T},
-                resid::Union{T,Vector{T}},
+                resid::R,
                 prob::Tangent{
                     Any,
                     @NamedTuple{
-                        f::Union{S,Tangent{
-                            Any,
-                            @NamedTuple{
-                                f::S,
-                                integrand_prototype::Vector{T}
-                            }
-                        }},
-                        domain::Tangent{Any,Union{Tuple{T,T},Tuple{Vector{T},Vector{T}}}},
-                        p::Union{T,Vector{T}},
-                        kwargs::S
+                        f::F,
+                        domain::Tangent{Any,M},
+                        p::P,
+                        kwargs::NoTangent
                     }
                 },
-                alg::S,
-                retcode::S,
-                chi::S,
-                stats::S
+                alg::NoTangent,
+                retcode::NoTangent,
+                chi::NoTangent,
+                stats::NoTangent
             }
         }
     }
-) where {T<:Base.IEEEFloat,S<:NoTangent}
+) where {T<:Base.IEEEFloat,
+    R<:Union{T,Vector{T}},
+    P<:Union{T,Vector{T}},
+    M<:Union{Tuple{T,T},Tuple{Vector{T},Vector{T}}},
+    F<:Union{NoTangent,
+        Tangent{
+            Any,
+            @NamedTuple{
+                f::NoTangent,
+                integrand_prototype::Vector{T}
+            }
+        }
+    }
+}
     Mooncake.increment!!(f, t.u)
     # rdata component(t) + r
     return t.prob.domain
 end
 
 # cannot mutate NoRData() in place, therefore return as is.
-function Mooncake.increment!!(::Mooncake.NoRData, y::Tangent{Any,Union{Tuple{T,T},Tangent{Any,Tuple{Vector{T},Vector{T}}}}}) where {T<:Base.IEEEFloat}
+function Mooncake.increment!!(::Mooncake.NoRData, y::Tangent{Any,Y}) where {T<:Base.IEEEFloat,Y<:Union{Tuple{T,T},Tuple{Vector{T},Vector{T}}}}
     return Mooncake.NoRData()
 end
 end
