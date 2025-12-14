@@ -198,7 +198,7 @@ end
 # Internal Mooncake overloads to accommodate IntegralSolution etc. Struct's Tangent Types.
 # Allows clear translation from ChainRules -> Mooncake's tangent.
 function Mooncake.increment_and_get_rdata!(
-    f::NoFData, r::Tuple{T,T}, t::Union{Tangent{Any,Tuple{T,T}},Tangent{Tuple{T,T},Tuple{T,T}}}
+    f::NoFData, r::Tuple{T,T}, t::Tangent{Any,Union{Tuple{T,T},Tangent{Tuple{T,T},Tuple{T,T}}}}
 ) where {T<:Base.IEEEFloat}
     return r .+ t.backing
 end
@@ -224,7 +224,7 @@ function Mooncake.increment_and_get_rdata!(
                 prob::Tangent{Any,
                     @NamedTuple{
                         f::S,
-                        domain::Union{Tangent{Any,Tuple{T,T}},Tangent{Any,Tuple{Vector{T},Vector{T}}}},
+                        domain::Tangent{Any,Union{Tuple{T,T},Tuple{Vector{T},Vector{T}}}},
                         p::T,
                         kwargs::S
                     }
@@ -261,7 +261,7 @@ function Mooncake.increment_and_get_rdata!(
                                 integrand_prototype::Vector{T}
                             }
                         }},
-                        domain::Union{Tangent{Any,Tuple{T,T}},Tangent{Any,Tuple{Vector{T},Vector{T}}}},
+                        domain::Tangent{Any,Union{Tuple{T,T},Tuple{Vector{T},Vector{T}}}},
                         p::Union{T,Vector{T}},
                         kwargs::S
                     }
@@ -280,7 +280,7 @@ function Mooncake.increment_and_get_rdata!(
 end
 
 # cannot mutate NoRData() in place, therefore return as is.
-function Mooncake.increment!!(::Mooncake.NoRData, y::Union{Tangent{Any,Tuple{T,T}},Tangent{Any,Tuple{Vector{T},Vector{T}}}}) where {T<:Base.IEEEFloat}
+function Mooncake.increment!!(::Mooncake.NoRData, y::Tangent{Any,Union{Tuple{T,T},Tangent{Any,Tuple{Vector{T},Vector{T}}}}}) where {T<:Base.IEEEFloat}
     return Mooncake.NoRData()
 end
 end
