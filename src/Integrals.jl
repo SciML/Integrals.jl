@@ -11,7 +11,9 @@ using SciMLBase: init, solve!
 using LinearAlgebra: LinearAlgebra, /, norm
 using Random: Random
 using ArrayInterface: ArrayInterface
+using SciMLLogging: SciMLLogging, @SciMLMessage, Silent, DebugLevel, InfoLevel, WarnLevel, ErrorLevel
 
+include("verbosity.jl")
 include("algorithms_meta.jl")
 include("common.jl")
 include("algorithms.jl")
@@ -142,8 +144,14 @@ function __solve(
         cache::IntegralCache, alg::ChangeOfVariables, sensealg, udomain, p;
         kwargs...
     )
+    @SciMLMessage("Applying coordinate transformation", cache.verbosity, :domain_transformation)
+
     cacheval = cache.cacheval.alg
     g, vdomain = alg.fu2gv(cache.f, udomain)
+
+    @SciMLMessage(@lazy("Domain transformed: $udomain → $vdomain"),
+                  cache.verbosity, :domain_transformation)
+
     _cache = IntegralCache(
         Val(isinplace(g)),
         g,
@@ -154,7 +162,8 @@ function __solve(
         sensealg,
         cache.kwargs,
         cacheval
-    )
+    ,
+        cache.verbosity)
     sol = __solve(_cache, alg.alg, sensealg, vdomain, p; kwargs...)
     prob = build_problem(cache)
     return SciMLBase.build_solution(
@@ -193,6 +202,9 @@ function __solvebp_call(
         reltol = 1.0e-8, abstol = 1.0e-8,
         maxiters = typemax(Int)
     )
+    @SciMLMessage(@lazy("QuadGKJL: starting 1D integration with reltol=$reltol, abstol=$abstol, order=$(alg.order)"),
+                  cache.verbosity, :algorithm_selection)
+
     prob = build_problem(cache)
     lb, ub = map(first, domain)
     if any(!isone ∘ length, domain)
@@ -201,8 +213,14 @@ function __solvebp_call(
 
     f = cache.f
     mid = (lb + ub) / 2
+
+    if cache.cacheval !== nothing
+        @SciMLMessage("Using pre-allocated buffer for QuadGKJL", cache.verbosity, :buffer_allocation)
+    end
     if f isa BatchIntegralFunction
+        @SciMLMessage("Using batch evaluation mode", cache.verbosity, :batch_mode)
         if isinplace(f)
+            @SciMLMessage("Batch integrand: in-place evaluation", cache.verbosity, :batch_mode)
             # quadgk only works with vector buffers. If the buffer is an array, we have to
             # turn it into a vector of arrays
             prototype = f.integrand_prototype
@@ -224,6 +242,7 @@ function __solvebp_call(
                 rtol = reltol, atol = abstol, order = alg.order, norm = alg.norm
             )
         else
+            @SciMLMessage("Batch integrand: out-of-place evaluation", cache.verbosity, :batch_mode)
             prototype = f(typeof(mid)[], p)
             _f = if prototype isa AbstractVector
                 BatchIntegrand((y, u) -> y .= f(u, p), prototype)
@@ -242,6 +261,7 @@ function __solvebp_call(
         end
     else
         if isinplace(f)
+            @SciMLMessage("Using in-place evaluation", cache.verbosity, :batch_mode)
             result = f.integrand_prototype * mid   # result may have different units than prototype
             _f = (y, u) -> f(y, u, p)
             val,
@@ -251,6 +271,7 @@ function __solvebp_call(
                 rtol = reltol, atol = abstol, order = alg.order, norm = alg.norm
             )
         else
+            @SciMLMessage("Using out-of-place evaluation", cache.verbosity, :batch_mode)
             _f = u -> f(u, p)
             val,
                 err = quadgk(
@@ -259,6 +280,7 @@ function __solvebp_call(
             )
         end
     end
+    @SciMLMessage(@lazy("QuadGKJL converged: val=$val, err=$err"), cache.verbosity, :convergence_result)
     return SciMLBase.build_solution(prob, alg, val, err, retcode = ReturnCode.Success)
 end
 
@@ -273,12 +295,20 @@ function __solvebp_call(
         reltol = 1.0e-8, abstol = 1.0e-8,
         maxiters = typemax(Int)
     )
+    @SciMLMessage(@lazy("HCubatureJL: starting multidimensional h-adaptive integration with reltol=$reltol, abstol=$abstol, initdiv=$(alg.initdiv)"),
+                  cache.verbosity, :algorithm_selection)
+
     prob = build_problem(cache)
     lb, ub = domain
     f = cache.f
 
+    if cache.cacheval !== nothing
+        @SciMLMessage("Using pre-allocated buffer for HCubatureJL", cache.verbosity, :buffer_allocation)
+    end
+
     @assert f isa IntegralFunction
     if isinplace(f)
+        @SciMLMessage("Wrapping in-place function for HCubature compatibility", cache.verbosity, :batch_mode)
         # allocate a new output array at each evaluation since HCubature.jl doesn't support
         # inplace ops
         prototype = f.integrand_prototype
@@ -307,19 +337,29 @@ function __solvebp_call(
             initdiv = alg.initdiv
         )::Tuple{typeof(ret), typeof(alg.norm(ret))}
     end
+    @SciMLMessage(@lazy("HCubatureJL converged: val=$val, err=$err"), cache.verbosity, :convergence_result)
     return SciMLBase.build_solution(prob, alg, val, err, retcode = ReturnCode.Success)
 end
 
 function __solvebp_call(
-        prob::IntegralProblem, alg::VEGAS, sensealg, domain, p;
+        cache::IntegralCache, alg::VEGAS, sensealg, domain, p;
         reltol = 1.0e-4, abstol = 1.0e-4,
         maxiters = 1000
     )
+    @SciMLMessage(@lazy("VEGAS: starting Monte Carlo integration with nbins=$(alg.nbins), ncalls=$(alg.ncalls), maxiters=$maxiters"),
+                  cache.verbosity, :algorithm_selection)
+
+    prob = build_problem(cache)
     lb, ub = domain
     mid = (lb + ub) / 2
     f = prob.f
-    alg.seed !== nothing && Random.seed!(alg.seed)
+
+    if alg.seed !== nothing
+        Random.seed!(alg.seed)
+        @SciMLMessage(@lazy("Random seed set to $(alg.seed)"), cache.verbosity, :algorithm_selection)
+    end
     if f isa BatchIntegralFunction
+        @SciMLMessage("Using batch Monte Carlo sampling", cache.verbosity, :batch_mode)
         # MonteCarloIntegration v0.0.x passes points as rows of a matrix
         # MonteCarloIntegration v0.1 passes batches as a vector of views of
         # a matrix with points as columns of a matrix
@@ -368,6 +408,7 @@ function __solvebp_call(
     val, err,
         chi = out isa Tuple ? out :
         (out.integral_estimate, out.standard_deviation, out.chi_squared_average)
+    @SciMLMessage(@lazy("VEGAS converged: val=$val, err=$err, χ²=$chi"), cache.verbosity, :convergence_result)
     return SciMLBase.build_solution(prob, alg, val, err, chi = chi, retcode = ReturnCode.Success)
 end
 
