@@ -432,8 +432,8 @@ end
 
     @testset "Sensitivity using Zygote" begin
         sensealg = Integrals.ReCallVJP(Integrals.ZygoteVJP())
-        sol = Zygote.withgradient((args...) -> testf(_testf, args..., alg), lb, ub, p, sensealg)
-        tsol = Zygote.withgradient((args...) -> testf(_testf, args..., talg), lb, ub, p, sensealg)
+        sol = Zygote.withgradient((args...) -> testf(_testf, args...), lb, ub, p, alg, sensealg)
+        tsol = Zygote.withgradient((args...) -> testf(_testf, args...), lb, ub, p, talg, sensealg)
         @test sol.val ≈ tsol.val
         # Fundamental theorem of Calculus part 1
         @test sol.grad[1] ≈ tsol.grad[1] ≈ -_testf(lb, p)
@@ -445,14 +445,14 @@ end
     @testset "Sensitivity using Mooncake" begin
         sensealg = Integrals.ReCallVJP(Integrals.MooncakeVJP())
         # anonymous function for cache creation and gradient evaluation call must be the same.
-        func = (args...) -> testf(_testf, args..., alg, sensealg)
-        cache = Mooncake.prepare_gradient_cache(func, lb, ub, p, sensealg)
+        func = (args...) -> testf(_testf, args...)
+        cache = Mooncake.prepare_gradient_cache(func, lb, ub, p, alg, sensealg)
         sol = Mooncake.value_and_gradient!!(cache, func,
-            lb, ub, p, sensealg)
+            lb, ub, p, alg, sensealg)
 
-        cache = Mooncake.prepare_gradient_cache(func, lb, ub, p, sensealg)
+        cache = Mooncake.prepare_gradient_cache(func, lb, ub, p, talg, sensealg)
         tsol = Mooncake.value_and_gradient!!(
-            cache, func, lb, ub, p, sensealg)
+            cache, func, lb, ub, p, talg, sensealg)
 
         @test sol[1] ≈ tsol[1]
         # Fundamental theorem of Calculus part 1
