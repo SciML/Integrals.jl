@@ -431,7 +431,7 @@ end
     lb, ub, p = 1.0, 5.0, 2.0
 
     @testset "Sensitivity using Zygote" begin
-        sensealg = Integrals.ReCallVJP{IntegralZygoteVJP}(IntegralZygoteVJP())
+        sensealg = Integrals.ReCallVJP(Integrals.ZygoteVJP())
         sol = Zygote.withgradient((args...) -> testf(_testf, args..., alg), lb, ub, p, sensealg)
         tsol = Zygote.withgradient((args...) -> testf(_testf, args..., talg), lb, ub, p, sensealg)
         @test sol.val ≈ tsol.val
@@ -443,7 +443,7 @@ end
     end
 
     @testset "Sensitivity using Mooncake" begin
-        sensealg = Integrals.ReCallVJP{Integrals.MooncakeVJP}(Integrals.MooncakeVJP())
+        sensealg = Integrals.ReCallVJP(Integrals.MooncakeVJP())
         # anonymous function for cache creation and gradient evaluation call must be the same.
         func = (args...) -> testf(_testf, args..., alg, sensealg)
         cache = Mooncake.prepare_gradient_cache(func, lb, ub, p, sensealg)
