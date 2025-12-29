@@ -49,7 +49,7 @@ The caching interface is intended for updating `p` and `domain`.
 Note that the types of these variables is not allowed to change.
 If it is necessary to change the integrand `f` instead of defining a new
 `IntegralProblem`, consider using
-[FunctionWrappers.jl](https://github.com/yuyichao/FunctionWrappers.jl).
+[FunctionWrappers.jl](https://github.com/JuliaLang/FunctionWrappers.jl).
 
 ## Caching for sampled integral problems
 
