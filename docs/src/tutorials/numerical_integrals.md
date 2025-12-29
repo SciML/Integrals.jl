@@ -50,9 +50,9 @@ Another way to think about this is that the integrand is now a vector valued fun
 In general, we should be able to integrate any type that is in a vector space
 and supports addition and scalar multiplication, although Integrals.jl allows
 scalars and arrays.
-In the above example, the integrand was defined out-of-position.
+In the above example, the integrand was defined out-of-place.
 This means that a new output vector is created every time the function `f` is called.
-If we do not  want these allocations, we can also define `f` in-position.
+If we do not want these allocations, we can also define `f` in-place.
 
 ```@example integrate3
 using Integrals, Cubature
@@ -70,7 +70,7 @@ sol.u
 where `y` is a cache to store the evaluation of the integrand and `prototype` is
 an instance of `y` with the desired type and shape.
 We needed to change the algorithm to `CubatureJLh()`
-because `HCubatureJL()` does not support in-position under the hood.
+because `HCubatureJL()` does not support in-place under the hood.
 `f` evaluates the integrand at a certain point,
 but most adaptive quadrature algorithms need to evaluate the integrand at multiple points
 in each step of the algorithm.
@@ -97,7 +97,7 @@ Both `u` and `y` changed from vectors to matrices,
 where each column is respectively a point the integrand is evaluated at or
 the evaluation of the integrand at the corresponding point.
 The `prototype` now has an extra dimension for batching that can be of size zero.
-Try to create yourself an out-of-position version of the above problem.
+Try to create yourself an out-of-place version of the above problem.
 For the full details of the batching interface, see the [problem page](@ref prob).
 
 If we would like to compare the results against Cuba.jl's `Cuhre` method, then
