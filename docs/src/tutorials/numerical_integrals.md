@@ -19,7 +19,8 @@ sol.u
 ```
 
 where the first argument of `IntegralProblem` is the integrand,
-the second argument is the lower bound, and the third argument is the upper bound.
+the second argument is the domain (a tuple of lower and upper bounds),
+and the optional third argument contains the parameters.
 `p` are the parameters of the integrand. In this case, there are no parameters,
 but still `f` must be defined as `f(x,p)` and **not** `f(x)`.
 For an example with parameters, see the next tutorial.
