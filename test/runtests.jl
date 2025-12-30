@@ -9,3 +9,4 @@ using Test
 @time @safetestset "Sampled Integration Tests" include("sampled_tests.jl")
 @time @safetestset "QuadratureFunction Tests" include("quadrule_tests.jl")
 @time @safetestset "Nested AD Tests" include("nested_ad_tests.jl")
+@time @safetestset "Alternative Transformation Tests" include("alt_transformation_tests.jl")

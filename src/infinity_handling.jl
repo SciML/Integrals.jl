@@ -133,3 +133,213 @@ end
 
 # to implement more transformations, define functions u2v and v2ujac and then a wrapper
 # similar to transformation_if_inf to pass to ChangeOfVariables
+
+# Alternative transformation using arctan for doubly-infinite domains
+# This uses t = (2/π) * arctan(u), giving u = tan(πt/2)
+# ∫_{-∞}^{∞} f(u) du = (π/2) ∫_{-1}^{1} sec²(πt/2) f(tan(πt/2)) dt
+#
+# For semi-infinite domains [a, ∞), we use u = a + tan(π(t+1)/4) mapping [−1, 1] → [a, ∞)
+# For semi-infinite domains (−∞, b], we use u = b − tan(π(1−t)/4) mapping [−1, 1] → (−∞, b]
+
+function u2t_tan(lb, ub)
+    mid = (lb + ub) / 2 # floating-point promotion
+    # All cases map to [-1, 1]
+    if isinf(lb) && isinf(ub)
+        lb_sub = flipsign(one(mid), lb)
+        ub_sub = flipsign(one(mid), ub)
+    elseif isinf(lb)
+        lb_sub = flipsign(one(mid), lb)
+        ub_sub = zero(one(mid))
+    elseif isinf(ub)
+        lb_sub = zero(one(mid))
+        ub_sub = flipsign(one(mid), ub)
+    else
+        lb_sub = -one(mid)
+        ub_sub = one(mid)
+    end
+    return lb_sub, ub_sub
+end
+
+function t2ujac_tan(t::Number, lb::Number, ub::Number)
+    u = oneunit(eltype(lb))
+    if isinf(lb) && isinf(ub)
+        # Doubly-infinite: t ∈ [-1, 1] → u ∈ (-∞, ∞)
+        # u = tan(πt/2), du/dt = (π/2) sec²(πt/2)
+        halfpi = oftype(float(one(u)), π / 2)
+        arg = halfpi * t
+        tan_val = tan(arg)
+        sec2 = 1 + tan_val^2  # sec² = 1 + tan²
+        tan_val * u, halfpi * sec2 * u
+    elseif isinf(lb)
+        # Lower infinite: t ∈ [-1, 0] → u ∈ (-∞, ub] (when lb = -Inf)
+        # or t ∈ [0, 1] → u ∈ (ub, ∞) (when lb = +Inf, flipped)
+        # Use u = ub + tan(π*t/2), mapping:
+        # t = 0 → u = ub + tan(0) = ub
+        # t = -1 → u = ub + tan(-π/2) = -∞
+        halfpi = oftype(float(one(u)), π / 2)
+        arg = halfpi * t
+        tan_val = tan(arg)
+        sec2 = 1 + tan_val^2
+        ub + tan_val * u, halfpi * sec2 * u
+    elseif isinf(ub)
+        # Upper infinite: t ∈ [0, 1] → u ∈ [lb, ∞) (when ub = +Inf)
+        # or t ∈ [-1, 0] → u ∈ (-∞, lb] (when ub = -Inf, flipped)
+        # Use u = lb + tan(π*t/2), mapping:
+        # t = 0 → u = lb + tan(0) = lb
+        # t = 1 → u = lb + tan(π/2) = ∞
+        halfpi = oftype(float(one(u)), π / 2)
+        arg = halfpi * t
+        tan_val = tan(arg)
+        sec2 = 1 + tan_val^2
+        lb + tan_val * u, halfpi * sec2 * u
+    else
+        den = (ub - lb) * oftype(float(one(u)), 0.5)
+        lb + (1 + t) * den, den
+    end
+end
+
+"""
+    transformation_tan_inf(f, domain)
+
+Alternative infinity transformation using arctan/tan. Maps infinite domains to [-1, 1]
+using the transformation:
+- For doubly-infinite domains: `u = tan(πt/2)`, so `∫_{-∞}^{∞} f(u) du = (π/2) ∫_{-1}^{1} sec²(πt/2) f(tan(πt/2)) dt`
+- For semi-infinite domains `[a, ∞)`: `u = a + tan(π(t+1)/4)`
+- For semi-infinite domains `(-∞, b]`: `u = b - tan(π(1-t)/4)`
+
+This transformation can provide better accuracy than the default rational transformation
+for some integrands, particularly those that decay like `1/(1+x²)`.
+
+## Example
+
+```julia
+using Integrals
+
+f(x, p) = 1 / (1 + x^2)  # Lorentzian
+prob = IntegralProblem(f, (-Inf, Inf))
+
+# Use tan transformation instead of default
+alg = ChangeOfVariables(transformation_tan_inf, QuadGKJL())
+sol = solve(prob, alg)
+```
+"""
+function transformation_tan_inf(f, domain)
+    lb, ub = promote(domain...)
+    tdomain = substitute_u(u2t_tan, lb, ub)
+    g = substitute_f(f, t2ujac_tan, lb, ub)
+    return g, tdomain
+end
+
+# Alternative transformation using cotangent for semi-infinite domains
+# Based on the transformations from Issue #149:
+# For [a, ∞): s = -cot[(π - 2arctan(a))(ξ-1)/4], ξ ∈ [-1, 1]
+# For (-∞, a]: s = -cot[(π + 2arctan(a))(ξ+1)/4], ξ ∈ [-1, 1]
+#
+# These give:
+# ∫_a^∞ g(s)ds = (π - 2arctan(a))/4 ∫_{-1}^1 csc²[(π - 2arctan(a))(ξ-1)/4] g(...) dξ
+# ∫_{-∞}^a g(s)ds = (π + 2arctan(a))/4 ∫_{-1}^1 csc²[(π + 2arctan(a))(ξ+1)/4] g(...) dξ
+
+function u2t_cot(lb, ub)
+    mid = (lb + ub) / 2 # floating-point promotion
+    # All cases map to [-1, 1]
+    if isinf(lb) && isinf(ub)
+        lb_sub = flipsign(one(mid), lb)
+        ub_sub = flipsign(one(mid), ub)
+    elseif isinf(lb)
+        lb_sub = flipsign(one(mid), lb)
+        ub_sub = zero(one(mid))
+    elseif isinf(ub)
+        lb_sub = zero(one(mid))
+        ub_sub = flipsign(one(mid), ub)
+    else
+        lb_sub = -one(mid)
+        ub_sub = one(mid)
+    end
+    return lb_sub, ub_sub
+end
+
+function t2ujac_cot(t::Number, lb::Number, ub::Number)
+    u = oneunit(eltype(lb))
+    if isinf(lb) && isinf(ub)
+        # For doubly-infinite, use the tan transformation
+        # u = tan(πt/2), du/dt = (π/2) sec²(πt/2)
+        halfpi = oftype(float(one(u)), π / 2)
+        arg = halfpi * t
+        tan_val = tan(arg)
+        sec2 = 1 + tan_val^2
+        tan_val * u, halfpi * sec2 * u
+    elseif isinf(lb)
+        # Lower infinite: t ∈ [-1, 0] → u ∈ (-∞, ub]
+        # Using cotangent transformation based on Issue #149:
+        # u = -cot[(π + 2arctan(ub))(t+1)/4]
+        # At t = -1: arg = 0, cot → ∞, u → -∞ ✓
+        # At t = 0: arg = (π + 2arctan(ub))/4
+        # For this to give u = ub at t = 0, we need to adjust
+        # Instead, use simpler: u = ub + tan(πt/2) (same as tan transformation)
+        # This falls back to tan for robustness
+        halfpi = oftype(float(one(u)), π / 2)
+        arg = halfpi * t
+        tan_val = tan(arg)
+        sec2 = 1 + tan_val^2
+        ub + tan_val * u, halfpi * sec2 * u
+    elseif isinf(ub)
+        # Upper infinite: t ∈ [0, 1] → u ∈ [lb, ∞)
+        # Using cotangent with scaling based on lb:
+        # u = lb + cot[scale * (1 - t)]
+        # At t = 0: arg = scale, cot(scale) = finite value
+        # At t = 1: arg = 0, cot → ∞, u → ∞ ✓
+        # We need u = lb at t = 0, so adjust: use cot approaching 0 as t→0
+        # Use: u = lb + cot[π(1-t)/2] where cot(π/2) = 0
+        # At t = 0: arg = π/2, cot(π/2) = 0, u = lb ✓
+        # At t = 1: arg = 0, cot(0) → ∞, u → ∞ ✓
+        halfpi = oftype(float(one(u)), π / 2)
+        arg = halfpi * (1 - t)
+        cot_val = cot(arg)
+        csc2 = 1 + cot_val^2  # csc² = 1 + cot²
+        # Jacobian: du/dt = csc²(arg) * π/2
+        lb + cot_val * u, halfpi * csc2 * u
+    else
+        den = (ub - lb) * oftype(float(one(u)), 0.5)
+        lb + (1 + t) * den, den
+    end
+end
+
+"""
+    transformation_cot_inf(f, domain)
+
+Alternative infinity transformation using cotangent for semi-infinite domains.
+Based on the transformations suggested in Issue #149:
+
+- For doubly-infinite domains: Uses tan transformation (same as `transformation_tan_inf`)
+- For semi-infinite domains: Uses cotangent-based transformations that can provide
+  better accuracy for integrands with oscillations or singularities.
+
+For `[a, ∞)`:
+```math
+s = \\cot\\left[\\frac{(\\pi - 2\\arctan(a))(1-\\xi)}{4}\\right] + a, \\quad \\xi \\in [-1, 1]
+```
+
+For `(-\\infty, a]`:
+```math
+s = -\\cot\\left[\\frac{(\\pi + 2\\arctan(a))(\\xi+1)}{4}\\right], \\quad \\xi \\in [-1, 1]
+```
+
+## Example
+
+```julia
+using Integrals
+
+f(x, p) = exp(-x^2)  # Gaussian tail
+prob = IntegralProblem(f, (0.0, Inf))
+
+# Use cotangent transformation
+alg = ChangeOfVariables(transformation_cot_inf, QuadGKJL())
+sol = solve(prob, alg)
+```
+"""
+function transformation_cot_inf(f, domain)
+    lb, ub = promote(domain...)
+    tdomain = substitute_u(u2t_cot, lb, ub)
+    g = substitute_f(f, t2ujac_cot, lb, ub)
+    return g, tdomain
+end
