@@ -47,7 +47,45 @@ _eachslice(data::AbstractArray{T, 1}; dims = ndims(data)) where {T} = data
 dimension(::Val{D}) where {D} = D
 dimension(D::Int) = D
 
+# Specialized evalrule for 1D arrays (Vector) - returns scalar
+function evalrule(data::AbstractVector, weights, dim)
+    n = length(data)
+    n == 0 && throw(ArgumentError("No points to integrate"))
+    out = data[1] * weights[1]
+    @inbounds for i in 2:n
+        out += weights[i] * data[i]
+    end
+    return out
+end
+
+# Specialized evalrule for 2D arrays (Matrix) integrating over last dimension
+# This is the most common case for vector-valued integrands
+function evalrule(data::AbstractMatrix{T}, weights, dim) where {T}
+    m, n = size(data)
+    n == 0 && throw(ArgumentError("No points to integrate"))
+    if dim == 2 || dim == ndims(data)
+        # Integration over columns (last dimension) - the common case
+        out = zeros(T, m)
+        @inbounds for i in 1:n
+            w = weights[i]
+            @simd for j in 1:m
+                out[j] += w * data[j, i]
+            end
+        end
+        return out
+    else
+        # Integration over rows (dim=1) - less common
+        # Fall back to general implementation
+        return _evalrule_general(data, weights, dim)
+    end
+end
+
+# General fallback for higher-dimensional arrays
 function evalrule(data::AbstractArray, weights, dim)
+    return _evalrule_general(data, weights, dim)
+end
+
+function _evalrule_general(data::AbstractArray, weights, dim)
     fw = zip(_eachslice(data, dims = dim), weights)
     next = iterate(fw)
     next === nothing && throw(ArgumentError("No points to integrate"))
