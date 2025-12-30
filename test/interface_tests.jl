@@ -407,3 +407,95 @@ end
               solve(IntegralProblem(f242, domain242, p242), QuadGKJL(); abstol).u
     end
 end
+
+@testset "Numeric Type Interface" begin
+    @testset "BigFloat support" begin
+        # Test QuadGKJL with BigFloat bounds
+        f_bf = (x, p) -> sin(x)
+        lb_bf = BigFloat("0.0")
+        ub_bf = BigFloat("1.0")
+        prob_bf = IntegralProblem(f_bf, (lb_bf, ub_bf))
+        sol_bf = solve(prob_bf, QuadGKJL())
+        expected_bf = 1 - cos(BigFloat(1))
+        @test sol_bf.u isa BigFloat
+        @test sol_bf.u≈expected_bf rtol=1e-10
+
+        # Test HCubatureJL with BigFloat scalar bounds
+        sol_hc_bf = solve(prob_bf, HCubatureJL())
+        @test sol_hc_bf.u isa BigFloat
+        @test sol_hc_bf.u≈expected_bf rtol=1e-10
+
+        # Test HCubatureJL with BigFloat vector bounds
+        f_bf_2d = (x, p) -> sin(x[1]) * cos(x[2])
+        lb_bf_2d = BigFloat[0, 0]
+        ub_bf_2d = BigFloat[1, 1]
+        prob_bf_2d = IntegralProblem(f_bf_2d, (lb_bf_2d, ub_bf_2d))
+        sol_bf_2d = solve(prob_bf_2d, HCubatureJL())
+        @test sol_bf_2d.u isa BigFloat
+
+        # Test SampledIntegralProblem with BigFloat
+        x_bf = range(BigFloat("0.0"), BigFloat("1.0"), length = 11)
+        y_bf = sin.(x_bf)
+        prob_sampled_bf = SampledIntegralProblem(y_bf, x_bf)
+        sol_sampled_bf = solve(prob_sampled_bf, TrapezoidalRule())
+        @test sol_sampled_bf.u isa BigFloat
+        @test eltype(x_bf) == BigFloat
+        @test eltype(y_bf) == BigFloat
+
+        # Test SimpsonsRule with BigFloat
+        sol_simpson_bf = solve(prob_sampled_bf, SimpsonsRule())
+        @test sol_simpson_bf.u isa BigFloat
+
+        # Test BigFloat matrix for vector-valued sampled integration
+        y_bf_matrix = BigFloat[sin(xi) * j for j in 1:3, xi in x_bf]
+        prob_sampled_bf_2d = SampledIntegralProblem(y_bf_matrix, x_bf; dim = 2)
+        sol_sampled_bf_2d = solve(prob_sampled_bf_2d, TrapezoidalRule())
+        @test eltype(sol_sampled_bf_2d.u) == BigFloat
+    end
+
+    @testset "Complex number support" begin
+        # Test SampledIntegralProblem with Complex numbers
+        x_c = range(0.0, 1.0, length = 11)
+        y_c = complex.(sin.(x_c), cos.(x_c))
+        prob_c = SampledIntegralProblem(y_c, x_c)
+        sol_c = solve(prob_c, TrapezoidalRule())
+        @test sol_c.u isa Complex
+        @test real(sol_c.u) > 0
+        @test imag(sol_c.u) > 0
+
+        # Test QuadGKJL with complex-valued integrand
+        f_c = (x, p) -> exp(im * x)
+        prob_quadgk_c = IntegralProblem(f_c, (0.0, 1.0))
+        sol_quadgk_c = solve(prob_quadgk_c, QuadGKJL())
+        expected_c = (exp(im) - 1) / im
+        @test sol_quadgk_c.u isa Complex
+        @test sol_quadgk_c.u≈expected_c rtol=1e-8
+    end
+
+    @testset "Float32 type preservation" begin
+        # Test SampledIntegralProblem preserves Float32
+        x_f32 = range(0.0f0, 1.0f0, length = 11)
+        y_f32 = sin.(x_f32)
+        prob_f32 = SampledIntegralProblem(y_f32, x_f32)
+        sol_f32 = solve(prob_f32, TrapezoidalRule())
+        @test sol_f32.u isa Float32
+
+        # Test Float32 matrix
+        y_f32_matrix = Float32[sin(xi) * j for j in 1:3, xi in x_f32]
+        prob_f32_2d = SampledIntegralProblem(y_f32_matrix, x_f32; dim = 2)
+        sol_f32_2d = solve(prob_f32_2d, TrapezoidalRule())
+        @test eltype(sol_f32_2d.u) == Float32
+    end
+
+    @testset "SubArray support" begin
+        # Test that views/SubArrays work correctly
+        x_full = range(0.0, 1.0, length = 11)
+        y_full = sin.(x_full)
+        y_view = @view y_full[:]
+        prob_view = SampledIntegralProblem(y_view, x_full)
+        sol_view = solve(prob_view, TrapezoidalRule())
+        prob_regular = SampledIntegralProblem(y_full, x_full)
+        sol_regular = solve(prob_regular, TrapezoidalRule())
+        @test sol_view.u ≈ sol_regular.u
+    end
+end
