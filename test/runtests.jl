@@ -1,6 +1,7 @@
 using SafeTestsets
 using Test
 
+@time @safetestset "Explicit Imports" include("explicit_imports_tests.jl")
 @time @safetestset "Quality Assurance" include("qa.jl")
 @time @safetestset "Interface Tests" include("interface_tests.jl")
 @time @safetestset "Derivative Tests" include("derivative_tests.jl")

@@ -1,7 +1,7 @@
 name = "Integrals"
 uuid = "de52edbc-65ea-441a-8357-d3a637375a31"
-authors = ["Chris Rackauckas <accounts@chrisrackauckas.com>"]
 version = "4.7.1"
+authors = ["Chris Rackauckas <accounts@chrisrackauckas.com>"]
 
 [deps]
 CommonSolve = "38540f10-b2f7-11e9-35d8-d573e4eb0ff2"
@@ -42,14 +42,15 @@ CommonSolve = "0.2.4"
 Cuba = "2.2"
 Cubature = "1.5"
 Distributions = "0.25.87"
+ExplicitImports = "1.14.0"
 FastGaussQuadrature = "0.5,1"
 FiniteDiff = "2.12"
 ForwardDiff = "0.10.36, 1"
 HCubature = "1.7"
 LinearAlgebra = "1.10"
 MCIntegration = "0.4.2"
-Mooncake = "0.4.184"
 MonteCarloIntegration = "0.2"
+Mooncake = "0.4.184"
 QuadGK = "2.11"
 Random = "1.10"
 Reexport = "1.2"
@@ -67,6 +68,7 @@ ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
 Cuba = "8a292aeb-7a57-582c-b821-06e4c11590b1"
 Cubature = "667455a9-e2ce-5579-9412-b964f529a492"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
+ExplicitImports = "7d51a73a-1435-4ff3-83d9-f097790105c7"
 FastGaussQuadrature = "442a2c76-b920-505d-bb47-c5924d526838"
 FiniteDiff = "6a86dc24-6348-571c-b903-95158fe2bd41"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
@@ -78,4 +80,4 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [targets]
-test = ["Aqua", "Arblib", "StaticArrays", "FiniteDiff", "SafeTestsets", "Test", "Distributions", "ForwardDiff", "Zygote", "ChainRulesCore", "FastGaussQuadrature", "Cuba", "Cubature", "MCIntegration", "Mooncake"]
+test = ["Aqua", "Arblib", "StaticArrays", "FiniteDiff", "SafeTestsets", "Test", "Distributions", "ForwardDiff", "Zygote", "ChainRulesCore", "FastGaussQuadrature", "Cuba", "Cubature", "MCIntegration", "Mooncake", "ExplicitImports"]
