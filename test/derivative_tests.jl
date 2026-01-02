@@ -86,7 +86,7 @@ Base.reshape(A::AbstractArray, ::ScalarAxes) = Scalar(only(A))
 
 # Scalar struct defined around Real Numbers (test/derivative_tests.jl)
 # Mooncake, like Zygote also treats 0-D data wrt to the type of datastructure.
-Mooncake.rdata_type(::Type{Scalar{T}}) where {T<:Real} = Mooncake.rdata_type(T)
+Mooncake.rdata_type(::Type{Scalar{T}}) where {T <: Real} = Mooncake.rdata_type(T)
 
 # here we assume f evaluated at scalar inputs gives a scalar output
 # p will be able to be a number  after https://github.com/FluxML/Zygote.jl/pull/1489
@@ -152,13 +152,20 @@ end
 do_tests_mooncake = function (; f, scalarize, lb, ub, p, alg, abstol, reltol)
     testf = function (lb, ub, p)
         prob = IntegralProblem(f, (lb, ub), p)
-        scalarize(solve(prob, alg; reltol, abstol, sensealg=Integrals.ReCallVJP{Integrals.MooncakeVJP}(Integrals.MooncakeVJP())))
+        scalarize(solve(prob,
+            alg;
+            reltol,
+            abstol,
+            sensealg = Integrals.ReCallVJP{Integrals.MooncakeVJP}(Integrals.MooncakeVJP())))
     end
     sol_fp = testf(lb, ub, p)
 
     # sensealg when non zygoet?
-    cache = Mooncake.prepare_gradient_cache(testf, lb, ub, p isa Number && f isa BatchIntegralFunction ? Scalar(p) : p)
-    forwpassval, gradients = Mooncake.value_and_gradient!!(cache, testf, lb, ub, p isa Number && f isa BatchIntegralFunction ? Scalar(p) : p)
+    cache = Mooncake.prepare_gradient_cache(
+        testf, lb, ub, p isa Number && f isa BatchIntegralFunction ? Scalar(p) : p)
+    forwpassval,
+    gradients = Mooncake.value_and_gradient!!(
+        cache, testf, lb, ub, p isa Number && f isa BatchIntegralFunction ? Scalar(p) : p)
 
     @test forwpassval == sol_fp
 
@@ -172,11 +179,11 @@ do_tests_mooncake = function (; f, scalarize, lb, ub, p, alg, abstol, reltol)
     dub2 = getproperty(FiniteDiff, Symbol(:finite_difference_, dub))(f_ub, ub)
 
     if lb isa Number
-        @test gradients[2] ≈ dlb2 atol = abstol rtol = reltol
-        @test gradients[3] ≈ dub2 atol = abstol rtol = reltol
+        @test gradients[2]≈dlb2 atol=abstol rtol=reltol
+        @test gradients[3]≈dub2 atol=abstol rtol=reltol
     else # TODO: implement multivariate limit derivatives in MooncakeExt
-        @test_broken gradients[2] ≈ dlb2 atol = abstol rtol = reltol
-        @test_broken gradients[3] ≈ dub2 atol = abstol rtol = reltol
+        @test_broken gradients[2]≈dlb2 atol=abstol rtol=reltol
+        @test_broken gradients[3]≈dub2 atol=abstol rtol=reltol
     end
 
     f_p = p -> testf(lb, ub, p)
@@ -185,11 +192,11 @@ do_tests_mooncake = function (; f, scalarize, lb, ub, p, alg, abstol, reltol)
     dp2 = getproperty(FiniteDiff, Symbol(:finite_difference_, dp))(f_p, p)
     dp3 = getproperty(ForwardDiff, dp)(f_p, p)
 
-    @test dp2 ≈ dp3 atol = abstol rtol = reltol
+    @test dp2≈dp3 atol=abstol rtol=reltol
 
     # test Mooncake for parameter p
-    @test gradients[4] ≈ dp2 atol = abstol rtol = reltol
-    @test dp2 ≈ dp3 atol = abstol rtol = reltol
+    @test gradients[4]≈dp2 atol=abstol rtol=reltol
+    @test dp2≈dp3 atol=abstol rtol=reltol
 
     return
 end
@@ -215,7 +222,7 @@ for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands),
     do_tests(;
         f, scalarize, lb = 1.0, ub = 3.0, p = [2.0i for i in 1:nout], alg, abstol, reltol)
     do_tests_mooncake(;
-        f, scalarize, lb=1.0, ub=3.0, p=[2.0i for i in 1:nout], alg, abstol, reltol)
+        f, scalarize, lb = 1.0, ub = 3.0, p = [2.0i for i in 1:nout], alg, abstol, reltol)
 end
 
 ### N-dimensional
@@ -226,7 +233,8 @@ for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands),
 
     @info "Multi-dimensional, scalar, oop derivative test" alg=nameof(typeof(alg)) integrand=j scalarize=i dim
     do_tests(; f, scalarize, lb = ones(dim), ub = 3ones(dim), p = 2.0, alg, abstol, reltol)
-    do_tests_mooncake(; f, scalarize, lb=ones(dim), ub=3ones(dim), p=2.0, alg, abstol, reltol)
+    do_tests_mooncake(;
+        f, scalarize, lb = ones(dim), ub = 3ones(dim), p = 2.0, alg, abstol, reltol)
 end
 
 ### N-dimensional nout
@@ -239,8 +247,8 @@ for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands),
     @info "Multi-dimensional, multivariate, oop derivative test" alg=nameof(typeof(alg)) integrand=j scalarize=i dim nout
     do_tests(; f, scalarize, lb = ones(dim), ub = 3ones(dim),
         p = [2.0i for i in 1:nout], alg, abstol, reltol)
-    do_tests_mooncake(; f, scalarize, lb=ones(dim), ub=3ones(dim),
-        p=[2.0i for i in 1:nout], alg, abstol, reltol)
+    do_tests_mooncake(; f, scalarize, lb = ones(dim), ub = 3ones(dim),
+        p = [2.0i for i in 1:nout], alg, abstol, reltol)
 end
 
 #### in place IntegralCache, IntegralFunction Tests
@@ -254,7 +262,8 @@ for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands),
     @info "One-dimensional, scalar, iip derivative test" alg=nameof(typeof(alg)) integrand=j scalarize=i
     fiip = IntegralFunction((y, x, p) -> f_helper!(f, y, x, p), zeros(1))
     do_tests(; f = fiip, scalarize, lb = 1.0, ub = 3.0, p = 2.0, alg, abstol, reltol)
-    do_tests_mooncake(; f=fiip, scalarize, lb = 1.0, ub = 3.0, p = 2.0, alg, abstol, reltol)
+    do_tests_mooncake(;
+        f = fiip, scalarize, lb = 1.0, ub = 3.0, p = 2.0, alg, abstol, reltol)
 end
 
 ## One-dimensional nout
@@ -268,7 +277,7 @@ for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands),
     fiip = IntegralFunction((y, x, p) -> f_helper!(f, y, x, p), zeros(nout))
     do_tests(; f = fiip, scalarize, lb = 1.0, ub = 3.0,
         p = [2.0i for i in 1:nout], alg, abstol, reltol)
-    do_tests_mooncake(; f=fiip, scalarize, lb = 1.0, ub = 3.0,
+    do_tests_mooncake(; f = fiip, scalarize, lb = 1.0, ub = 3.0,
         p = [2.0i for i in 1:nout], alg, abstol, reltol)
 end
 
@@ -284,7 +293,7 @@ for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands),
     do_tests(;
         f = fiip, scalarize, lb = ones(dim), ub = 3ones(dim), p = 2.0, alg, abstol, reltol)
     do_tests_mooncake(;
-        f=fiip, scalarize, lb = ones(dim), ub = 3ones(dim), p = 2.0, alg, abstol, reltol)
+        f = fiip, scalarize, lb = ones(dim), ub = 3ones(dim), p = 2.0, alg, abstol, reltol)
 end
 
 ### N-dimensional nout iip
@@ -423,7 +432,8 @@ end
         end
     end
 
-    testf = (f, lb, ub, p, alg, sensealg) -> begin
+    testf = (f, lb, ub, p, alg,
+        sensealg) -> begin
         prob = IntegralProblem(f, (lb, ub), p)
         solve(prob, alg; abstol, reltol, sensealg = sensealg).u
     end
@@ -432,8 +442,10 @@ end
 
     @testset "Sensitivity using Zygote" begin
         sensealg = Integrals.ReCallVJP(Integrals.ZygoteVJP())
-        sol = Zygote.withgradient((args...) -> testf(_testf, args...), lb, ub, p, alg, sensealg)
-        tsol = Zygote.withgradient((args...) -> testf(_testf, args...), lb, ub, p, talg, sensealg)
+        sol = Zygote.withgradient(
+            (args...) -> testf(_testf, args...), lb, ub, p, alg, sensealg)
+        tsol = Zygote.withgradient(
+            (args...) -> testf(_testf, args...), lb, ub, p, talg, sensealg)
         @test sol.val ≈ tsol.val
         # Fundamental theorem of Calculus part 1
         @test sol.grad[1] ≈ tsol.grad[1] ≈ -_testf(lb, p)
@@ -461,4 +473,39 @@ end
         # To check ∂p
         @test sol[2][4] ≈ tsol[2][4]
     end
+end
+
+# Test for issue #291: NullParameters should not cause *(Nothing, Float) error
+@testset "NullParameters gradient - Issue #291" begin
+    # Test that using NullParameters (no explicit p argument) doesn't crash
+    # when computing gradients with Zygote
+    ps = [1.0f0, 2.0f0]
+
+    # Function that captures parameters in closure (doesn't use p)
+    function loss_closure(ps)
+        g(x, _) = ps[1] * x + ps[2] * x^2
+        y = solve(IntegralProblem(g, (0.0f0, 1.0f0)), HCubatureJL()).u
+        abs2(y)
+    end
+
+    # This should not throw MethodError: no method matching *(::Nothing, ::Float32)
+    @test_nowarn Zygote.gradient(loss_closure, ps)
+
+    # Verify the loss value is computed correctly
+    @test loss_closure(ps) ≈ (ps[1] * 0.5f0 + ps[2] / 3.0f0)^2
+
+    # When using explicit p parameter, gradients should work correctly
+    function loss_explicit_p(ps)
+        g(x, p) = p[1] * x + p[2] * x^2
+        y = solve(IntegralProblem(g, (0.0f0, 1.0f0), ps), HCubatureJL()).u
+        abs2(y)
+    end
+
+    grad_explicit = Zygote.gradient(loss_explicit_p, ps)[1]
+    @test grad_explicit !== nothing
+    @test length(grad_explicit) == 2
+
+    # Compare with ForwardDiff for correctness
+    grad_fd = ForwardDiff.gradient(loss_explicit_p, ps)
+    @test grad_explicit ≈ grad_fd rtol = 1e-5
 end

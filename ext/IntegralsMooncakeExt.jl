@@ -2,27 +2,34 @@ module IntegralsMooncakeExt
 using Mooncake
 using LinearAlgebra: dot
 using Integrals, SciMLBase, QuadGK
-using Mooncake: @from_chainrules, @is_primitive, increment!!, MinimalCtx, rrule!!, NoFData, NoRData, CoDual, primal, NoRData, zero_fcodual
+using Mooncake: @from_chainrules, @is_primitive, increment!!, MinimalCtx, rrule!!, NoFData,
+                NoRData, CoDual, primal, NoRData, zero_fcodual
 import Mooncake: increment_and_get_rdata!, @zero_derivative
 using Integrals: AbstractIntegralMetaAlgorithm, IntegralProblem
 import ChainRulesCore
 import ChainRulesCore: Tangent, NoTangent, ProjectTo
 using Zygote # use chainrules defined in ZygoteExt
 
-batch_unwrap(x::AbstractArray) = dropdims(x; dims=ndims(x))
+batch_unwrap(x::AbstractArray) = dropdims(x; dims = ndims(x))
 
-@zero_derivative MinimalCtx Tuple{typeof(QuadGK.quadgk),Vararg}
-@zero_derivative MinimalCtx Tuple{typeof(QuadGK.cachedrule),Any,Integer}
-@zero_derivative MinimalCtx Tuple{typeof(Integrals.checkkwargs),Vararg}
-@zero_derivative MinimalCtx Tuple{typeof(Integrals.isinplace),Vararg}
-@zero_derivative MinimalCtx Tuple{typeof(Integrals.init_cacheval),Union{<:SciMLBase.AbstractIntegralAlgorithm,<:AbstractIntegralMetaAlgorithm},Union{<:IntegralProblem,<:SampledIntegralProblem}}
-@zero_derivative MinimalCtx Tuple{typeof(Integrals.substitute_f),Union{<:BatchIntegralFunction,<:IntegralFunction},Any,Any,Any}
-@zero_derivative MinimalCtx Tuple{typeof(Integrals.substitute_v),Any,Any,Union{<:AbstractVector,<:Number},Union{<:AbstractVector,<:Number}}
-@zero_derivative MinimalCtx Tuple{typeof(Integrals.substitute_bv),Any,AbstractArray,Union{<:AbstractVector,<:Number},Union{<:AbstractVector,<:Number}}
+@zero_derivative MinimalCtx Tuple{typeof(QuadGK.quadgk), Vararg}
+@zero_derivative MinimalCtx Tuple{typeof(QuadGK.cachedrule), Any, Integer}
+@zero_derivative MinimalCtx Tuple{typeof(Integrals.checkkwargs), Vararg}
+@zero_derivative MinimalCtx Tuple{typeof(Integrals.isinplace), Vararg}
+@zero_derivative MinimalCtx Tuple{typeof(Integrals.init_cacheval),
+    Union{<:SciMLBase.AbstractIntegralAlgorithm, <:AbstractIntegralMetaAlgorithm},
+    Union{<:IntegralProblem, <:SampledIntegralProblem}}
+@zero_derivative MinimalCtx Tuple{typeof(Integrals.substitute_f),
+    Union{<:BatchIntegralFunction, <:IntegralFunction}, Any, Any, Any}
+@zero_derivative MinimalCtx Tuple{typeof(Integrals.substitute_v), Any, Any,
+    Union{<:AbstractVector, <:Number}, Union{<:AbstractVector, <:Number}}
+@zero_derivative MinimalCtx Tuple{typeof(Integrals.substitute_bv), Any, AbstractArray,
+    Union{<:AbstractVector, <:Number}, Union{<:AbstractVector, <:Number}}
 
 # @from_chainrules MinimalCtx Tuple{Type{IntegralProblem{iip}},Any,Any,Any} where {iip} true
-@is_primitive MinimalCtx Tuple{Type{IntegralProblem{iip}},Any,Any,Any} where {iip}
-function Mooncake.rrule!!(::CoDual{Type{IntegralProblem{iip}}}, f::CoDual, domain::CoDual, p::CoDual; kwargs...) where {iip}
+@is_primitive MinimalCtx Tuple{Type{IntegralProblem{iip}}, Any, Any, Any} where {iip}
+function Mooncake.rrule!!(::CoDual{Type{IntegralProblem{iip}}}, f::CoDual,
+        domain::CoDual, p::CoDual; kwargs...) where {iip}
     f_prim, domain_prim, p_prim = map(primal, (f, domain, p))
     prob = IntegralProblem{iip}(f_prim, domain_prim, p_prim; kwargs...)
 
@@ -47,14 +54,15 @@ function Mooncake.rrule!!(::CoDual{Type{IntegralProblem{iip}}}, f::CoDual, domai
 end
 
 # Mooncake does not need chainrule for evaluate! as it supports mutation.
-@from_chainrules MinimalCtx Tuple{Type{IntegralProblem},Any,Any,Any} true
-@from_chainrules MinimalCtx Tuple{typeof(Integrals.u2t),Any,Any} true
-@from_chainrules MinimalCtx Tuple{typeof(SciMLBase.build_solution),IntegralProblem,Any,Any,Any} true
+@from_chainrules MinimalCtx Tuple{Type{IntegralProblem}, Any, Any, Any} true
+@from_chainrules MinimalCtx Tuple{typeof(Integrals.u2t), Any, Any} true
+@from_chainrules MinimalCtx Tuple{
+    typeof(SciMLBase.build_solution), IntegralProblem, Any, Any, Any} true
 
-@from_chainrules MinimalCtx Tuple{typeof(Integrals.__solvebp),Any,Any,Any,Any,Any} true
+@from_chainrules MinimalCtx Tuple{typeof(Integrals.__solvebp), Any, Any, Any, Any, Any} true
 function ChainRulesCore.rrule(::typeof(Integrals.__solvebp), cache, alg, sensealg, domain,
-    p;
-    kwargs...)
+        p;
+        kwargs...)
     # TODO: integrate the primal and dual in the same call to the quadrature library
     out = Integrals.__solvebp_call(cache, alg, sensealg, domain, p; kwargs...)
 
@@ -67,7 +75,7 @@ function ChainRulesCore.rrule(::typeof(Integrals.__solvebp), cache, alg, senseal
                 # zygote doesn't support mutation, so we build an oop pullback
                 if cache.f isa BatchIntegralFunction
                     dx = similar(cache.f.integrand_prototype,
-                        size(cache.f.integrand_prototype)[begin:(end-1)]..., 1)
+                        size(cache.f.integrand_prototype)[begin:(end - 1)]..., 1)
                     _f = x -> (cache.f(dx, x, p); dx)
                     # TODO: let the user pass a batched jacobian so we can return a BatchIntegralFunction
                     dfdp_ = function (x, p)
@@ -126,7 +134,8 @@ function ChainRulesCore.rrule(::typeof(Integrals.__solvebp), cache, alg, senseal
                         # i.e. (tangent(output) == Δ.u). Otherwise integralfunc_closure_p only outputs "nothing" and tangent(output) != Δ.u
                         integralfunc_closure_p = p -> (cache.f(dx, x, p); dx)
                         cache_z = Mooncake.prepare_pullback_cache(integralfunc_closure_p, p)
-                        z, grads = Mooncake.value_and_pullback!!(cache_z, Δ.u, integralfunc_closure_p, p)
+                        z,
+                        grads = Mooncake.value_and_pullback!!(cache_z, Δ.u, integralfunc_closure_p, p)
                         return grads[2]
                     end
                     dfdp = IntegralFunction{false}(dfdp_, nothing)
@@ -141,7 +150,8 @@ function ChainRulesCore.rrule(::typeof(Integrals.__solvebp), cache, alg, senseal
                         integralfunc_closure_p = p -> cache.f(x, p)
                         cache_z = Mooncake.prepare_pullback_cache(integralfunc_closure_p, p)
                         # Δ.u is integrand function's output sensitivity which we pass into Mooncake's pullback
-                        z, grads = Mooncake.value_and_pullback!!(cache_z, Δ.u, integralfunc_closure_p, p)
+                        z,
+                        grads = Mooncake.value_and_pullback!!(cache_z, Δ.u, integralfunc_closure_p, p)
                         return grads[2]
                     end
                     dfdp = IntegralFunction{false}(dfdp_, nothing)
@@ -151,17 +161,24 @@ function ChainRulesCore.rrule(::typeof(Integrals.__solvebp), cache, alg, senseal
             error("TODO")
         end
 
-        prob = Integrals.build_problem(cache)
-        # dp_prob = remake(prob, f = dfdp)  # fails because we change iip
-        dp_prob = IntegralProblem(dfdp, prob.domain, prob.p; prob.kwargs...)
-        # the infinity transformation was already applied to f so we don't apply it to dfdp
-        dp_cache = init(dp_prob,
-            alg;
-            sensealg=sensealg,
-            cache.kwargs...)
+        # Compute dp (gradient w.r.t. p) only if p is not NullParameters
+        # When p is NullParameters, the parameters being differentiated are captured
+        # in closures, not passed as p, so dp should be NoTangent()
+        if p isa SciMLBase.NullParameters
+            dp = NoTangent()
+        else
+            prob = Integrals.build_problem(cache)
+            # dp_prob = remake(prob, f = dfdp)  # fails because we change iip
+            dp_prob = IntegralProblem(dfdp, prob.domain, prob.p; prob.kwargs...)
+            # the infinity transformation was already applied to f so we don't apply it to dfdp
+            dp_cache = init(dp_prob,
+                alg;
+                sensealg = sensealg,
+                cache.kwargs...)
 
-        project_p = ProjectTo(p)
-        dp = project_p(solve!(dp_cache).u)
+            project_p = ProjectTo(p)
+            dp = project_p(solve!(dp_cache).u)
+        end
 
         # Because Mooncake tangent structure vs Zygote, Chainrules, ReverseDiff
         du_adj = sensealg.vjp isa Integrals.MooncakeVJP ? Δ.u : Δ
@@ -198,76 +215,33 @@ end
 # Internal Mooncake overloads to accommodate IntegralSolution etc. Struct's Tangent Types.
 # Allows clear translation from ChainRules -> Mooncake's tangent.
 function Mooncake.increment_and_get_rdata!(
-    f::NoFData, r::Tuple{T,T}, t::Union{Tangent{Tuple{T,T},Tuple{T,T}},Tangent{Any,Tuple{Float64,Float64}}}
-) where {T<:Base.IEEEFloat}
+        f::NoFData, r::Tuple{T, T},
+        t::Union{Tangent{Tuple{T, T}, Tuple{T, T}}, Tangent{Any, Tuple{Float64, Float64}}}
+) where {T <: Base.IEEEFloat}
     return r .+ t.backing
 end
 
 function Mooncake.increment_and_get_rdata!(
-    f::Tuple{Vector{T},Vector{T}},
-    r::NoRData,
-    t::Tangent{Any,Tuple{Vector{T},Vector{T}}},
-) where {T<:Base.IEEEFloat}
+        f::Tuple{Vector{T}, Vector{T}},
+        r::NoRData,
+        t::Tangent{Any, Tuple{Vector{T}, Vector{T}}}
+) where {T <: Base.IEEEFloat}
     Mooncake.increment!!(f, t.backing)
     return NoRData()
 end
 
 # sol.u & p are single scalar values, domain (lb,ub) is single/multi - variate.
 function Mooncake.increment_and_get_rdata!(
-    f::NoFData,
-    r::T,
-    t::Tangent{Any,
-        @NamedTuple{
-            u::T,
-            resid::R,
-            prob::Tangent{Any,
-                @NamedTuple{
-                    f::NoTangent,
-                    domain::Tangent{Any,Tuple{M,M}},
-                    p::P,
-                    kwargs::NoTangent
-                }
-            },
-            alg::A,
-            retcode::NoTangent,
-            chi::NoTangent,
-            stats::NoTangent
-        }
-    }
-) where {T<:Base.IEEEFloat,
-    R<:Union{NoTangent,T},
-    P<:Union{T,Vector{T}},
-    M<:Union{T,Vector{T}},
-    A<:Union{NoTangent,
-        Tangent{Any,
+        f::NoFData,
+        r::T,
+        t::Tangent{Any,
             @NamedTuple{
-                nodes::Vector{T},
-                weights::Vector{T},
-                subintervals::NoTangent
-            }
-        }
-    }
-}
-    # rdata component of t + r (u field)
-    return Mooncake.increment_and_get_rdata!(f, r, t.u)
-end
-
-# sol.u is vector valued, p is scalar/vector valued, domain can be single/multi - variate
-#  resid can be single/vector valued. For inplace integrals (iip true) : included integrand_prototype field in typeof{prob.f}
-function Mooncake.increment_and_get_rdata!(
-    f::Vector{T},
-    r::NoRData,
-    t::Union{
-        Tangent{
-            Any,
-            @NamedTuple{
-                u::Vector{T},
+                u::T,
                 resid::R,
-                prob::Tangent{
-                    Any,
+                prob::Tangent{Any,
                     @NamedTuple{
-                        f::F,
-                        domain::Tangent{Any,M},
+                        f::NoTangent,
+                        domain::Tangent{Any, Tuple{M, M}},
                         p::P,
                         kwargs::NoTangent
                     }
@@ -278,29 +252,73 @@ function Mooncake.increment_and_get_rdata!(
                 stats::NoTangent
             }
         }
-    }
-) where {T<:Base.IEEEFloat,
-    R<:Union{NoTangent,T,Vector{T}},
-    P<:Union{T,Vector{T}},
-    M<:Union{Tuple{T,T},Tuple{Vector{T},Vector{T}}},
-    F<:Union{NoTangent,
-        Tangent{
+) where {T <: Base.IEEEFloat,
+        R <: Union{NoTangent, T},
+        P <: Union{T, Vector{T}},
+        M <: Union{T, Vector{T}},
+        A <: Union{NoTangent,
+            Tangent{Any,
+                @NamedTuple{
+                    nodes::Vector{T},
+                    weights::Vector{T},
+                    subintervals::NoTangent
+                }
+            }
+        }
+}
+    # rdata component of t + r (u field)
+    return Mooncake.increment_and_get_rdata!(f, r, t.u)
+end
+
+# sol.u is vector valued, p is scalar/vector valued, domain can be single/multi - variate
+#  resid can be single/vector valued. For inplace integrals (iip true) : included integrand_prototype field in typeof{prob.f}
+function Mooncake.increment_and_get_rdata!(
+        f::Vector{T},
+        r::NoRData,
+        t::Union{
+            Tangent{
             Any,
             @NamedTuple{
-                f::NoTangent,
-                integrand_prototype::Vector{T}
+                u::Vector{T},
+                resid::R,
+                prob::Tangent{
+                    Any,
+                    @NamedTuple{
+                        f::F,
+                        domain::Tangent{Any, M},
+                        p::P,
+                        kwargs::NoTangent
+                    }
+                },
+                alg::A,
+                retcode::NoTangent,
+                chi::NoTangent,
+                stats::NoTangent
             }
         }
-    },
-    A<:Union{NoTangent,
-        Tangent{Any,
-            @NamedTuple{
-                nodes::Vector{T},
-                weights::Vector{T},
-                subintervals::NoTangent
+        }
+) where {T <: Base.IEEEFloat,
+        R <: Union{NoTangent, T, Vector{T}},
+        P <: Union{T, Vector{T}},
+        M <: Union{Tuple{T, T}, Tuple{Vector{T}, Vector{T}}},
+        F <: Union{NoTangent,
+            Tangent{
+                Any,
+                @NamedTuple{
+                    f::NoTangent,
+                    integrand_prototype::Vector{T}
+                }
+            }
+        },
+        A <: Union{NoTangent,
+            Tangent{Any,
+                @NamedTuple{
+                    nodes::Vector{T},
+                    weights::Vector{T},
+                    subintervals::NoTangent
+                }
             }
         }
-    }
 }
     Mooncake.increment!!(f, t.u)
     # rdata component(t) + r
@@ -308,7 +326,9 @@ function Mooncake.increment_and_get_rdata!(
 end
 
 # cannot mutate NoRData() in place, therefore return as is.
-function Mooncake.increment!!(::Mooncake.NoRData, y::Tangent{Any,Y}) where {T<:Base.IEEEFloat,Y<:Union{Tuple{T,T},Tuple{Vector{T},Vector{T}}}}
+function Mooncake.increment!!(::Mooncake.NoRData,
+        y::Tangent{Any, Y}) where {
+        T <: Base.IEEEFloat, Y <: Union{Tuple{T, T}, Tuple{Vector{T}, Vector{T}}}}
     return Mooncake.NoRData()
 end
 end
