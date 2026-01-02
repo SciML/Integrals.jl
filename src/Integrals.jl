@@ -1,9 +1,15 @@
 module Integrals
 
-using Reexport, MonteCarloIntegration, QuadGK, HCubature
-@reexport using SciMLBase
-using LinearAlgebra
-using Random
+using Reexport: Reexport, @reexport
+using MonteCarloIntegration: MonteCarloIntegration, vegas
+using QuadGK: QuadGK, quadgk, quadgk!, BatchIntegrand
+using HCubature: HCubature, hcubature, hquadrature
+@reexport using SciMLBase: SciMLBase, IntegralFunction, BatchIntegralFunction,
+                            IntegralProblem, SampledIntegralProblem, ReturnCode,
+                            isinplace, remake, init, solve!, solve
+using SciMLBase: init, solve!
+using LinearAlgebra: LinearAlgebra, /, norm
+using Random: Random
 
 include("algorithms_meta.jl")
 include("common.jl")
