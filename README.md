@@ -74,3 +74,4 @@ the change is a one-argument change:
 using Cuba
 sol = solve(prob, CubaCuhre(), reltol = 1e-3, abstol = 1e-3)
 ```
+
