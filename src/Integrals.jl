@@ -339,5 +339,7 @@ export QuadGKJL, HCubatureJL, VEGAS, VEGASMC, GaussLegendre, QuadratureRule,
 export CubaVegas, CubaSUAVE, CubaDivonne, CubaCuhre
 export CubatureJLh, CubatureJLp
 export ArblibJL
+export ChangeOfVariables
+export transformation_if_inf, transformation_tan_inf, transformation_cot_inf
 
 end # module
