@@ -14,10 +14,12 @@ SciMLBase.isinplace(::IntegralCache{iip}) where {iip} = iip
 
 init_cacheval(::SciMLBase.AbstractIntegralAlgorithm, args...) = nothing
 
-function SciMLBase.init(prob::IntegralProblem{iip},
+function SciMLBase.init(
+        prob::IntegralProblem{iip},
         alg::SciMLBase.AbstractIntegralAlgorithm;
         sensealg = ReCallVJP(ZygoteVJP()),
-        do_inf_transformation = nothing, kws...) where {iip}
+        do_inf_transformation = nothing, kws...
+    ) where {iip}
     kwargs = pairs((; prob.kwargs..., kws...))
     checkkwargs(kwargs...)
     do_inf_transformation === nothing ||
@@ -25,7 +27,8 @@ function SciMLBase.init(prob::IntegralProblem{iip},
     _alg = alg isa ChangeOfVariables ? alg : ChangeOfVariables(transformation_if_inf, alg)
     cacheval = init_cacheval(_alg, prob)
 
-    IntegralCache{iip,
+    return IntegralCache{
+        iip,
         typeof(prob.f),
         typeof(prob.domain),
         typeof(prob.p),
@@ -33,7 +36,9 @@ function SciMLBase.init(prob::IntegralProblem{iip},
         typeof(_alg),
         typeof(sensealg),
         typeof(kwargs),
-        typeof(cacheval)}(Val(iip),
+        typeof(cacheval),
+    }(
+        Val(iip),
         prob.f,
         prob.domain,
         prob.p,
@@ -41,7 +46,8 @@ function SciMLBase.init(prob::IntegralProblem{iip},
         _alg,
         sensealg,
         kwargs,
-        cacheval)
+        cacheval
+    )
 end
 
 function Base.getproperty(cache::IntegralCache, name::Symbol)
@@ -74,14 +80,18 @@ end
 # Throw error if alg is not provided, as defaults are not implemented.
 function SciMLBase.solve(::IntegralProblem; kwargs...)
     checkkwargs(kwargs...)
-    throw(ArgumentError("""
-No integration algorithm `alg` was supplied as the second positional argument.
-Recommended integration algorithms are:
-For scalar functions: QuadGKJL()
-For ≤ 8 dimensional vector functions: HCubatureJL()
-For > 8 dimensional vector functions: MonteCarloIntegration.vegas(f, st, en, kwargs...)
-See the docstrings of the different algorithms for more detail.
-"""))
+    throw(
+        ArgumentError(
+            """
+            No integration algorithm `alg` was supplied as the second positional argument.
+            Recommended integration algorithms are:
+            For scalar functions: QuadGKJL()
+            For ≤ 8 dimensional vector functions: HCubatureJL()
+            For > 8 dimensional vector functions: MonteCarloIntegration.vegas(f, st, en, kwargs...)
+            See the docstrings of the different algorithms for more detail.
+            """
+        )
+    )
 end
 
 """
@@ -98,24 +108,28 @@ These common arguments are:
   - `abstol` (absolute tolerance in changes of the objective value)
   - `reltol` (relative tolerance  in changes of the objective value)
 """
-function SciMLBase.solve(prob::IntegralProblem,
+function SciMLBase.solve(
+        prob::IntegralProblem,
         alg::SciMLBase.AbstractIntegralAlgorithm;
-        kwargs...)
-    solve!(init(prob, alg; kwargs...))
+        kwargs...
+    )
+    return solve!(init(prob, alg; kwargs...))
 end
 
 function SciMLBase.solve!(cache::IntegralCache)
-    __solve(cache, cache.alg, cache.sensealg, cache.domain, cache.p;
-        cache.kwargs...)
+    return __solve(
+        cache, cache.alg, cache.sensealg, cache.domain, cache.p;
+        cache.kwargs...
+    )
 end
 
 function build_problem(cache::IntegralCache{iip}) where {iip}
-    IntegralProblem{iip}(cache.f, cache.domain, cache.p; cache.prob_kwargs...)
+    return IntegralProblem{iip}(cache.f, cache.domain, cache.p; cache.prob_kwargs...)
 end
 
 # fallback method for existing algorithms which use no cache
 function __solvebp_call(cache::IntegralCache, args...; kwargs...)
-    __solvebp_call(build_problem(cache), args...; kwargs...)
+    return __solvebp_call(build_problem(cache), args...; kwargs...)
 end
 
 mutable struct SampledIntegralCache{Y, X, D, PK, A, K, Tc}
@@ -133,26 +147,30 @@ function Base.setproperty!(cache::SampledIntegralCache, name::Symbol, x)
     if name === :x
         setfield!(cache, :isfresh, true)
     end
-    setfield!(cache, name, x)
+    return setfield!(cache, name, x)
 end
 
-function SciMLBase.init(prob::SampledIntegralProblem,
+function SciMLBase.init(
+        prob::SampledIntegralProblem,
         alg::SciMLBase.AbstractIntegralAlgorithm;
-        kwargs...)
+        kwargs...
+    )
     NamedTuple(kwargs) == NamedTuple() ||
         throw(ArgumentError("There are no keyword arguments allowed to `solve`"))
 
     cacheval = init_cacheval(alg, prob)
     isfresh = true
 
-    SampledIntegralCache(prob.y,
+    return SampledIntegralCache(
+        prob.y,
         prob.x,
         prob.dim,
         prob.kwargs,
         alg,
         kwargs,
         isfresh,
-        cacheval)
+        cacheval
+    )
 end
 
 """
@@ -164,19 +182,23 @@ solve(prob::SampledIntegralProblem, alg::SciMLBase.AbstractIntegralAlgorithm; kw
 
 There are no keyword arguments used to solve `SampledIntegralProblem`s
 """
-function SciMLBase.solve(prob::SampledIntegralProblem,
+function SciMLBase.solve(
+        prob::SampledIntegralProblem,
         alg::SciMLBase.AbstractIntegralAlgorithm;
-        kwargs...)
-    solve!(init(prob, alg; kwargs...))
+        kwargs...
+    )
+    return solve!(init(prob, alg; kwargs...))
 end
 
 function SciMLBase.solve!(cache::SampledIntegralCache)
-    __solvebp(cache, cache.alg; cache.kwargs...)
+    return __solvebp(cache, cache.alg; cache.kwargs...)
 end
 
 function build_problem(cache::SampledIntegralCache)
-    SampledIntegralProblem(cache.y,
+    return SampledIntegralProblem(
+        cache.y,
         cache.x;
         dim = dimension(cache.dim),
-        cache.prob_kwargs...)
+        cache.prob_kwargs...
+    )
 end

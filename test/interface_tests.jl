@@ -4,60 +4,88 @@ using Test
 
 max_dim_test = 2
 max_nout_test = 2
-reltol = 1e-5
-abstol = 1e-5
+reltol = 1.0e-5
+abstol = 1.0e-5
 
 alg_req = Dict(
-    QuadGKJL() => (nout = Inf, allows_batch = true, min_dim = 1, max_dim = 1,
-        allows_iip = true),
-    QuadratureRule(gausslegendre,
-        n = 50) => (
+    QuadGKJL() => (
+        nout = Inf, allows_batch = true, min_dim = 1, max_dim = 1,
+        allows_iip = true,
+    ),
+    QuadratureRule(
+        gausslegendre,
+        n = 50
+    ) => (
         nout = Inf, min_dim = 1, max_dim = 1, allows_batch = false,
-        allows_iip = false),
-    GaussLegendre() => (nout = Inf, min_dim = 1, max_dim = 1, allows_batch = false,
-        allows_iip = false),
-    HCubatureJL() => (nout = Inf, allows_batch = false, min_dim = 1,
-        max_dim = Inf, allows_iip = true),
-    VEGAS(seed = 109) => (nout = 1, allows_batch = true, min_dim = 2, max_dim = Inf,
-        allows_iip = true),
-    VEGASMC(seed = 42) => (nout = Inf, allows_batch = false, min_dim = 1, max_dim = Inf,
-        allows_iip = true),
-    CubatureJLh() => (nout = Inf, allows_batch = true, min_dim = 1,
-        max_dim = Inf, allows_iip = true),
-    CubatureJLp() => (nout = Inf, allows_batch = true, min_dim = 1,
-        max_dim = Inf, allows_iip = true),
-    CubaVegas() => (nout = Inf, allows_batch = true, min_dim = 1, max_dim = Inf,
-        allows_iip = true),
-    CubaSUAVE() => (nout = Inf, allows_batch = true, min_dim = 1, max_dim = Inf,
-        allows_iip = true),
-    CubaDivonne() => (nout = Inf, allows_batch = true, min_dim = 2,
-        max_dim = Inf, allows_iip = true),
-    CubaCuhre() => (nout = Inf, allows_batch = true, min_dim = 2, max_dim = Inf,
-        allows_iip = true),
+        allows_iip = false,
+    ),
+    GaussLegendre() => (
+        nout = Inf, min_dim = 1, max_dim = 1, allows_batch = false,
+        allows_iip = false,
+    ),
+    HCubatureJL() => (
+        nout = Inf, allows_batch = false, min_dim = 1,
+        max_dim = Inf, allows_iip = true,
+    ),
+    VEGAS(seed = 109) => (
+        nout = 1, allows_batch = true, min_dim = 2, max_dim = Inf,
+        allows_iip = true,
+    ),
+    VEGASMC(seed = 42) => (
+        nout = Inf, allows_batch = false, min_dim = 1, max_dim = Inf,
+        allows_iip = true,
+    ),
+    CubatureJLh() => (
+        nout = Inf, allows_batch = true, min_dim = 1,
+        max_dim = Inf, allows_iip = true,
+    ),
+    CubatureJLp() => (
+        nout = Inf, allows_batch = true, min_dim = 1,
+        max_dim = Inf, allows_iip = true,
+    ),
+    CubaVegas() => (
+        nout = Inf, allows_batch = true, min_dim = 1, max_dim = Inf,
+        allows_iip = true,
+    ),
+    CubaSUAVE() => (
+        nout = Inf, allows_batch = true, min_dim = 1, max_dim = Inf,
+        allows_iip = true,
+    ),
+    CubaDivonne() => (
+        nout = Inf, allows_batch = true, min_dim = 2,
+        max_dim = Inf, allows_iip = true,
+    ),
+    CubaCuhre() => (
+        nout = Inf, allows_batch = true, min_dim = 2, max_dim = Inf,
+        allows_iip = true,
+    ),
     ArblibJL() => (
-        nout = 1, allows_batch = false, min_dim = 1, max_dim = 1, allows_iip = false)
+        nout = 1, allows_batch = false, min_dim = 1, max_dim = 1, allows_iip = false,
+    )
 )
 
 integrands = [
     (x, p) -> 1.0,
-    (x, p) -> x isa Number ? cos(x) : prod(cos.(x))
+    (x, p) -> x isa Number ? cos(x) : prod(cos.(x)),
 ]
 iip_integrands = [(dx, x, p) -> (dx .= f(x, p)) for f in integrands]
 
-integrands_v = [(x, p, nout) -> collect(1.0:nout)
-                let f = integrands[2]
-                    (x, p, nout) -> f(x, p) * collect(1.0:nout)
-                end]
+integrands_v = [
+    (x, p, nout) -> collect(1.0:nout)
+    let f = integrands[2]
+        (x, p, nout) -> f(x, p) * collect(1.0:nout)
+    end
+]
 iip_integrands_v = [(dx, x, p, nout) -> (dx .= f(x, p, nout)) for f in integrands_v]
 
 exact_sol = [
     (ndim, nout, lb, ub) -> prod(ub - lb),
-    (ndim, nout, lb, ub) -> prod(sin.(ub) - sin.(lb))
+    (ndim, nout, lb, ub) -> prod(sin.(ub) - sin.(lb)),
 ]
 
 exact_sol_v = [
     (ndim, nout, lb, ub) -> prod(ub - lb) * collect(1.0:nout),
-    (ndim, nout, lb, ub) -> exact_sol[2](ndim, nout, lb, ub) * collect(1:nout)
+    (ndim, nout, lb, ub) -> exact_sol[2](ndim, nout, lb, ub) * collect(1:nout),
 ]
 
 batch_f(f) = (pts, p) -> begin
@@ -108,7 +136,7 @@ end
             @info "Alg = $(nameof(typeof(alg))), Integrand = $i, Dimension = $dim, Output Dimension = $nout"
             sol = @inferred solve(prob, alg, reltol = reltol, abstol = abstol)
             @test sol.alg == alg
-            @test sol.u≈exact_sol[i](dim, nout, lb, ub) rtol=1e-2
+            @test sol.u ≈ exact_sol[i](dim, nout, lb, ub) rtol = 1.0e-2
         end
     end
 end
@@ -126,7 +154,7 @@ end
                 @info "Alg = $(nameof(typeof(alg))), Integrand = $i, Dimension = $dim, Output Dimension = $nout"
                 sol = @inferred solve(prob, alg, reltol = reltol, abstol = abstol)
                 @test sol.alg == alg
-                @test sol.u≈exact_sol[i](dim, nout, lb, ub) rtol=1e-2
+                @test sol.u ≈ exact_sol[i](dim, nout, lb, ub) rtol = 1.0e-2
             end
         end
     end
@@ -146,9 +174,9 @@ end
                 sol = @inferred solve(prob, alg, reltol = reltol, abstol = abstol)
                 @test sol.alg == alg
                 if sol.u isa Number
-                    @test sol.u≈exact_sol[i](dim, nout, lb, ub) rtol=1e-2
+                    @test sol.u ≈ exact_sol[i](dim, nout, lb, ub) rtol = 1.0e-2
                 else
-                    @test sol.u≈[exact_sol[i](dim, nout, lb, ub)] rtol=1e-2
+                    @test sol.u ≈ [exact_sol[i](dim, nout, lb, ub)] rtol = 1.0e-2
                 end
             end
         end
@@ -167,7 +195,7 @@ end
             @info "Alg = $(nameof(typeof(alg))), Integrand = $i, Dimension = $dim, Output Dimension = $nout"
             sol = @inferred solve(prob, alg, reltol = reltol, abstol = abstol)
             @test sol.alg == alg
-            @test sol.u[1]≈exact_sol[i](dim, nout, lb, ub) rtol=1e-2
+            @test sol.u[1] ≈ exact_sol[i](dim, nout, lb, ub) rtol = 1.0e-2
         end
     end
 end
@@ -178,8 +206,11 @@ end
         for i in 1:length(integrands)
             for dim in 1:max_dim_test
                 (lb, ub) = (ones(dim), 3ones(dim))
-                prob = IntegralProblem(BatchIntegralFunction(batch_f(integrands[i])), (
-                    lb, ub))
+                prob = IntegralProblem(
+                    BatchIntegralFunction(batch_f(integrands[i])), (
+                        lb, ub,
+                    )
+                )
                 if dim > req.max_dim || dim < req.min_dim || !req.allows_batch
                     continue
                 end
@@ -187,9 +218,9 @@ end
                 sol = @inferred solve(prob, alg, reltol = reltol, abstol = abstol)
                 @test sol.alg == alg
                 if sol.u isa Number
-                    @test sol.u≈exact_sol[i](dim, nout, lb, ub) rtol=1e-2
+                    @test sol.u ≈ exact_sol[i](dim, nout, lb, ub) rtol = 1.0e-2
                 else
-                    @test sol.u≈[exact_sol[i](dim, nout, lb, ub)] rtol=1e-2
+                    @test sol.u ≈ [exact_sol[i](dim, nout, lb, ub)] rtol = 1.0e-2
                 end
             end
         end
@@ -204,18 +235,19 @@ end
                 (lb, ub) = (ones(dim), 3ones(dim))
                 prob = IntegralProblem(
                     BatchIntegralFunction(batch_iip_f(integrands[i]), zeros(0), max_batch = 1000),
-                    (lb, ub))
+                    (lb, ub)
+                )
                 if dim > req.max_dim || dim < req.min_dim || !req.allows_batch ||
-                   !req.allows_iip
+                        !req.allows_iip
                     continue
                 end
                 @info "Alg = $(nameof(typeof(alg))), Integrand = $i, Dimension = $dim, Output Dimension = $nout"
                 sol = @inferred solve(prob, alg, reltol = reltol, abstol = abstol)
                 @test sol.alg == alg
                 if sol.u isa Number
-                    @test sol.u≈exact_sol[i](dim, nout, lb, ub) rtol=1e-2
+                    @test sol.u ≈ exact_sol[i](dim, nout, lb, ub) rtol = 1.0e-2
                 else
-                    @test sol.u≈[exact_sol[i](dim, nout, lb, ub)] rtol=1e-2
+                    @test sol.u ≈ [exact_sol[i](dim, nout, lb, ub)] rtol = 1.0e-2
                 end
             end
         end
@@ -240,9 +272,9 @@ end
                 sol = @inferred solve(prob, alg, reltol = reltol, abstol = abstol)
                 @test sol.alg == alg
                 if nout == 1
-                    @test sol.u[1]≈exact_sol_v[i](dim, nout, lb, ub)[1] rtol=1e-2
+                    @test sol.u[1] ≈ exact_sol_v[i](dim, nout, lb, ub)[1] rtol = 1.0e-2
                 else
-                    @test sol.u≈exact_sol_v[i](dim, nout, lb, ub) rtol=1e-2
+                    @test sol.u ≈ exact_sol_v[i](dim, nout, lb, ub) rtol = 1.0e-2
                 end
             end
         end
@@ -266,9 +298,9 @@ end
                     sol = @inferred solve(prob, alg, reltol = reltol, abstol = abstol)
                     @test sol.alg == alg
                     if nout == 1
-                        @test sol.u[1]≈exact_sol_v[i](dim, nout, lb, ub)[1] rtol=1e-2
+                        @test sol.u[1] ≈ exact_sol_v[i](dim, nout, lb, ub)[1] rtol = 1.0e-2
                     else
-                        @test sol.u≈exact_sol_v[i](dim, nout, lb, ub) rtol=1e-2
+                        @test sol.u ≈ exact_sol_v[i](dim, nout, lb, ub) rtol = 1.0e-2
                     end
                 end
             end
@@ -287,16 +319,16 @@ end
                     end
                     prob = IntegralProblem(integrand_f, (lb, ub))
                     if dim > req.max_dim || dim < req.min_dim || req.nout < nout ||
-                       !req.allows_iip
+                            !req.allows_iip
                         continue
                     end
                     @info "Alg = $(nameof(typeof(alg))), Integrand = $i, Dimension = $dim, Output Dimension = $nout"
                     sol = @inferred solve(prob, alg, reltol = reltol, abstol = abstol)
                     @test sol.alg == alg
                     if nout == 1
-                        @test sol.u[1]≈exact_sol_v[i](dim, nout, lb, ub)[1] rtol=1e-2
+                        @test sol.u[1] ≈ exact_sol_v[i](dim, nout, lb, ub)[1] rtol = 1.0e-2
                     else
-                        @test sol.u≈exact_sol_v[i](dim, nout, lb, ub) rtol=1e-2
+                        @test sol.u ≈ exact_sol_v[i](dim, nout, lb, ub) rtol = 1.0e-2
                     end
                 end
             end
@@ -309,15 +341,18 @@ end
     (dim, nout) = (1, 2)
     for (alg, req) in pairs(alg_req)
         for i in 1:length(integrands_v)
-            prob = IntegralProblem(BatchIntegralFunction(batch_f_v(integrands_v[i], nout)), (
-                lb, ub))
+            prob = IntegralProblem(
+                BatchIntegralFunction(batch_f_v(integrands_v[i], nout)), (
+                    lb, ub,
+                )
+            )
             if req.min_dim > 1 || !req.allows_batch || req.nout < nout
                 continue
             end
             @info "Alg = $(nameof(typeof(alg))), Integrand = $i, Dimension = $dim, Output Dimension = $nout"
             sol = @inferred solve(prob, alg, reltol = reltol, abstol = abstol)
             @test sol.alg == alg
-            @test sol.u≈exact_sol_v[i](dim, nout, lb, ub) rtol=1e-2
+            @test sol.u ≈ exact_sol_v[i](dim, nout, lb, ub) rtol = 1.0e-2
         end
     end
 end
@@ -328,16 +363,19 @@ end
         for i in 1:length(integrands_v)
             for dim in 1:max_dim_test
                 (lb, ub) = (ones(dim), 3ones(dim))
-                prob = IntegralProblem(BatchIntegralFunction(batch_f_v(integrands_v[i], nout)), (
-                    lb, ub))
+                prob = IntegralProblem(
+                    BatchIntegralFunction(batch_f_v(integrands_v[i], nout)), (
+                        lb, ub,
+                    )
+                )
                 if dim > req.max_dim || dim < req.min_dim || !req.allows_batch ||
-                   req.nout < nout
+                        req.nout < nout
                     continue
                 end
                 @info "Alg = $(nameof(typeof(alg))), Integrand = $i, Dimension = $dim, Output Dimension = $nout"
                 sol = @inferred solve(prob, alg, reltol = reltol, abstol = abstol)
                 @test sol.alg == alg
-                @test sol.u≈exact_sol_v[i](dim, nout, lb, ub) rtol=1e-2
+                @test sol.u ≈ exact_sol_v[i](dim, nout, lb, ub) rtol = 1.0e-2
             end
         end
     end
@@ -351,15 +389,16 @@ end
                 (lb, ub) = (ones(dim), 3ones(dim))
                 prob = IntegralProblem(
                     BatchIntegralFunction(batch_iip_f_v(integrands_v[i], nout), zeros(nout, 0)),
-                    (lb, ub))
+                    (lb, ub)
+                )
                 if dim > req.max_dim || dim < req.min_dim || !req.allows_batch ||
-                   !req.allows_iip || req.nout < nout
+                        !req.allows_iip || req.nout < nout
                     continue
                 end
                 @info "Alg = $(nameof(typeof(alg))), Integrand = $i, Dimension = $dim, Output Dimension = $nout"
                 sol = @inferred solve(prob, alg, reltol = reltol, abstol = abstol)
                 @test sol.alg == alg
-                @test sol.u≈exact_sol_v[i](dim, nout, lb, ub) rtol=1e-2
+                @test sol.u ≈ exact_sol_v[i](dim, nout, lb, ub) rtol = 1.0e-2
             end
         end
     end
@@ -368,11 +407,12 @@ end
 @testset "Allowed keyword test" begin
     f(u, p) = sum(sin.(u))
     prob = IntegralProblem(f, ones(3), 3ones(3))
-    @test_throws Integrals.CommonKwargError((:relztol => 1e-3, :abstol => 1e-3)) solve(
+    @test_throws Integrals.CommonKwargError((:relztol => 1.0e-3, :abstol => 1.0e-3)) solve(
         prob,
         HCubatureJL();
-        relztol = 1e-3,
-        abstol = 1e-3)
+        relztol = 1.0e-3,
+        abstol = 1.0e-3
+    )
 end
 
 @testset "Caching interface" begin
@@ -387,13 +427,13 @@ end
         for i in 1:length(integrands)
             prob = IntegralProblem(integrands[i], (lb, ub), p)
             cache = init(prob, alg, reltol = reltol, abstol = abstol)
-            @test solve!(cache).u≈exact_sol[i](dim, nout, lb, ub) rtol=1e-2
+            @test solve!(cache).u ≈ exact_sol[i](dim, nout, lb, ub) rtol = 1.0e-2
             cache.lb = lb = 0.5
-            @test solve!(cache).u≈exact_sol[i](dim, nout, lb, ub) rtol=1e-2
+            @test solve!(cache).u ≈ exact_sol[i](dim, nout, lb, ub) rtol = 1.0e-2
             cache.ub = ub = 3.5
-            @test solve!(cache).u≈exact_sol[i](dim, nout, lb, ub) rtol=1e-2
+            @test solve!(cache).u ≈ exact_sol[i](dim, nout, lb, ub) rtol = 1.0e-2
             cache.p = Inf
-            @test solve!(cache).u≈exact_sol[i](dim, nout, lb, ub) rtol=1e-2
+            @test solve!(cache).u ≈ exact_sol[i](dim, nout, lb, ub) rtol = 1.0e-2
         end
     end
 end
@@ -401,10 +441,10 @@ end
 @testset "issue242" begin
     f242(x, p) = p / (x^2 + p^2)
     domain242 = (-1, 1)
-    p242 = 1e-3
-    for abstol in [1e-2, 1e-4, 1e-6, 1e-8]
+    p242 = 1.0e-3
+    for abstol in [1.0e-2, 1.0e-4, 1.0e-6, 1.0e-8]
         @test solve(IntegralProblem(f242, domain242, p242; abstol), QuadGKJL()).u ==
-              solve(IntegralProblem(f242, domain242, p242), QuadGKJL(); abstol).u
+            solve(IntegralProblem(f242, domain242, p242), QuadGKJL(); abstol).u
     end
 end
 
@@ -418,12 +458,12 @@ end
         sol_bf = solve(prob_bf, QuadGKJL())
         expected_bf = 1 - cos(BigFloat(1))
         @test sol_bf.u isa BigFloat
-        @test sol_bf.u≈expected_bf rtol=1e-10
+        @test sol_bf.u ≈ expected_bf rtol = 1.0e-10
 
         # Test HCubatureJL with BigFloat scalar bounds
         sol_hc_bf = solve(prob_bf, HCubatureJL())
         @test sol_hc_bf.u isa BigFloat
-        @test sol_hc_bf.u≈expected_bf rtol=1e-10
+        @test sol_hc_bf.u ≈ expected_bf rtol = 1.0e-10
 
         # Test HCubatureJL with BigFloat vector bounds
         f_bf_2d = (x, p) -> sin(x[1]) * cos(x[2])
@@ -469,7 +509,7 @@ end
         sol_quadgk_c = solve(prob_quadgk_c, QuadGKJL())
         expected_c = (exp(im) - 1) / im
         @test sol_quadgk_c.u isa Complex
-        @test sol_quadgk_c.u≈expected_c rtol=1e-8
+        @test sol_quadgk_c.u ≈ expected_c rtol = 1.0e-8
     end
 
     @testset "Float32 type preservation" begin

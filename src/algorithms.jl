@@ -65,7 +65,7 @@ struct HCubatureJL{F, B} <: SciMLBase.AbstractIntegralAlgorithm
     buffer::B
 end
 function HCubatureJL(; initdiv = 1, norm = norm, buffer = nothing)
-    HCubatureJL(initdiv, norm, buffer)
+    return HCubatureJL(initdiv, norm, buffer)
 end
 
 """
@@ -105,7 +105,7 @@ struct VEGAS{S} <: SciMLBase.AbstractIntegralAlgorithm
     seed::S
 end
 function VEGAS(; nbins = 100, ncalls = 1000, debug = false, seed = nothing)
-    VEGAS(nbins, ncalls, debug, seed)
+    return VEGAS(nbins, ncalls, debug, seed)
 end
 
 """

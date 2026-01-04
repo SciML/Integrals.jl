@@ -33,9 +33,9 @@ Implementations must have:
 """
 abstract type NonuniformWeights <: AbstractWeights end
 @inline Base.iterate(w::NonuniformWeights) = (0 == length(w.x)) ? nothing :
-                                             (w[firstindex(w.x)], firstindex(w.x))
+    (w[firstindex(w.x)], firstindex(w.x))
 @inline Base.iterate(w::NonuniformWeights, i) = (i == lastindex(w.x)) ? nothing :
-                                                (w[i + 1], i + 1)
+    (w[i + 1], i + 1)
 Base.length(w::NonuniformWeights) = length(w.x)
 Base.eltype(w::NonuniformWeights) = eltype(w.x)
 Base.size(w::NonuniformWeights) = (length(w),)
@@ -110,14 +110,18 @@ end
 
 # can be reused for other sampled rules, which should implement find_weights(x, alg)
 
-function init_cacheval(alg::SciMLBase.AbstractIntegralAlgorithm,
-        prob::SampledIntegralProblem)
-    find_weights(prob.x, alg)
+function init_cacheval(
+        alg::SciMLBase.AbstractIntegralAlgorithm,
+        prob::SampledIntegralProblem
+    )
+    return find_weights(prob.x, alg)
 end
 
-function __solvebp_call(cache::SampledIntegralCache,
+function __solvebp_call(
+        cache::SampledIntegralCache,
         alg::SciMLBase.AbstractIntegralAlgorithm;
-        kwargs...)
+        kwargs...
+    )
     dim = dimension(cache.dim)
     err = nothing
     data = cache.y

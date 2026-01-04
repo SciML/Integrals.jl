@@ -7,5 +7,5 @@ using LinearAlgebra: norm
     @test check_no_implicit_imports(Integrals) === nothing
     # Note: norm is used in default parameters in included files (algorithms.jl)
     # which ExplicitImports may not detect properly, so we ignore it
-    @test check_no_stale_explicit_imports(Integrals; ignore=(:norm,)) === nothing
+    @test check_no_stale_explicit_imports(Integrals; ignore = (:norm,)) === nothing
 end
