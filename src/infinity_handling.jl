@@ -124,6 +124,34 @@ function t2ujac(t::Number, lb::Number, ub::Number)
     end
 end
 
+"""
+    transformation_if_inf(f, domain)
+
+Default infinity transformation using rational functions. Maps infinite domains to finite
+intervals using the following substitutions:
+
+  - For doubly-infinite domains `(-∞, ∞)`: `u = t/(1-t²)`, so `∫_{-∞}^{∞} f(u) du = ∫_{-1}^{1} f(t/(1-t²)) (1+t²)/(1-t²)² dt`
+  - For semi-infinite domains `[a, ∞)`: `u = a + t/(1-t)`, so `∫_a^∞ f(u) du = ∫_0^1 f(a+t/(1-t)) 1/(1-t)² dt`
+  - For semi-infinite domains `(-∞, b]`: `u = b + t/(1+t)`, so `∫_{-∞}^b f(u) du = ∫_{-1}^0 f(b+t/(1+t)) 1/(1+t)² dt`
+
+This is the default transformation applied by algorithms like `QuadGKJL` and `HCubatureJL`
+when encountering infinite integration bounds.
+
+## Example
+
+```julia
+using Integrals
+
+f(x, p) = exp(-x^2)
+prob = IntegralProblem(f, (-Inf, Inf))
+
+# Explicitly use the default transformation
+alg = ChangeOfVariables(transformation_if_inf, QuadGKJL())
+sol = solve(prob, alg)
+```
+
+See also: [`transformation_tan_inf`](@ref), [`transformation_cot_inf`](@ref), [`ChangeOfVariables`](@ref)
+"""
 function transformation_if_inf(f, domain)
     lb, ub = promote(domain...)
     tdomain = substitute_u(u2t, lb, ub)
@@ -203,9 +231,10 @@ end
 
 Alternative infinity transformation using arctan/tan. Maps infinite domains to [-1, 1]
 using the transformation:
-- For doubly-infinite domains: `u = tan(πt/2)`, so `∫_{-∞}^{∞} f(u) du = (π/2) ∫_{-1}^{1} sec²(πt/2) f(tan(πt/2)) dt`
-- For semi-infinite domains `[a, ∞)`: `u = a + tan(π(t+1)/4)`
-- For semi-infinite domains `(-∞, b]`: `u = b - tan(π(1-t)/4)`
+
+  - For doubly-infinite domains: `u = tan(πt/2)`, so `∫_{-∞}^{∞} f(u) du = (π/2) ∫_{-1}^{1} sec²(πt/2) f(tan(πt/2)) dt`
+  - For semi-infinite domains `[a, ∞)`: `u = a + tan(π(t+1)/4)`
+  - For semi-infinite domains `(-∞, b]`: `u = b - tan(π(1-t)/4)`
 
 This transformation can provide better accuracy than the default rational transformation
 for some integrands, particularly those that decay like `1/(1+x²)`.
@@ -222,6 +251,8 @@ prob = IntegralProblem(f, (-Inf, Inf))
 alg = ChangeOfVariables(transformation_tan_inf, QuadGKJL())
 sol = solve(prob, alg)
 ```
+
+See also: [`transformation_if_inf`](@ref), [`transformation_cot_inf`](@ref), [`ChangeOfVariables`](@ref)
 """
 function transformation_tan_inf(f, domain)
     lb, ub = promote(domain...)
@@ -310,16 +341,18 @@ end
 Alternative infinity transformation using cotangent for semi-infinite domains.
 Based on the transformations suggested in Issue #149:
 
-- For doubly-infinite domains: Uses tan transformation (same as `transformation_tan_inf`)
-- For semi-infinite domains: Uses cotangent-based transformations that can provide
-  better accuracy for integrands with oscillations or singularities.
+  - For doubly-infinite domains: Uses tan transformation (same as `transformation_tan_inf`)
+  - For semi-infinite domains: Uses cotangent-based transformations that can provide
+    better accuracy for integrands with oscillations or singularities.
 
 For `[a, ∞)`:
+
 ```math
 s = \\cot\\left[\\frac{(\\pi - 2\\arctan(a))(1-\\xi)}{4}\\right] + a, \\quad \\xi \\in [-1, 1]
 ```
 
 For `(-\\infty, a]`:
+
 ```math
 s = -\\cot\\left[\\frac{(\\pi + 2\\arctan(a))(\\xi+1)}{4}\\right], \\quad \\xi \\in [-1, 1]
 ```
@@ -336,6 +369,8 @@ prob = IntegralProblem(f, (0.0, Inf))
 alg = ChangeOfVariables(transformation_cot_inf, QuadGKJL())
 sol = solve(prob, alg)
 ```
+
+See also: [`transformation_if_inf`](@ref), [`transformation_tan_inf`](@ref), [`ChangeOfVariables`](@ref)
 """
 function transformation_cot_inf(f, domain)
     lb, ub = promote(domain...)
