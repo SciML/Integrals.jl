@@ -6,14 +6,14 @@ calls. It integrates with ForwardDiff.jl for forward-mode automatic differentiat
 and Zygote.jl for reverse-mode automatic differentiation. For example:
 
 ```@example AD
-using Integrals, ForwardDiff, FiniteDiff, Zygote, Cuba
+using Integrals, ForwardDiff, FiniteDiff, Zygote
 f(x, p) = sum(sin.(x .* p))
 domain = (ones(2), 3ones(2)) # (lb, ub)
 p = ones(2)
 
 function testf(p)
     prob = IntegralProblem(f, domain, p)
-    sin(solve(prob, CubaCuhre(), reltol = 1e-6, abstol = 1e-6)[1])
+    sin(solve(prob, HCubatureJL(), reltol = 1e-6, abstol = 1e-6)[1])
 end
 testf(p)
 dp1 = Zygote.gradient(testf, p)
