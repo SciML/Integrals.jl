@@ -24,6 +24,9 @@ jobs:
           - 'lts'
           - 'pre'
         exclude:
+          # AD tests crash with SIGSEGV on Julia 1.12+ (Zygote/Mooncake issue)
+          - group: AD
+            version: '1'
           - group: AD
             version: 'pre'
     steps:
