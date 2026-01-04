@@ -14,7 +14,7 @@ struct SimpsonUniformWeights{T} <: UniformWeights
 end
 
 @inline function Base.getindex(w::SimpsonUniformWeights, i)
-    # evenly spaced simpson's 1/3, 3/8 rule 
+    # evenly spaced simpson's 1/3, 3/8 rule
     h = w.h
     n = w.n
     (i == 1 || i == n) && return 17h / 48
@@ -43,38 +43,42 @@ end
     checkbounds(w.x, i)
     x = w.x
     j = i - firstindex(x)
-    @assert length(w.x)>2 "The length of the grid must exceed 2 for simpsons rule."
+    @assert length(w.x) > 2 "The length of the grid must exceed 2 for simpsons rule."
     i == firstindex(x) && return (x[begin + 2] - x[begin + 0]) / 6 *
-           (2 - (x[begin + 2] - x[begin + 1]) / (x[begin + 1] - x[begin + 0]))
+        (2 - (x[begin + 2] - x[begin + 1]) / (x[begin + 1] - x[begin + 0]))
 
     if isodd(length(x)) # even number of subintervals
         i == lastindex(x) && return (x[end] - x[end - 2]) / 6 *
-               (2 - (x[end - 1] - x[end - 2]) / (x[end] - x[end - 1]))
+            (2 - (x[end - 1] - x[end - 2]) / (x[end] - x[end - 1]))
     else # odd number of subintervals, we add additional terms
         i == lastindex(x) && return (x[end] - x[end - 1]) *
-               (2 * (x[end] - x[end - 1]) + 3 * (x[end - 1] - x[end - 2])) /
-               (x[end] - x[end - 2]) / 6
+            (2 * (x[end] - x[end - 1]) + 3 * (x[end - 1] - x[end - 2])) /
+            (x[end] - x[end - 2]) / 6
         i == lastindex(x) - 1 && return (x[end - 1] - x[end - 3]) / 6 *
-               (2 - (x[end - 2] - x[end - 3]) / (x[end - 1] - x[end - 2])) +
-               (x[end] - x[end - 1]) *
-               ((x[end] - x[end - 1]) + 3 * (x[end - 1] - x[end - 2])) /
-               (x[end - 1] - x[end - 2]) / 6
+            (2 - (x[end - 2] - x[end - 3]) / (x[end - 1] - x[end - 2])) +
+            (x[end] - x[end - 1]) *
+            ((x[end] - x[end - 1]) + 3 * (x[end - 1] - x[end - 2])) /
+            (x[end - 1] - x[end - 2]) / 6
         i == lastindex(x) - 2 &&
             return (x[end - 1] - x[end - 3])^3 / (x[end - 2] - x[end - 3]) /
-                   (x[end - 1] - x[end - 2]) / 6 -
-                   (x[end] - x[end - 1])^3 / (x[end - 1] - x[end - 2]) /
-                   (x[end] - x[end - 2]) / 6
+            (x[end - 1] - x[end - 2]) / 6 -
+            (x[end] - x[end - 1])^3 / (x[end - 1] - x[end - 2]) /
+            (x[end] - x[end - 2]) / 6
     end
     isodd(j) &&
         return (x[begin + j + 1] - x[begin + j - 1])^3 / (x[begin + j] - x[begin + j - 1]) /
-               (x[begin + j + 1] - x[begin + j]) / 6
-    iseven(j) &&
+        (x[begin + j + 1] - x[begin + j]) / 6
+    return iseven(j) &&
         return (x[begin + j] - x[begin + j - 2]) / 6 *
-               (2 -
-                (x[begin + j - 1] - x[begin + j - 2]) / (x[begin + j] - x[begin + j - 1])) +
-               (x[begin + j + 2] - x[begin + j]) / 6 *
-               (2 -
-                (x[begin + j + 2] - x[begin + j + 1]) / (x[begin + j + 1] - x[begin + j]))
+        (
+        2 -
+            (x[begin + j - 1] - x[begin + j - 2]) / (x[begin + j] - x[begin + j - 1])
+    ) +
+        (x[begin + j + 2] - x[begin + j]) / 6 *
+        (
+        2 -
+            (x[begin + j + 2] - x[begin + j + 1]) / (x[begin + j + 1] - x[begin + j])
+    )
 end
 
 function find_weights(x::AbstractVector, ::SimpsonsRule)

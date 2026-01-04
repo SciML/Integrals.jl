@@ -24,7 +24,8 @@ function ChainRulesCore.rrule(::Type{<:IntegralProblem}, f, domain, p; kwargs...
 end
 
 function ChainRulesCore.rrule(
-        ::Type{IntegralProblem{iip}}, f, domain, p; kwargs...) where {iip}
+        ::Type{IntegralProblem{iip}}, f, domain, p; kwargs...
+    ) where {iip}
     prob = IntegralProblem{iip}(f, domain, p; kwargs...)
     function IntegralProblem_iip_pullback(Δ)
         ddomain = hasproperty(Δ, :domain) ? Δ.domain : NoTangent()
@@ -36,12 +37,13 @@ end
 
 # TODO move this adjoint to SciMLBase
 function ChainRulesCore.rrule(
-        ::typeof(SciMLBase.build_solution), prob::IntegralProblem, alg, u, resid; kwargs...)
+        ::typeof(SciMLBase.build_solution), prob::IntegralProblem, alg, u, resid; kwargs...
+    )
     function build_integral_solution_pullback(Δ)
         return NoTangent(), NoTangent(), NoTangent(), Δ, NoTangent()
     end
     return SciMLBase.build_solution(prob, alg, u, resid; kwargs...),
-    build_integral_solution_pullback
+        build_integral_solution_pullback
 end
 
 function ChainRulesCore.rrule(::typeof(Integrals._evaluate!), f, y, u, p)
@@ -50,7 +52,7 @@ function ChainRulesCore.rrule(::typeof(Integrals._evaluate!), f, y, u, p)
         f(b, u, p)
         return copy(b)
     end
-    out, Δ -> (NoTangent(), NoTangent(), back(Δ)...)
+    return out, Δ -> (NoTangent(), NoTangent(), back(Δ)...)
 end
 
 function ChainRulesCore.rrule(::typeof(Integrals.u2t), lb, ub)
@@ -63,8 +65,10 @@ function ChainRulesCore.rrule(::typeof(Integrals.u2t), lb, ub)
     return out, u2t_pullback
 end
 
-Zygote.@adjoint function Zygote.literal_getproperty(sol::SciMLBase.IntegralSolution,
-        ::Val{:u})
+Zygote.@adjoint function Zygote.literal_getproperty(
+        sol::SciMLBase.IntegralSolution,
+        ::Val{:u}
+    )
     sol.u, Δ -> (SciMLBase.build_solution(sol.prob, sol.alg, Δ, sol.resid),)
 end
 end

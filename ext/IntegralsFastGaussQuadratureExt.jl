@@ -30,10 +30,12 @@ function composite_gauss_legendre(f::F, p, lb, ub, nodes, weights, subintervals)
     return I
 end
 
-function Integrals.__solvebp_call(prob::IntegralProblem, alg::Integrals.GaussLegendre{C},
+function Integrals.__solvebp_call(
+        prob::IntegralProblem, alg::Integrals.GaussLegendre{C},
         sensealg, domain, p;
         reltol = nothing, abstol = nothing,
-        maxiters = nothing) where {C}
+        maxiters = nothing
+    ) where {C}
     if !all(isone ∘ length, domain)
         error("GaussLegendre only accepts one-dimensional quadrature problems.")
     end
@@ -41,13 +43,17 @@ function Integrals.__solvebp_call(prob::IntegralProblem, alg::Integrals.GaussLeg
     @assert !isinplace(prob)
     lb, ub = map(only, domain)
     if C
-        val = composite_gauss_legendre(prob.f, prob.p, lb, ub,
-            alg.nodes, alg.weights, alg.subintervals)
+        val = composite_gauss_legendre(
+            prob.f, prob.p, lb, ub,
+            alg.nodes, alg.weights, alg.subintervals
+        )
     else
-        val = gauss_legendre(prob.f, prob.p, lb, ub,
-            alg.nodes, alg.weights)
+        val = gauss_legendre(
+            prob.f, prob.p, lb, ub,
+            alg.nodes, alg.weights
+        )
     end
     err = nothing
-    SciMLBase.build_solution(prob, alg, val, err, retcode = ReturnCode.Success)
+    return SciMLBase.build_solution(prob, alg, val, err, retcode = ReturnCode.Success)
 end
 end

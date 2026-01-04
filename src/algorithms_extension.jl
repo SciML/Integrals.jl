@@ -103,7 +103,7 @@ publisher={ACM New York, NY, USA}
 ```
 """
 struct CubaDivonne{R1, R2, R3, R4} <:
-       AbstractCubaAlgorithm where {R1 <: Real, R2 <: Real, R3 <: Real, R4 <: Real}
+    AbstractCubaAlgorithm where {R1 <: Real, R2 <: Real, R3 <: Real, R4 <: Real}
     flags::Int
     seed::Int
     minevals::Int
@@ -145,29 +145,37 @@ struct CubaCuhre <: AbstractCubaAlgorithm
     key::Int
 end
 
-function CubaVegas(; flags = 0, seed = 0, minevals = 0, nstart = 1000, nincrease = 500,
-        gridno = 0)
+function CubaVegas(;
+        flags = 0, seed = 0, minevals = 0, nstart = 1000, nincrease = 500,
+        gridno = 0
+    )
     isnothing(Base.get_extension(@__MODULE__, :IntegralsCubaExt)) &&
         error("CubaVegas requires `using Cuba`")
     return CubaVegas(flags, seed, minevals, nstart, nincrease, gridno)
 end
 
-function CubaSUAVE(; flags = 0, seed = 0, minevals = 0, nnew = 1000, nmin = 2,
-        flatness = 25.0)
+function CubaSUAVE(;
+        flags = 0, seed = 0, minevals = 0, nnew = 1000, nmin = 2,
+        flatness = 25.0
+    )
     isnothing(Base.get_extension(@__MODULE__, :IntegralsCubaExt)) &&
         error("CubaSUAVE requires `using Cuba`")
     return CubaSUAVE(flags, seed, minevals, nnew, nmin, flatness)
 end
 
-function CubaDivonne(; flags = 0, seed = 0, minevals = 0,
+function CubaDivonne(;
+        flags = 0, seed = 0, minevals = 0,
         key1 = 47, key2 = 1, key3 = 1, maxpass = 5, border = 0.0,
         maxchisq = 10.0, mindeviation = 0.25,
         xgiven = zeros(Cdouble, 0, 0),
-        nextra = 0, peakfinder = C_NULL)
+        nextra = 0, peakfinder = C_NULL
+    )
     isnothing(Base.get_extension(@__MODULE__, :IntegralsCubaExt)) &&
         error("CubaDivonne requires `using Cuba`")
-    return CubaDivonne(flags, seed, minevals, key1, key2, key3, maxpass, border, maxchisq,
-        mindeviation, xgiven, nextra, peakfinder)
+    return CubaDivonne(
+        flags, seed, minevals, key1, key2, key3, maxpass, border, maxchisq,
+        mindeviation, xgiven, nextra, peakfinder
+    )
 end
 
 function CubaCuhre(; flags = 0, minevals = 0, key = 0)
@@ -256,8 +264,10 @@ struct ArblibJL{O} <: AbstractIntegralCExtensionAlgorithm
     warn_on_no_convergence::Bool
     opts::O
 end
-function ArblibJL(; check_analytic = false, take_prec = false,
-        warn_on_no_convergence = false, opts = C_NULL)
+function ArblibJL(;
+        check_analytic = false, take_prec = false,
+        warn_on_no_convergence = false, opts = C_NULL
+    )
     isnothing(Base.get_extension(@__MODULE__, :IntegralsArblibExt)) &&
         error("ArblibJL requires `using Arblib`")
     return ArblibJL(check_analytic, take_prec, warn_on_no_convergence, opts)

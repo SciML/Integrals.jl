@@ -42,7 +42,7 @@ sol = solve(prob, alg)
 See also: [`transformation_if_inf`](@ref), [`transformation_tan_inf`](@ref), [`transformation_cot_inf`](@ref)
 """
 struct ChangeOfVariables{T, A <: SciMLBase.AbstractIntegralAlgorithm} <:
-       AbstractIntegralMetaAlgorithm
+    AbstractIntegralMetaAlgorithm
     fu2gv::T
     alg::A
 end

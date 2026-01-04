@@ -2,15 +2,17 @@ module IntegralsCubaExt
 
 using Integrals, Cuba
 import Integrals: transformation_if_inf,
-                  scale_x, scale_x!, CubaVegas, AbstractCubaAlgorithm,
-                  CubaSUAVE, CubaDivonne, CubaCuhre
+    scale_x, scale_x!, CubaVegas, AbstractCubaAlgorithm,
+    CubaSUAVE, CubaDivonne, CubaCuhre
 
-function Integrals.__solvebp_call(prob::IntegralProblem, alg::AbstractCubaAlgorithm,
+function Integrals.__solvebp_call(
+        prob::IntegralProblem, alg::AbstractCubaAlgorithm,
         sensealg,
         domain, p;
-        reltol = 1e-4, abstol = 1e-12,
-        maxiters = 1000000)
-    @assert maxiters>=1000 "maxiters for $alg should be larger than 1000"
+        reltol = 1.0e-4, abstol = 1.0e-12,
+        maxiters = 1000000
+    )
+    @assert maxiters >= 1000 "maxiters for $alg should be larger than 1000"
     lb, ub = domain
     mid = (lb + ub) / 2
     ndim = length(mid)
@@ -43,7 +45,7 @@ function Integrals.__solvebp_call(prob::IntegralProblem, alg::AbstractCubaAlgori
                 function (u, _y)
                     y = @view(y_[ax..., begin:(begin + size(_y, 2) - 1)])
                     f(y, scale(u), p)
-                    _y .= reshape(y, size(_y)) .* vol
+                    return _y .= reshape(y, size(_y)) .* vol
                 end
             end
         else
@@ -73,31 +75,39 @@ function Integrals.__solvebp_call(prob::IntegralProblem, alg::AbstractCubaAlgori
     end
 
     out = if alg isa CubaVegas
-        Cuba.vegas(_f, ndim, ncomp; rtol = reltol,
+        Cuba.vegas(
+            _f, ndim, ncomp; rtol = reltol,
             atol = abstol, nvec = nvec,
             maxevals = maxiters,
             flags = alg.flags, seed = alg.seed, minevals = alg.minevals,
             nstart = alg.nstart, nincrease = alg.nincrease,
-            gridno = alg.gridno)
+            gridno = alg.gridno
+        )
     elseif alg isa CubaSUAVE
-        Cuba.suave(_f, ndim, ncomp; rtol = reltol,
+        Cuba.suave(
+            _f, ndim, ncomp; rtol = reltol,
             atol = abstol, nvec = nvec,
             maxevals = maxiters,
             flags = alg.flags, seed = alg.seed, minevals = alg.minevals,
-            nnew = alg.nnew, nmin = alg.nmin, flatness = alg.flatness)
+            nnew = alg.nnew, nmin = alg.nmin, flatness = alg.flatness
+        )
     elseif alg isa CubaDivonne
-        Cuba.divonne(_f, ndim, ncomp; rtol = reltol,
+        Cuba.divonne(
+            _f, ndim, ncomp; rtol = reltol,
             atol = abstol, nvec = nvec,
             maxevals = maxiters,
             flags = alg.flags, seed = alg.seed, minevals = alg.minevals,
             key1 = alg.key1, key2 = alg.key2, key3 = alg.key3,
             maxpass = alg.maxpass, border = alg.border,
-            maxchisq = alg.maxchisq, mindeviation = alg.mindeviation)
+            maxchisq = alg.maxchisq, mindeviation = alg.mindeviation
+        )
     elseif alg isa CubaCuhre
-        Cuba.cuhre(_f, ndim, ncomp; rtol = reltol,
+        Cuba.cuhre(
+            _f, ndim, ncomp; rtol = reltol,
             atol = abstol, nvec = nvec,
             maxevals = maxiters,
-            flags = alg.flags, minevals = alg.minevals, key = alg.key)
+            flags = alg.flags, minevals = alg.minevals, key = alg.key
+        )
     end
 
     # out.integral is a Vector{Float64}, but we want to return it to the shape of the integrand
@@ -117,8 +127,10 @@ function Integrals.__solvebp_call(prob::IntegralProblem, alg::AbstractCubaAlgori
         end
     end
 
-    SciMLBase.build_solution(prob, alg, val, out.error,
-        chi = out.probability, retcode = ReturnCode.Success)
+    return SciMLBase.build_solution(
+        prob, alg, val, out.error,
+        chi = out.probability, retcode = ReturnCode.Success
+    )
 end
 
 end

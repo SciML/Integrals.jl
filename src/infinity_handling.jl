@@ -18,7 +18,7 @@ end
 
 function substitute_f(f::IntegralFunction{false}, v2ujac, lb, ub)
     _f = f.f
-    IntegralFunction{false}(f.integrand_prototype) do v, p
+    return IntegralFunction{false}(f.integrand_prototype) do v, p
         u, jac = substitute_v(v2ujac, v, lb, ub)
         return _f(u, p) * jac
     end
@@ -27,7 +27,7 @@ function substitute_f(f::IntegralFunction{true}, v2ujac, lb, ub)
     _f = f.f
     prototype = similar(f.integrand_prototype)
     vol = prod((ub - lb) / 2) # just to get the type of the jacobian determinant
-    IntegralFunction{true}(prototype * vol) do y, v, p
+    return IntegralFunction{true}(prototype * vol) do y, v, p
         u, jac = substitute_v(v2ujac, v, lb, ub)
         _y = _evaluate!(_f, prototype, u, p)
         y .= _y .* jac
@@ -61,7 +61,7 @@ end
 
 function substitute_f(f::BatchIntegralFunction{false}, v2ujac, lb, ub)
     _f = f.f
-    BatchIntegralFunction{false}(f.integrand_prototype, max_batch = f.max_batch) do v, p
+    return BatchIntegralFunction{false}(f.integrand_prototype, max_batch = f.max_batch) do v, p
         u, jac = substitute_bv(v2ujac, v, lb, ub)
         y = _f(u, p)
         return y .* reshape(jac, ntuple(d -> d == ndims(y) ? length(jac) : 1, ndims(y)))
@@ -71,7 +71,7 @@ function substitute_f(f::BatchIntegralFunction{true}, v2ujac, lb, ub)
     _f = f.f
     prototype = similar(f.integrand_prototype)
     vol = prod((ub - lb) / 2) # just to get the type of the jacobian determinant
-    BatchIntegralFunction{true}(prototype * vol, max_batch = f.max_batch) do y, v, p
+    return BatchIntegralFunction{true}(prototype * vol, max_batch = f.max_batch) do y, v, p
         u, jac = substitute_bv(v2ujac, v, lb, ub)
         _prototype = similar(prototype, size(y))
         _y = _evaluate!(_f, _prototype, u, p)
@@ -109,7 +109,7 @@ end
 function t2ujac(t::Number, lb::Number, ub::Number)
     u = oneunit(eltype(lb))
     # apply correct units
-    if isinf(lb) && isinf(ub)
+    return if isinf(lb) && isinf(ub)
         den = inv(1 - t^2)
         t * den * u, (1 + t^2) * den^2 * u
     elseif isinf(lb)
@@ -190,7 +190,7 @@ end
 
 function t2ujac_tan(t::Number, lb::Number, ub::Number)
     u = oneunit(eltype(lb))
-    if isinf(lb) && isinf(ub)
+    return if isinf(lb) && isinf(ub)
         # Doubly-infinite: t ∈ [-1, 1] → u ∈ (-∞, ∞)
         # u = tan(πt/2), du/dt = (π/2) sec²(πt/2)
         halfpi = oftype(float(one(u)), π / 2)
@@ -291,7 +291,7 @@ end
 
 function t2ujac_cot(t::Number, lb::Number, ub::Number)
     u = oneunit(eltype(lb))
-    if isinf(lb) && isinf(ub)
+    return if isinf(lb) && isinf(ub)
         # For doubly-infinite, use the tan transformation
         # u = tan(πt/2), du/dt = (π/2) sec²(πt/2)
         halfpi = oftype(float(one(u)), π / 2)

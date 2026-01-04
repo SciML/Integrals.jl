@@ -1,7 +1,7 @@
 using Integrals, Test
 
-reltol = 1e-6
-abstol = 1e-6
+reltol = 1.0e-6
+abstol = 1.0e-6
 
 @testset "Alternative Infinity Transformations" begin
     @testset "transformation_tan_inf" begin
@@ -10,37 +10,37 @@ abstol = 1e-6
         prob = IntegralProblem(f_gaussian, (-Inf, Inf))
         alg = ChangeOfVariables(transformation_tan_inf, QuadGKJL())
         sol = solve(prob, alg; reltol, abstol)
-        @test isapprox(sol.u, sqrt(π), rtol = 1e-5)
+        @test isapprox(sol.u, sqrt(π), rtol = 1.0e-5)
 
         # Test Lorentzian: ∫_{-∞}^{∞} 1/(1+x²) dx = π
         f_lorentz = (x, p) -> 1 / (1 + x^2)
         prob = IntegralProblem(f_lorentz, (-Inf, Inf))
         sol = solve(prob, alg; reltol, abstol)
-        @test isapprox(sol.u, π, rtol = 1e-5)
+        @test isapprox(sol.u, π, rtol = 1.0e-5)
 
         # Test semi-infinite upper: ∫_0^{∞} exp(-x) dx = 1
         f_exp = (x, p) -> exp(-x)
         prob = IntegralProblem(f_exp, (0.0, Inf))
         sol = solve(prob, alg; reltol, abstol)
-        @test isapprox(sol.u, 1.0, rtol = 1e-4)
+        @test isapprox(sol.u, 1.0, rtol = 1.0e-4)
 
         # Test semi-infinite lower: ∫_{-∞}^0 exp(x) dx = 1
         f_exp_neg = (x, p) -> exp(x)
         prob = IntegralProblem(f_exp_neg, (-Inf, 0.0))
         sol = solve(prob, alg; reltol, abstol)
-        @test isapprox(sol.u, 1.0, rtol = 1e-4)
+        @test isapprox(sol.u, 1.0, rtol = 1.0e-4)
 
         # Test semi-infinite with non-zero bound: ∫_2^{∞} 1/((x-2)² + 1) dx = π/2
         f_shifted_lorentz = (x, p) -> 1 / ((x - 2)^2 + 1)
         prob = IntegralProblem(f_shifted_lorentz, (2.0, Inf))
         sol = solve(prob, alg; reltol, abstol)
-        @test isapprox(sol.u, π / 2, rtol = 1e-4)
+        @test isapprox(sol.u, π / 2, rtol = 1.0e-4)
 
         # Test with negative semi-infinite bound: ∫_{-∞}^{-1} exp(x) dx = exp(-1)
         f_exp_shifted = (x, p) -> exp(x)
         prob = IntegralProblem(f_exp_shifted, (-Inf, -1.0))
         sol = solve(prob, alg; reltol, abstol)
-        @test isapprox(sol.u, exp(-1), rtol = 1e-4)
+        @test isapprox(sol.u, exp(-1), rtol = 1.0e-4)
     end
 
     @testset "transformation_cot_inf" begin
@@ -49,24 +49,24 @@ abstol = 1e-6
         prob = IntegralProblem(f_gaussian, (-Inf, Inf))
         alg = ChangeOfVariables(transformation_cot_inf, QuadGKJL())
         sol = solve(prob, alg; reltol, abstol)
-        @test isapprox(sol.u, sqrt(π), rtol = 1e-5)
+        @test isapprox(sol.u, sqrt(π), rtol = 1.0e-5)
 
         # Test semi-infinite upper: ∫_0^{∞} exp(-x) dx = 1
         f_exp = (x, p) -> exp(-x)
         prob = IntegralProblem(f_exp, (0.0, Inf))
-        sol = solve(prob, alg; reltol = 1e-4, abstol = 1e-4)
-        @test isapprox(sol.u, 1.0, rtol = 1e-3)
+        sol = solve(prob, alg; reltol = 1.0e-4, abstol = 1.0e-4)
+        @test isapprox(sol.u, 1.0, rtol = 1.0e-3)
 
         # Test semi-infinite lower: ∫_{-∞}^0 exp(x) dx = 1
         f_exp_neg = (x, p) -> exp(x)
         prob = IntegralProblem(f_exp_neg, (-Inf, 0.0))
-        sol = solve(prob, alg; reltol = 1e-4, abstol = 1e-4)
-        @test isapprox(sol.u, 1.0, rtol = 1e-3)
+        sol = solve(prob, alg; reltol = 1.0e-4, abstol = 1.0e-4)
+        @test isapprox(sol.u, 1.0, rtol = 1.0e-3)
 
         # Test half Gaussian: ∫_0^{∞} exp(-x²) dx = √π/2
         prob = IntegralProblem(f_gaussian, (0.0, Inf))
-        sol = solve(prob, alg; reltol = 1e-4, abstol = 1e-4)
-        @test isapprox(sol.u, sqrt(π) / 2, rtol = 1e-3)
+        sol = solve(prob, alg; reltol = 1.0e-4, abstol = 1.0e-4)
+        @test isapprox(sol.u, sqrt(π) / 2, rtol = 1.0e-3)
     end
 
     @testset "Finite domains unchanged" begin
@@ -75,14 +75,18 @@ abstol = 1e-6
         prob = IntegralProblem(f, (0.0, 1.0))
 
         sol_default = solve(prob, QuadGKJL(); reltol, abstol)
-        sol_tan = solve(prob, ChangeOfVariables(transformation_tan_inf, QuadGKJL());
-            reltol, abstol)
-        sol_cot = solve(prob, ChangeOfVariables(transformation_cot_inf, QuadGKJL());
-            reltol, abstol)
+        sol_tan = solve(
+            prob, ChangeOfVariables(transformation_tan_inf, QuadGKJL());
+            reltol, abstol
+        )
+        sol_cot = solve(
+            prob, ChangeOfVariables(transformation_cot_inf, QuadGKJL());
+            reltol, abstol
+        )
 
-        @test isapprox(sol_default.u, 1 / 3, rtol = 1e-8)
-        @test isapprox(sol_tan.u, 1 / 3, rtol = 1e-8)
-        @test isapprox(sol_cot.u, 1 / 3, rtol = 1e-8)
+        @test isapprox(sol_default.u, 1 / 3, rtol = 1.0e-8)
+        @test isapprox(sol_tan.u, 1 / 3, rtol = 1.0e-8)
+        @test isapprox(sol_cot.u, 1 / 3, rtol = 1.0e-8)
     end
 
     @testset "Flipped infinite limits" begin
@@ -93,7 +97,7 @@ abstol = 1e-6
         prob = IntegralProblem(f, (Inf, -Inf))
         alg = ChangeOfVariables(transformation_tan_inf, QuadGKJL())
         sol = solve(prob, alg; reltol, abstol)
-        @test isapprox(sol.u, -sqrt(π), rtol = 1e-5)
+        @test isapprox(sol.u, -sqrt(π), rtol = 1.0e-5)
     end
 
     @testset "Works with different algorithms" begin
@@ -103,7 +107,7 @@ abstol = 1e-6
         # Test with HCubatureJL
         alg_hcub = ChangeOfVariables(transformation_tan_inf, HCubatureJL())
         sol = solve(prob, alg_hcub; reltol, abstol)
-        @test isapprox(sol.u, sqrt(π), rtol = 1e-4)
+        @test isapprox(sol.u, sqrt(π), rtol = 1.0e-4)
     end
 
     @testset "ChangeOfVariables exported" begin

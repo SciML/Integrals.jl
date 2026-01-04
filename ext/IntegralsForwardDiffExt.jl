@@ -3,18 +3,22 @@ using Integrals
 using ForwardDiff
 ### Forward-Mode AD Intercepts
 
-function Integrals._evaluate!(f, y, u,
-        p::Union{D, AbstractArray{<:D}}) where {T, V, P, D <: ForwardDiff.Dual{T, V, P}}
+function Integrals._evaluate!(
+        f, y, u,
+        p::Union{D, AbstractArray{<:D}}
+    ) where {T, V, P, D <: ForwardDiff.Dual{T, V, P}}
     dy = similar(y, replace_dualvaltype(eltype(p), eltype(y)))
     f(dy, u, p)
     return dy
 end
 
 # Default to direct AD on solvers
-function Integrals.__solvebp(cache, alg, sensealg, domain,
+function Integrals.__solvebp(
+        cache, alg, sensealg, domain,
         p::Union{D, AbstractArray{<:D}};
-        kwargs...) where {T, V, P, D <: ForwardDiff.Dual{T, V, P}}
-    if isinplace(cache.f)
+        kwargs...
+    ) where {T, V, P, D <: ForwardDiff.Dual{T, V, P}}
+    return if isinplace(cache.f)
         prototype = cache.f.integrand_prototype
         elt = eltype(prototype)
         ForwardDiff.can_dual(elt) ||
@@ -26,7 +30,8 @@ function Integrals.__solvebp(cache, alg, sensealg, domain,
             IntegralFunction{true}(cache.f.f, dprototype)
         end
         prob = Integrals.build_problem(cache)
-        dcache = Integrals.IntegralCache(cache.iip,
+        dcache = Integrals.IntegralCache(
+            cache.iip,
             df,
             domain,
             p,
@@ -48,7 +53,8 @@ end
 function Integrals.__solvebp(
         cache, alg::Integrals.AbstractIntegralCExtensionAlgorithm, sensealg, domain,
         p::Union{D, AbstractArray{<:D}};
-        kwargs...) where {T, V, P, D <: ForwardDiff.Dual{T, V, P}}
+        kwargs...
+    ) where {T, V, P, D <: ForwardDiff.Dual{T, V, P}}
 
     # we need the output type to avoid perturbation confusion while unwrapping nested duals
     # We compute a vector-valued integral of the primal and dual simultaneously
@@ -57,9 +63,11 @@ function Integrals.__solvebp(
         elt = eltype(cache.f.integrand_prototype)
         DT = replace_dualvaltype(eltype(p), elt)
         len = duallen(p)
-        dual_prototype = similar(cache.f.integrand_prototype,
+        dual_prototype = similar(
+            cache.f.integrand_prototype,
             len,
-            size(cache.f.integrand_prototype)...)
+            size(cache.f.integrand_prototype)...
+        )
 
         dfdp_ = function (out, x, _p)
             dualp = reinterpret(ForwardDiff.Dual{T, V, P}, _p)
@@ -77,7 +85,7 @@ function Integrals.__solvebp(
         mid = (lb + ub) / 2
         y = if cache.f isa BatchIntegralFunction
             mid isa Number ? cache.f(eltype(mid)[], p) :
-            cache.f(Matrix{eltype(mid)}(undef, length(mid), 0), p)
+                cache.f(Matrix{eltype(mid)}(undef, length(mid), 0), p)
         else
             cache.f(mid, p)
         end
@@ -104,21 +112,23 @@ function Integrals.__solvebp(
 
     prob = Integrals.build_problem(cache)
     dp_prob = remake(prob, f = dfdp, p = rawp)
-    dp_cache = init(dp_prob,
+    dp_cache = init(
+        dp_prob,
         alg;
         sensealg = sensealg,
-        cache.kwargs...)
+        cache.kwargs...
+    )
     dual = solve!(dp_cache)
 
     res = reinterpret(reshape, DT, dual.u)
     # unwrap the dual when the primal would return a scalar
     out = if (cache.f isa BatchIntegralFunction && y isa AbstractVector) ||
-             !(y isa AbstractArray)
+            !(y isa AbstractArray)
         only(res)
     else
         res
     end
-    SciMLBase.build_solution(prob, alg, out, dual.resid)
+    return SciMLBase.build_solution(prob, alg, out, dual.resid)
 end
 
 duallen(::Type{T}) where {T} = 1
@@ -130,13 +140,15 @@ function duallen(::Type{ForwardDiff.Dual{T, V, P}}) where {T, V, P}
 end
 
 replace_dualvaltype(::Type{T}, ::Type{S}) where {T, S} = S
-function replace_dualvaltype(::Type{ForwardDiff.Dual{T, V, P}},
-        ::Type{S}) where {T, V, P, S}
+function replace_dualvaltype(
+        ::Type{ForwardDiff.Dual{T, V, P}},
+        ::Type{S}
+    ) where {T, V, P, S}
     return ForwardDiff.Dual{T, replace_dualvaltype(V, S), P}
 end
 
 unwrap_dualvaltype(::Type{T}) where {T} = T
 function unwrap_dualvaltype(::Type{ForwardDiff.Dual{T, V, P}}) where {T, V, P}
-    unwrap_dualvaltype(V)
+    return unwrap_dualvaltype(V)
 end
 end
