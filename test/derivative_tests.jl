@@ -569,3 +569,7 @@ end
     grad_fd = ForwardDiff.gradient(loss_explicit_p, ps)
     @test grad_explicit ≈ grad_fd rtol = 1.0e-5
 end
+
+# DifferentiationInterface extension tests are TODO
+# The extension provides the foundation for using ADTypes backends as sensealg
+# Full testing requires further integration work with the existing Zygote/Mooncake extensions
