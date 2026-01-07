@@ -83,6 +83,11 @@ function scale_x(ub, lb, x)
     return (ub .- lb) .* x .+ lb
 end
 
+# Type-stable check for real scalar values (handles both Number and 1-element arrays)
+_is_real_scalar(y::Real) = true
+_is_real_scalar(y::AbstractArray) = length(y) == 1 && eltype(y) <: Real
+_is_real_scalar(y) = false
+
 const allowedkeywords = (:maxiters, :abstol, :reltol)
 const KWARGERROR_MESSAGE = """
 Unrecognized keyword arguments found.
@@ -346,7 +351,7 @@ function __solvebp_call(
     if f isa BatchIntegralFunction
         @assert prod(size(y)[begin:(end - 1)]) == 1&&eltype(y) <: Real "VEGAS only supports Float64-valued scalar integrands"
     else
-        @assert length(y) == 1&&eltype(y) <: Real "VEGAS only supports Float64-valued scalar integrands"
+        @assert _is_real_scalar(y) "VEGAS only supports Float64-valued scalar integrands"
     end
 
     ncalls = alg.ncalls
