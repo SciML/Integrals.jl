@@ -15,7 +15,7 @@ both those based upon quadrature as well as Monte-Carlo approaches. By using
 Integrals.jl, you get a single predictable interface where many of the
 arguments are standardized throughout the various integrator libraries. This
 can be useful for benchmarking or for library implementations, since libraries
-which internally use a quadrature can easily accept a integration method as an
+which internally use a quadrature can easily accept an integration method as an
 argument.
 
 ## Tutorials and Documentation
