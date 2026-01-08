@@ -47,7 +47,6 @@ FastGaussQuadrature = "0.5,1"
 FiniteDiff = "2.12"
 ForwardDiff = "0.10.36, 1"
 HCubature = "1.7"
-JET = "0.9, 0.10, 0.11.3"
 LinearAlgebra = "1.10"
 MCIntegration = "0.4.2"
 MonteCarloIntegration = "0.2"
@@ -73,7 +72,6 @@ ExplicitImports = "7d51a73a-1435-4ff3-83d9-f097790105c7"
 FastGaussQuadrature = "442a2c76-b920-505d-bb47-c5924d526838"
 FiniteDiff = "6a86dc24-6348-571c-b903-95158fe2bd41"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
-JET = "c3a54625-cd67-489e-a8e7-0a5a0ff4e31b"
 MCIntegration = "ea1e2de9-7db7-4b42-91ee-0cd1bf6df167"
 Mooncake = "da2b9cff-9c12-43a0-ae48-6db2b0edb7d6"
 SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
@@ -82,4 +80,4 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [targets]
-test = ["Aqua", "Arblib", "StaticArrays", "FiniteDiff", "SafeTestsets", "Test", "Distributions", "ForwardDiff", "Zygote", "ChainRulesCore", "FastGaussQuadrature", "Cuba", "Cubature", "MCIntegration", "Mooncake", "ExplicitImports", "JET"]
+test = ["Aqua", "Arblib", "StaticArrays", "FiniteDiff", "SafeTestsets", "Test", "Distributions", "ForwardDiff", "Zygote", "ChainRulesCore", "FastGaussQuadrature", "Cuba", "Cubature", "MCIntegration", "Mooncake", "ExplicitImports"]

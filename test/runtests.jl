@@ -1,7 +1,14 @@
+using Pkg
 using SafeTestsets
 using Test
 
 const GROUP = get(ENV, "GROUP", "All")
+
+function activate_nopre_env()
+    Pkg.activate("nopre")
+    Pkg.develop(PackageSpec(path = dirname(@__DIR__)))
+    return Pkg.instantiate()
+end
 
 if GROUP == "All" || GROUP == "Core"
     @time @safetestset "Explicit Imports" include("explicit_imports_tests.jl")
@@ -19,6 +26,7 @@ if GROUP == "All" || GROUP == "AD"
     @time @safetestset "Nested AD Tests" include("nested_ad_tests.jl")
 end
 
-if GROUP == "JET"
-    @time @safetestset "JET Static Analysis" include("jet_tests.jl")
+if GROUP == "nopre"
+    activate_nopre_env()
+    @time @safetestset "JET Static Analysis" include("nopre/jet_tests.jl")
 end
