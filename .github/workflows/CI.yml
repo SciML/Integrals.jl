@@ -19,6 +19,7 @@ jobs:
         group:
           - Core
           - AD
+          - JET
         version:
           - '1'
           - 'lts'
@@ -28,6 +29,9 @@ jobs:
           - group: AD
             version: '1'
           - group: AD
+            version: 'pre'
+          # JET tests may have issues with pre-release Julia versions
+          - group: JET
             version: 'pre'
     steps:
       - uses: actions/checkout@v6
