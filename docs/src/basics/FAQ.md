@@ -32,7 +32,7 @@ i.e. [`QuadGKJL`](@ref).
 
 ## What should I do if my solution is not converged?
 
-Certain algorithms, such as [`QuadratureRule`](@ref) used a fixed number of points to
+Certain algorithms, such as [`QuadratureRule`](@ref), use a fixed number of points to
 calculate an integral and cannot provide an error estimate. In this case, you
 have to increase the number of points and check the convergence yourself, which
 will depend on the accuracy of the rule you choose.
@@ -55,7 +55,7 @@ See [`SampledIntegralProblem`](@ref).
 You can't, since Integrals.jl currently supports integration on hypercubes
 because that is what lower-level packages implement.
 
-## I don't see algorithm X or quadrature scheme Y ?
+## I don't see algorithm X or quadrature scheme Y
 
 Fixed quadrature rules from other packages can be used with `QuadratureRule`.
 Otherwise, feel free to open an issue or pull request.

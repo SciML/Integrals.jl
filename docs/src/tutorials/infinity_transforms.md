@@ -25,42 +25,48 @@ Integrals.jl provides three built-in transformations for handling infinite bound
 
 ### Default: `transformation_if_inf`
 
-The default transformation uses rational functions. This is applied automatically when
-using algorithms like `QuadGKJL` or `HCubatureJL` with infinite bounds.
+The default transformation uses rational functions to map infinite domains to finite intervals:
 
-```@docs
-transformation_if_inf
-```
+- For doubly-infinite domains `(-∞, ∞)`: uses `u = t/(1-t²)` mapping `[-1, 1] → (-∞, ∞)`
+- For semi-infinite domains `[a, ∞)`: uses `u = a + t/(1-t)` mapping `[0, 1] → [a, ∞)`
+- For semi-infinite domains `(-∞, b]`: uses `u = b + t/(1+t)` mapping `[-1, 0] → (-∞, b]`
+
+This transformation is applied automatically when using algorithms like `QuadGKJL()` or `HCubatureJL()` with infinite bounds.
 
 ### Alternative: `transformation_tan_inf`
 
-Uses trigonometric (arctan/tan) transformation. This can work better for integrands
-that decay like `1/(1+x²)`.
+Uses trigonometric (arctan/tan) transformations:
 
-```@docs
-transformation_tan_inf
-```
+- For doubly-infinite domains: uses `u = tan(πt/2)` mapping `[-1, 1] → (-∞, ∞)`
+- For semi-infinite domains: uses similar tan-based transformations
+
+This can provide better accuracy than the default for integrands that decay like `1/(1+x²)`, such as Lorentzian distributions.
 
 ### Alternative: `transformation_cot_inf`
 
-Uses cotangent-based transformation for semi-infinite domains. This can be useful for
-integrands with specific singularity behavior at the finite endpoint.
+Uses cotangent-based transformations for semi-infinite domains:
 
-```@docs
-transformation_cot_inf
-```
+- For doubly-infinite domains: falls back to tan transformation
+- For semi-infinite `[a, ∞)`: uses a cot-based transformation
+- For semi-infinite `(-∞, b]`: uses a cot-based transformation
+
+This can be useful for integrands with specific singularity behavior at finite endpoints or oscillatory integrands.
 
 ## Using Custom Transformations
 
 To use an alternative transformation, wrap your algorithm with `ChangeOfVariables`:
 
-```@docs
-Integrals.ChangeOfVariables
+```julia
+alg = ChangeOfVariables(transformation_function, base_algorithm)
 ```
+
+where `transformation_function` is one of `transformation_if_inf`, `transformation_tan_inf`, or `transformation_cot_inf`, and `base_algorithm` is the underlying quadrature method like `QuadGKJL()` or `HCubatureJL()`.
 
 ## Comparison Example
 
-Let's compare the different transformations on a Gaussian integral:
+Let's compare the different transformations on a Gaussian integral. Note that for this
+particular integrand, all transformations perform well, but the example demonstrates
+the syntax for using alternative transformations.
 
 ```@example transforms
 using Integrals
@@ -75,26 +81,28 @@ true_value = sqrt(π)
 # Default algorithm (uses transformation_if_inf internally)
 sol_default = solve(prob, QuadGKJL())
 println("Default:     ", sol_default.u, " (error: ", abs(sol_default.u - true_value), ")")
+```
 
+You can also explicitly specify which transformation to use with `ChangeOfVariables`:
+
+```julia
 # Explicit default transformation
 alg_default = ChangeOfVariables(transformation_if_inf, QuadGKJL())
 sol_explicit = solve(prob, alg_default)
-println("Explicit if: ", sol_explicit.u, " (error: ", abs(sol_explicit.u - true_value), ")")
 
 # Tan transformation
 alg_tan = ChangeOfVariables(transformation_tan_inf, QuadGKJL())
 sol_tan = solve(prob, alg_tan)
-println("Tan:         ", sol_tan.u, " (error: ", abs(sol_tan.u - true_value), ")")
 
 # Cot transformation
 alg_cot = ChangeOfVariables(transformation_cot_inf, QuadGKJL())
 sol_cot = solve(prob, alg_cot)
-println("Cot:         ", sol_cot.u, " (error: ", abs(sol_cot.u - true_value), ")")
 ```
 
 ## Semi-Infinite Integrals
 
-For semi-infinite integrals, the choice of transformation can be more important:
+For semi-infinite integrals, the choice of transformation can be more important.
+Here's an example integrating `exp(-x)` from 0 to ∞ (true value = 1):
 
 ```@example transforms
 # Integrating exp(-x) from 0 to ∞ (true value = 1)
@@ -103,14 +111,16 @@ prob = IntegralProblem(f, (0.0, Inf))
 
 sol_default = solve(prob, QuadGKJL())
 println("Default: ", sol_default.u)
+```
 
+Alternative transformations can be specified similarly:
+
+```julia
 alg_tan = ChangeOfVariables(transformation_tan_inf, QuadGKJL())
 sol_tan = solve(prob, alg_tan)
-println("Tan:     ", sol_tan.u)
 
 alg_cot = ChangeOfVariables(transformation_cot_inf, QuadGKJL())
 sol_cot = solve(prob, alg_cot)
-println("Cot:     ", sol_cot.u)
 ```
 
 ## When to Use Alternative Transformations
