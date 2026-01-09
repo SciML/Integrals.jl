@@ -19,6 +19,7 @@ jobs:
         group:
           - Core
           - AD
+          - nopre
         version:
           - '1'
           - 'lts'
@@ -28,6 +29,9 @@ jobs:
           - group: AD
             version: '1'
           - group: AD
+            version: 'pre'
+          # nopre tests (JET) should not run on pre-release or LTS Julia versions
+          - group: nopre
             version: 'pre'
     steps:
       - uses: actions/checkout@v6
