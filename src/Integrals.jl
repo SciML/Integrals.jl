@@ -10,6 +10,7 @@ using HCubature: HCubature, hcubature, hquadrature
 using SciMLBase: init, solve!
 using LinearAlgebra: LinearAlgebra, /, norm
 using Random: Random
+using ArrayInterface: ArrayInterface
 
 include("algorithms_meta.jl")
 include("common.jl")

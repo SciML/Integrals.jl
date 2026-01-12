@@ -4,6 +4,7 @@ version = "4.8.0"
 authors = ["Chris Rackauckas <accounts@chrisrackauckas.com>"]
 
 [deps]
+ArrayInterface = "4fba245c-0d91-5ea0-9b3e-6abc04ee57a9"
 CommonSolve = "38540f10-b2f7-11e9-35d8-d573e4eb0ff2"
 HCubature = "19dc6840-f33b-545b-b366-655c7e3ffd49"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
@@ -37,6 +38,7 @@ IntegralsZygoteExt = ["Zygote", "ChainRulesCore", "Mooncake"]
 [compat]
 Aqua = "0.8"
 Arblib = "1"
+ArrayInterface = "7"
 ChainRulesCore = "1.18"
 CommonSolve = "0.2.4"
 Cuba = "2.2"
