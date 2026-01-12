@@ -15,10 +15,12 @@ Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
 
 [weakdeps]
+ADTypes = "47edcb42-4c32-4615-8424-f2b9edc5f35b"
 Arblib = "fb37089c-8514-4489-9461-98f9c8763369"
 ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
 Cuba = "8a292aeb-7a57-582c-b821-06e4c11590b1"
 Cubature = "667455a9-e2ce-5579-9412-b964f529a492"
+DifferentiationInterface = "a0c0ee7d-e4b9-4e03-894e-1c5f64a51d63"
 FastGaussQuadrature = "442a2c76-b920-505d-bb47-c5924d526838"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 MCIntegration = "ea1e2de9-7db7-4b42-91ee-0cd1bf6df167"
@@ -29,6 +31,7 @@ Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 IntegralsArblibExt = "Arblib"
 IntegralsCubaExt = "Cuba"
 IntegralsCubatureExt = "Cubature"
+IntegralsDifferentiationInterfaceExt = ["ADTypes", "DifferentiationInterface", "ChainRulesCore"]
 IntegralsFastGaussQuadratureExt = "FastGaussQuadrature"
 IntegralsForwardDiffExt = "ForwardDiff"
 IntegralsMCIntegrationExt = "MCIntegration"
@@ -36,6 +39,7 @@ IntegralsMooncakeExt = ["Mooncake", "Zygote", "ChainRulesCore"]
 IntegralsZygoteExt = ["Zygote", "ChainRulesCore", "Mooncake"]
 
 [compat]
+ADTypes = "1"
 Aqua = "0.8"
 Arblib = "1"
 ArrayInterface = "7"
@@ -43,6 +47,7 @@ ChainRulesCore = "1.18"
 CommonSolve = "0.2.4"
 Cuba = "2.2"
 Cubature = "1.5"
+DifferentiationInterface = "0.6"
 Distributions = "0.25.87"
 ExplicitImports = "1.14.0"
 FastGaussQuadrature = "0.5,1"
@@ -65,12 +70,14 @@ Zygote = "0.7.10"
 julia = "1.10"
 
 [extras]
+ADTypes = "47edcb42-4c32-4615-8424-f2b9edc5f35b"
 Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
 Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
 Arblib = "fb37089c-8514-4489-9461-98f9c8763369"
 ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
 Cuba = "8a292aeb-7a57-582c-b821-06e4c11590b1"
 Cubature = "667455a9-e2ce-5579-9412-b964f529a492"
+DifferentiationInterface = "a0c0ee7d-e4b9-4e03-894e-1c5f64a51d63"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 ExplicitImports = "7d51a73a-1435-4ff3-83d9-f097790105c7"
 FastGaussQuadrature = "442a2c76-b920-505d-bb47-c5924d526838"
@@ -84,4 +91,4 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [targets]
-test = ["Aqua", "Arblib", "StaticArrays", "FiniteDiff", "SafeTestsets", "Test", "Distributions", "ForwardDiff", "Zygote", "ChainRulesCore", "FastGaussQuadrature", "Cuba", "Cubature", "MCIntegration", "Mooncake", "ExplicitImports", "Pkg"]
+test = ["ADTypes", "Aqua", "Arblib", "StaticArrays", "FiniteDiff", "SafeTestsets", "Test", "Distributions", "ForwardDiff", "Zygote", "ChainRulesCore", "FastGaussQuadrature", "Cuba", "Cubature", "MCIntegration", "Mooncake", "ExplicitImports", "DifferentiationInterface", "Pkg"]
