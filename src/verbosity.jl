@@ -11,14 +11,54 @@
     )
 
     presets = (
+        None = (
+            cache_init = Silent(),
+            domain_transformation = Silent(),
+            algorithm_selection = Silent(),
+            iteration_progress = Silent(),
+            convergence_result = Silent(),
+            batch_mode = Silent(),
+            buffer_allocation = Silent(),
+            deprecations = Silent()
+        ),
+        Minimal = (
+            cache_init = Silent(),
+            domain_transformation = Silent(),
+            algorithm_selection = Silent(),
+            iteration_progress = Silent(),
+            convergence_result = Silent(),
+            batch_mode = Silent(),
+            buffer_allocation = Silent(),
+            deprecations = WarnLevel()
+        ),
         Standard = (
+            cache_init = Silent(),
+            domain_transformation = Silent(),
+            algorithm_selection = Silent(),
+            iteration_progress = Silent(),
+            convergence_result = Silent(),
+            batch_mode = Silent(),
+            buffer_allocation = Silent(),
+            deprecations = WarnLevel()
+        ),
+        Detailed = (
             cache_init = InfoLevel(),
             domain_transformation = InfoLevel(),
-            algorithm_selection = DebugLevel(),
+            algorithm_selection = InfoLevel(),
             iteration_progress = Silent(),
             convergence_result = InfoLevel(),
-            batch_mode = DebugLevel(),
-            buffer_allocation = DebugLevel(),
+            batch_mode = InfoLevel(),
+            buffer_allocation = InfoLevel(),
+            deprecations = WarnLevel()
+        ),
+        All = (
+            cache_init = InfoLevel(),
+            domain_transformation = InfoLevel(),
+            algorithm_selection = InfoLevel(),
+            iteration_progress = InfoLevel(),
+            convergence_result = InfoLevel(),
+            batch_mode = InfoLevel(),
+            buffer_allocation = InfoLevel(),
             deprecations = WarnLevel()
         ),
     )
@@ -46,16 +86,36 @@ Verbosity specifier for controlling logging output in Integrals.jl.
 - `:buffer_allocation` - Pre-allocated buffer creation for reusable caches
 - `:deprecations` - Deprecation warnings for outdated API usage
 
+# Presets
+
+IntegralVerbosity supports five predefined SciMLLogging presets:
+
+- **None()** - No output (best for production)
+- **Minimal()** - Only deprecation warnings
+- **Standard()** - Only deprecation warnings (default, recommended)
+- **Detailed()** - Comprehensive output for debugging (all setup, solver, and debug info)
+- **All()** - Maximum verbosity (includes iteration-by-iteration progress)
+
 # Usage
 
 ## Using Presets
 
 ```julia
-# Standard preset (default)
+# Standard preset (default) - shows only deprecations
 solve(prob, QuadGKJL(); verbose = IntegralVerbosity())
+solve(prob, QuadGKJL(); verbose = IntegralVerbosity(Standard()))
 
 # Completely silent
 solve(prob, QuadGKJL(); verbose = IntegralVerbosity(None()))
+
+# Only deprecation warnings
+solve(prob, QuadGKJL(); verbose = IntegralVerbosity(Minimal()))
+
+# Detailed debugging information
+solve(prob, QuadGKJL(); verbose = IntegralVerbosity(Detailed()))
+
+# Maximum verbosity including iteration progress
+solve(prob, QuadGKJL(); verbose = IntegralVerbosity(All()))
 ```
 
 ## Setting Individual Toggles
@@ -69,7 +129,8 @@ solve(prob, QuadGKJL(); verbose = IntegralVerbosity(
     iteration_progress = Silent(),
     convergence_result = InfoLevel(),
     batch_mode = Silent(),
-    buffer_allocation = Silent()
+    buffer_allocation = Silent(),
+    deprecations = WarnLevel()
 ))
 
 # Enable iteration-by-iteration progress (useful for slow integrals)
@@ -89,20 +150,36 @@ solve(prob, QuadGKJL(); verbose = IntegralVerbosity(setup = InfoLevel()))
 solve(prob, QuadGKJL(); verbose = IntegralVerbosity(debug = DebugLevel()))
 ```
 
-# Default Levels (Standard Preset)
+# Preset Details
 
-- `cache_init` → `InfoLevel()` (visible by default)
-- `domain_transformation` → `InfoLevel()` (visible by default)
-- `algorithm_selection` → `DebugLevel()` (requires `ENV["JULIA_DEBUG"] = "Integrals"`)
-- `iteration_progress` → `Silent()` (off by default, can be very verbose)
-- `convergence_result` → `InfoLevel()` (visible by default)
-- `batch_mode` → `DebugLevel()` (requires `ENV["JULIA_DEBUG"] = "Integrals"`)
-- `buffer_allocation` → `DebugLevel()` (requires `ENV["JULIA_DEBUG"] = "Integrals"`)
-- `deprecations` → `WarnLevel()` (visible by default as warnings)
+## None
+- All toggles: `Silent()`
+
+## Minimal
+- `deprecations` → `WarnLevel()` (shows deprecation warnings)
+- All others → `Silent()`
+
+## Standard (Default)
+- `deprecations` → `WarnLevel()` (shows deprecation warnings)
+- All others → `Silent()`
+
+## Detailed
+- `cache_init` → `InfoLevel()`
+- `domain_transformation` → `InfoLevel()`
+- `algorithm_selection` → `InfoLevel()`
+- `convergence_result` → `InfoLevel()`
+- `batch_mode` → `InfoLevel()`
+- `buffer_allocation` → `InfoLevel()`
+- `iteration_progress` → `Silent()` (still off, can be very verbose)
+- `deprecations` → `WarnLevel()`
+
+## All
+- All toggles → `InfoLevel()` (including `iteration_progress`)
+- `deprecations` → `WarnLevel()`
 """
 function IntegralVerbosity end 
 
-const DEFAULT_VERBOSE = ODEVerbosity()
+const DEFAULT_VERBOSE = IntegralVerbosity()
 
 @inline function _process_verbose_param(verbose::SciMLLogging.AbstractVerbosityPreset)
     IntegralVerbosity(verbose)
