@@ -291,3 +291,46 @@ function VEGASMC(; kws...)
         error("VEGASMC requires `using MCIntegration`")
     return VEGASMC(NamedTuple(kws))
 end
+
+"""
+    FastTanhSinhQuadratureJL(; tol = 1e-12, max_levels = 10)
+
+One-dimensional adaptive Tanh-Sinh (double exponential) quadrature from FastTanhSinhQuadrature.jl.
+This method uses a double exponential transformation that provides excellent convergence properties,
+especially for integrands with endpoint singularities or infinite derivatives at endpoints.
+
+## Keyword Arguments
+
+  - `tol`: Relative tolerance for convergence (default: `1e-12`)
+  - `max_levels`: Maximum number of refinement levels in adaptive integration (default: `10`)
+
+## Limitations
+
+  - Only supports 1D, 2D, and 3D integration
+  - Does not support batched evaluation
+  - Does not support in-place integrands
+
+## References
+
+```tex
+@article{takahasi1974double,
+title={Double exponential formulas for numerical integration},
+author={Takahasi, Hidetosi and Mori, Masatake},
+journal={Publications of the Research Institute for Mathematical Sciences},
+volume={9},
+number={3},
+pages={721--741},
+year={1974},
+publisher={Research Institute for Mathematical Sciences}
+}
+```
+"""
+struct FastTanhSinhQuadratureJL{T} <: AbstractIntegralExtensionAlgorithm
+    tol::T
+    max_levels::Int
+end
+function FastTanhSinhQuadratureJL(; tol = 1e-12, max_levels = 10)
+    isnothing(Base.get_extension(@__MODULE__, :IntegralsFastTanhSinhQuadratureExt)) &&
+        error("FastTanhSinhQuadratureJL requires `using FastTanhSinhQuadrature`")
+    return FastTanhSinhQuadratureJL(tol, max_levels)
+end
