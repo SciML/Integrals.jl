@@ -71,168 +71,45 @@ end
 } true
 
 @from_chainrules MinimalCtx Tuple{typeof(Integrals.__solvebp), Any, Any, Any, Any, Any} true
-function ChainRulesCore.rrule(
-        ::typeof(Integrals.__solvebp), cache, alg, sensealg, domain,
-        p;
-        kwargs...
-    )
-    # TODO: integrate the primal and dual in the same call to the quadrature library
-    out = Integrals.__solvebp_call(cache, alg, sensealg, domain, p; kwargs...)
 
-    # the adjoint will be the integral of the input sensitivities, so it maps the
-    # sensitivity of the output to an object of the type of the parameters
-    function quadrature_adjoint(Δ)
-        # https://juliadiff.org/ChainRulesCore.jl/dev/design/many_tangents.html#manytypes
-        if sensealg.vjp isa Integrals.ZygoteVJP
-            if isinplace(cache)
-                # zygote doesn't support mutation, so we build an oop pullback
-                if cache.f isa BatchIntegralFunction
-                    dx = similar(
-                        cache.f.integrand_prototype,
-                        size(cache.f.integrand_prototype)[begin:(end - 1)]..., 1
-                    )
-                    _f = x -> (cache.f(dx, x, p); dx)
-                    # TODO: let the user pass a batched jacobian so we can return a BatchIntegralFunction
-                    dfdp_ = function (x, p)
-                        x_ = x isa AbstractArray ? reshape(x, size(x)..., 1) : [x]
-                        z, back = Zygote.pullback(p) do p
-                            _dx = Zygote.Buffer(dx)
-                            cache.f(_dx, x_, p)
-                            copy(_dx)
-                        end
-                        return back(
-                            z .= (
-                                Δ isa AbstractArray ? reshape(Δ, size(Δ)..., 1) :
-                                    Δ
-                            )
-                        )[1]
-                    end
-                    dfdp = IntegralFunction{false}(dfdp_, nothing)
-                else
-                    dx = similar(cache.f.integrand_prototype)
-                    _f = x -> (cache.f(dx, x, p); dx)
-                    dfdp_ = function (x, p)
-                        _, back = Zygote.pullback(p) do p
-                            _dx = Zygote.Buffer(dx)
-                            cache.f(_dx, x, p)
-                            copy(_dx)
-                        end
-                        return back(Δ)[1]
-                    end
-                    dfdp = IntegralFunction{false}(dfdp_, nothing)
-                end
-            else
-                _f = x -> cache.f(x, p)
-                if cache.f isa BatchIntegralFunction
-                    # TODO: let the user pass a batched jacobian so we can return a BatchIntegralFunction
-                    dfdp_ = function (x, p)
-                        x_ = x isa AbstractArray ? reshape(x, size(x)..., 1) : [x]
-                        z, back = Zygote.pullback(p -> cache.f(x_, p), p)
-                        return back(Δ isa AbstractArray ? reshape(Δ, size(Δ)..., 1) : [Δ])[1]
-                    end
-                    dfdp = IntegralFunction{false}(dfdp_, nothing)
-                else
-                    dfdp_ = function (x, p)
-                        z, back = Zygote.pullback(p -> cache.f(x, p), p)
-                        return back(z isa Number ? only(Δ) : Δ)[1]
-                    end
-                    dfdp = IntegralFunction{false}(dfdp_, nothing)
-                end
-            end
-        elseif sensealg.vjp isa Integrals.MooncakeVJP
-            # SOMETHINGS UP WITH DFDP FUNCTION prob.f it cant accept two ints and error.
-            if isinplace(cache)
-                if cache.f isa BatchIntegralFunction
-                    error("TODO")
-                else
-                    dx = similar(cache.f.integrand_prototype)
-                    _f = x -> (cache.f(dx, x, p); dx)
-                    dfdp_ = function (x, p)
-                        # dx is modified inplace by dfdp/integralfunc_closure_p calls AND the Reverse pass tangent comes externally (from Δ).
-                        # Therefore, Δ.u is Tangent passed to the pullback AND integralfunc_closure_p must always return dx as Output.
-                        # i.e. (tangent(output) == Δ.u). Otherwise integralfunc_closure_p only outputs "nothing" and tangent(output) != Δ.u
-                        integralfunc_closure_p = p -> (cache.f(dx, x, p); dx)
-                        cache_z = Mooncake.prepare_pullback_cache(integralfunc_closure_p, p)
-                        z,
-                            grads = Mooncake.value_and_pullback!!(cache_z, Δ.u, integralfunc_closure_p, p)
-                        return grads[2]
-                    end
-                    dfdp = IntegralFunction{false}(dfdp_, nothing)
-                end
-            else
-                _f = x -> cache.f(x, p)
-                if cache.f isa BatchIntegralFunction
-                    # TODO: let the user pass a batched jacobian so we can return a BatchIntegralFunction
-                    error("TODO")
-                else
-                    dfdp_ = function (x, p)
-                        integralfunc_closure_p = p -> cache.f(x, p)
-                        cache_z = Mooncake.prepare_pullback_cache(integralfunc_closure_p, p)
-                        # Δ.u is integrand function's output sensitivity which we pass into Mooncake's pullback
-                        z,
-                            grads = Mooncake.value_and_pullback!!(cache_z, Δ.u, integralfunc_closure_p, p)
-                        return grads[2]
-                    end
-                    dfdp = IntegralFunction{false}(dfdp_, nothing)
-                end
-            end
-        elseif sensealg.vjp isa Integrals.ReverseDiffVJP
-            error("TODO")
-        end
+# Add MooncakeVJP support to the dispatch function defined in ZygoteExt
+function Integrals._compute_dfdp_and_f(::Integrals.MooncakeVJP, cache, p, Δ)
+    # Extract the tangent value - Mooncake wraps it in a struct with .u field
+    Δ_val = hasproperty(Δ, :u) ? Δ.u : Δ
 
-        # Compute dp (gradient w.r.t. p) only if p is not NullParameters
-        # When p is NullParameters, the parameters being differentiated are captured
-        # in closures, not passed as p, so dp should be NoTangent()
-        if p isa SciMLBase.NullParameters
-            dp = NoTangent()
+    if isinplace(cache)
+        if cache.f isa BatchIntegralFunction
+            error("MooncakeVJP does not yet support BatchIntegralFunction with in-place functions")
         else
-            prob = Integrals.build_problem(cache)
-            # dp_prob = remake(prob, f = dfdp)  # fails because we change iip
-            dp_prob = IntegralProblem(dfdp, prob.domain, prob.p; prob.kwargs...)
-            # the infinity transformation was already applied to f so we don't apply it to dfdp
-            dp_cache = init(
-                dp_prob,
-                alg;
-                sensealg = sensealg,
-                cache.kwargs...
-            )
-
-            project_p = ProjectTo(p)
-            dp = project_p(solve!(dp_cache).u)
+            dx = similar(cache.f.integrand_prototype)
+            _f = x -> (cache.f(dx, x, p); dx)
+            dfdp_ = function (x, p)
+                # dx is modified inplace by dfdp/integralfunc_closure_p calls AND the Reverse pass tangent comes externally (from Δ).
+                # Therefore, Δ_val is Tangent passed to the pullback AND integralfunc_closure_p must always return dx as Output.
+                # i.e. (tangent(output) == Δ_val). Otherwise integralfunc_closure_p only outputs "nothing" and tangent(output) != Δ_val
+                integralfunc_closure_p = p -> (cache.f(dx, x, p); dx)
+                cache_z = Mooncake.prepare_pullback_cache(integralfunc_closure_p, p)
+                z, grads = Mooncake.value_and_pullback!!(cache_z, Δ_val, integralfunc_closure_p, p)
+                return grads[2]
+            end
+            dfdp = IntegralFunction{false}(dfdp_, nothing)
         end
-
-        # Because Mooncake tangent structure vs Zygote, Chainrules, ReverseDiff
-        du_adj = sensealg.vjp isa Integrals.MooncakeVJP ? Δ.u : Δ
-
-        lb, ub = domain
-        if lb isa Number
-            # TODO replace evaluation at endpoint (which anyone can do without Integrals.jl)
-            # with integration of dfdx uing the same quadrature
-            dlb = cache.f isa BatchIntegralFunction ? -batch_unwrap(_f([lb])) : -_f(lb)
-            dub = cache.f isa BatchIntegralFunction ? batch_unwrap(_f([ub])) : _f(ub)
-            return (
-                NoTangent(),
-                NoTangent(),
-                NoTangent(),
-                NoTangent(),
-                Tangent{typeof(domain)}(dot(dlb, du_adj), dot(dub, du_adj)),
-                dp,
-            )
+    else
+        _f = x -> cache.f(x, p)
+        if cache.f isa BatchIntegralFunction
+            error("MooncakeVJP does not yet support BatchIntegralFunction")
         else
-            # we need to compute 2*length(lb) integrals on the faces of the hypercube, as we
-            # can see from writing the multidimensional integral as an iterated integral
-            # alternatively we can use Stokes' theorem to replace the integral on the
-            # boundary with a volume integral of the flux of the integrand
-            # ∫∂Ω ω = ∫Ω dω, which would be better since we won't have to change the
-            # dimensionality of the integral or the quadrature used (such as quadratures
-            # that don't evaluate points on the boundaries) and it could be generalized to
-            # other kinds of domains. The only question is to determine ω in terms of f and
-            # the deformation of the surface (e.g. consider integral over an ellipse and
-            # asking for the derivative of the result w.r.t. the semiaxes of the ellipse)
-            return (NoTangent(), NoTangent(), NoTangent(), NoTangent(), NoTangent(), dp)
+            dfdp_ = function (x, p)
+                integralfunc_closure_p = p -> cache.f(x, p)
+                cache_z = Mooncake.prepare_pullback_cache(integralfunc_closure_p, p)
+                # Δ_val is integrand function's output sensitivity which we pass into Mooncake's pullback
+                z, grads = Mooncake.value_and_pullback!!(cache_z, Δ_val, integralfunc_closure_p, p)
+                return grads[2]
+            end
+            dfdp = IntegralFunction{false}(dfdp_, nothing)
         end
     end
-    return out, quadrature_adjoint
+    return dfdp, _f
 end
 
 # Internal Mooncake overloads to accommodate IntegralSolution etc. Struct's Tangent Types.

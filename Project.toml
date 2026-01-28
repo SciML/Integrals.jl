@@ -36,7 +36,7 @@ IntegralsFastGaussQuadratureExt = "FastGaussQuadrature"
 IntegralsForwardDiffExt = "ForwardDiff"
 IntegralsMCIntegrationExt = "MCIntegration"
 IntegralsMooncakeExt = ["Mooncake", "Zygote", "ChainRulesCore"]
-IntegralsZygoteExt = ["Zygote", "ChainRulesCore", "Mooncake"]
+IntegralsZygoteExt = ["Zygote", "ChainRulesCore"]
 
 [compat]
 ADTypes = "1"
