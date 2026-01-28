@@ -66,6 +66,81 @@ end
 
 batch_unwrap(x::AbstractArray) = dropdims(x; dims = ndims(x))
 
+# Extract tangent value - Mooncake wraps tangents in a struct with .u field
+_extract_tangent(Δ) = hasproperty(Δ, :u) ? Δ.u : Δ
+
+# Dispatch function for computing dfdp and _f based on VJP type
+# Extensions can add methods for other VJP types (e.g., MooncakeVJP in IntegralsMooncakeExt)
+function Integrals._compute_dfdp_and_f(
+        ::Integrals.ZygoteVJP, cache, p, Δ
+    )
+    if isinplace(cache)
+        # zygote doesn't support mutation, so we build an oop pullback
+        if cache.f isa BatchIntegralFunction
+            dx = similar(
+                cache.f.integrand_prototype,
+                size(cache.f.integrand_prototype)[begin:(end - 1)]..., 1
+            )
+            _f = x -> (cache.f(dx, x, p); dx)
+            # TODO: let the user pass a batched jacobian so we can return a BatchIntegralFunction
+            dfdp_ = function (x, p)
+                x_ = x isa AbstractArray ? reshape(x, size(x)..., 1) : [x]
+                z, back = Zygote.pullback(p) do p
+                    _dx = Zygote.Buffer(dx)
+                    cache.f(_dx, x_, p)
+                    copy(_dx)
+                end
+                return back(
+                    z .= (
+                        Δ isa AbstractArray ? reshape(Δ, size(Δ)..., 1) :
+                            Δ
+                    )
+                )[1]
+            end
+            dfdp = IntegralFunction{false}(dfdp_, nothing)
+        else
+            dx = similar(cache.f.integrand_prototype)
+            _f = x -> (cache.f(dx, x, p); dx)
+            dfdp_ = function (x, p)
+                _, back = Zygote.pullback(p) do p
+                    _dx = Zygote.Buffer(dx)
+                    cache.f(_dx, x, p)
+                    copy(_dx)
+                end
+                return back(Δ)[1]
+            end
+            dfdp = IntegralFunction{false}(dfdp_, nothing)
+        end
+    else
+        _f = x -> cache.f(x, p)
+        if cache.f isa BatchIntegralFunction
+            # TODO: let the user pass a batched jacobian so we can return a BatchIntegralFunction
+            dfdp_ = function (x, p)
+                x_ = x isa AbstractArray ? reshape(x, size(x)..., 1) : [x]
+                z, back = Zygote.pullback(p -> cache.f(x_, p), p)
+                return back(Δ isa AbstractArray ? reshape(Δ, size(Δ)..., 1) : [Δ])[1]
+            end
+            dfdp = IntegralFunction{false}(dfdp_, nothing)
+        else
+            dfdp_ = function (x, p)
+                z, back = Zygote.pullback(p -> cache.f(x, p), p)
+                return back(z isa Number ? only(Δ) : Δ)[1]
+            end
+            dfdp = IntegralFunction{false}(dfdp_, nothing)
+        end
+    end
+    return dfdp, _f
+end
+
+function Integrals._compute_dfdp_and_f(::Integrals.ReverseDiffVJP, cache, p, Δ)
+    error("ReverseDiffVJP is not yet implemented")
+end
+
+# Fallback for unknown VJP types
+function Integrals._compute_dfdp_and_f(vjp, cache, p, Δ)
+    error("Unsupported VJP type: $(typeof(vjp)). If using MooncakeVJP, ensure Mooncake.jl is loaded.")
+end
+
 function ChainRulesCore.rrule(
         ::typeof(Integrals.__solvebp), cache, alg, sensealg, domain,
         p;
@@ -78,65 +153,8 @@ function ChainRulesCore.rrule(
     # sensitivity of the output to an object of the type of the parameters
     function quadrature_adjoint(Δ)
         # https://juliadiff.org/ChainRulesCore.jl/dev/design/many_tangents.html#manytypes
-        if sensealg.vjp isa Integrals.ZygoteVJP
-            if isinplace(cache)
-                # zygote doesn't support mutation, so we build an oop pullback
-                if cache.f isa BatchIntegralFunction
-                    dx = similar(
-                        cache.f.integrand_prototype,
-                        size(cache.f.integrand_prototype)[begin:(end - 1)]..., 1
-                    )
-                    _f = x -> (cache.f(dx, x, p); dx)
-                    # TODO: let the user pass a batched jacobian so we can return a BatchIntegralFunction
-                    dfdp_ = function (x, p)
-                        x_ = x isa AbstractArray ? reshape(x, size(x)..., 1) : [x]
-                        z, back = Zygote.pullback(p) do p
-                            _dx = Zygote.Buffer(dx)
-                            cache.f(_dx, x_, p)
-                            copy(_dx)
-                        end
-                        return back(
-                            z .= (
-                                Δ isa AbstractArray ? reshape(Δ, size(Δ)..., 1) :
-                                    Δ
-                            )
-                        )[1]
-                    end
-                    dfdp = IntegralFunction{false}(dfdp_, nothing)
-                else
-                    dx = similar(cache.f.integrand_prototype)
-                    _f = x -> (cache.f(dx, x, p); dx)
-                    dfdp_ = function (x, p)
-                        _, back = Zygote.pullback(p) do p
-                            _dx = Zygote.Buffer(dx)
-                            cache.f(_dx, x, p)
-                            copy(_dx)
-                        end
-                        return back(Δ)[1]
-                    end
-                    dfdp = IntegralFunction{false}(dfdp_, nothing)
-                end
-            else
-                _f = x -> cache.f(x, p)
-                if cache.f isa BatchIntegralFunction
-                    # TODO: let the user pass a batched jacobian so we can return a BatchIntegralFunction
-                    dfdp_ = function (x, p)
-                        x_ = x isa AbstractArray ? reshape(x, size(x)..., 1) : [x]
-                        z, back = Zygote.pullback(p -> cache.f(x_, p), p)
-                        return back(Δ isa AbstractArray ? reshape(Δ, size(Δ)..., 1) : [Δ])[1]
-                    end
-                    dfdp = IntegralFunction{false}(dfdp_, nothing)
-                else
-                    dfdp_ = function (x, p)
-                        z, back = Zygote.pullback(p -> cache.f(x, p), p)
-                        return back(z isa Number ? only(Δ) : Δ)[1]
-                    end
-                    dfdp = IntegralFunction{false}(dfdp_, nothing)
-                end
-            end
-        elseif sensealg.vjp isa Integrals.ReverseDiffVJP
-            error("TODO")
-        end
+        # Dispatch to extension-specific implementations based on VJP type
+        dfdp, _f = Integrals._compute_dfdp_and_f(sensealg.vjp, cache, p, Δ)
 
         # Compute dp (gradient w.r.t. p) only if p is not NullParameters
         # When p is NullParameters, the parameters being differentiated are captured
@@ -165,12 +183,14 @@ function ChainRulesCore.rrule(
             # with integration of dfdx uing the same quadrature
             dlb = cache.f isa BatchIntegralFunction ? -batch_unwrap(_f([lb])) : -_f(lb)
             dub = cache.f isa BatchIntegralFunction ? batch_unwrap(_f([ub])) : _f(ub)
+            # Extract tangent value - Mooncake wraps tangents differently than Zygote/ChainRules
+            du_adj = _extract_tangent(Δ)
             return (
                 NoTangent(),
                 NoTangent(),
                 NoTangent(),
                 NoTangent(),
-                Tangent{typeof(domain)}(dot(dlb, Δ), dot(dub, Δ)),
+                Tangent{typeof(domain)}(dot(dlb, du_adj), dot(dub, du_adj)),
                 dp,
             )
         else

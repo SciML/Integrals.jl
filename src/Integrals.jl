@@ -75,6 +75,10 @@ Uses Mooncake.jl for vector-Jacobian products in automatic differentiation of in
 """
 struct MooncakeVJP <: IntegralVJP end
 
+# Dispatch function for computing dfdp and _f based on VJP type
+# Extensions add methods for specific VJP types (ZygoteVJP, MooncakeVJP, etc.)
+function _compute_dfdp_and_f end
+
 function scale_x!(_x, ub, lb, x)
     _x .= (ub .- lb) .* x .+ lb
     return _x
