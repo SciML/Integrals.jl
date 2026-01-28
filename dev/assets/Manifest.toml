@@ -442,7 +442,7 @@ version = "0.1.3"
 deps = ["ArrayInterface", "CommonSolve", "HCubature", "LinearAlgebra", "MonteCarloIntegration", "QuadGK", "Random", "Reexport", "SciMLBase"]
 path = "/home/runner/work/Integrals.jl/Integrals.jl"
 uuid = "de52edbc-65ea-441a-8357-d3a637375a31"
-version = "4.9.1"
+version = "4.10.0"
 
     [deps.Integrals.extensions]
     IntegralsArblibExt = "Arblib"
