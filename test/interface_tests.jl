@@ -1,5 +1,5 @@
 using Integrals
-using Cuba, Cubature, Arblib, FastGaussQuadrature, MCIntegration
+using Cuba, Cubature, Arblib, FastGaussQuadrature, FastTanhSinhQuadrature, MCIntegration
 using Test
 
 max_dim_test = 2
@@ -61,6 +61,9 @@ alg_req = Dict(
     ),
     ArblibJL() => (
         nout = 1, allows_batch = false, min_dim = 1, max_dim = 1, allows_iip = false,
+    ),
+    FastTanhSinhQuadratureJL() => (
+        nout = Inf, allows_batch = false, min_dim = 1, max_dim = 3, allows_iip = false,
     )
 )
 
