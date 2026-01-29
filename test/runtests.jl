@@ -19,6 +19,7 @@ if GROUP == "All" || GROUP == "Core"
     @time @safetestset "Sampled Integration Tests" include("sampled_tests.jl")
     @time @safetestset "QuadratureFunction Tests" include("quadrule_tests.jl")
     @time @safetestset "Alternative Transformation Tests" include("alt_transformation_tests.jl")
+    @time @safetestset "HAdaptiveIntegration Tests" include("hadaptiveintegration_tests.jl")
 end
 
 if GROUP == "All" || GROUP == "AD"
