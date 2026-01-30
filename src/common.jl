@@ -1,4 +1,4 @@
-mutable struct IntegralCache{iip, F, D, P, PK, A, S, K, Tc}
+mutable struct IntegralCache{iip, F, D, P, PK, A, S, K, Tc, VT}
     iip::Val{iip}
     f::F
     domain::D
@@ -8,6 +8,7 @@ mutable struct IntegralCache{iip, F, D, P, PK, A, S, K, Tc}
     sensealg::S
     kwargs::K
     cacheval::Tc    # store alg cache here
+    verbosity::VT
 end
 
 SciMLBase.isinplace(::IntegralCache{iip}) where {iip} = iip
@@ -18,17 +19,37 @@ function SciMLBase.init(
         prob::IntegralProblem{iip},
         alg::SciMLBase.AbstractIntegralAlgorithm;
         sensealg = ReCallVJP(ZygoteVJP()),
-        do_inf_transformation = nothing, kws...
+        do_inf_transformation = nothing,
+        verbose = IntegralVerbosity(),
+        kws...
     ) where {iip}
     kwargs = pairs((; prob.kwargs..., kws...))
     checkkwargs(kwargs...)
-    do_inf_transformation === nothing ||
-        @warn "do_inf_transformation is deprecated. All integral problems are transformed"
+
+    verb_spec = _process_verbose_param(verbose)
+
+    if do_inf_transformation !== nothing
+        @SciMLMessage("do_inf_transformation is deprecated. All integral problems are transformed",
+                      verb_spec, :deprecations)
+    end
+
+    @SciMLMessage(@lazy("Initializing IntegralCache with algorithm $(typeof(alg).name.name)"),
+                  verb_spec, :cache_init)
+
     _alg = alg isa ChangeOfVariables ? alg : ChangeOfVariables(transformation_if_inf, alg)
+
+    if !isa(alg, ChangeOfVariables)
+        @SciMLMessage("Algorithm wrapped with ChangeOfVariables for automatic domain transformation",
+                      verb_spec, :domain_transformation)
+    end
+
     cacheval = init_cacheval(_alg, prob)
 
-    return IntegralCache{
-        iip,
+    @SciMLMessage("Cache initialization complete", verb_spec, :cache_init)
+
+    @SciMLMessage("Cache initialization complete", verb_spec, :cache_init)
+
+    return IntegralCache{iip,
         typeof(prob.f),
         typeof(prob.domain),
         typeof(prob.p),
@@ -37,6 +58,7 @@ function SciMLBase.init(
         typeof(sensealg),
         typeof(kwargs),
         typeof(cacheval),
+        typeof(verb_spec),
     }(
         Val(iip),
         prob.f,
@@ -47,7 +69,8 @@ function SciMLBase.init(
         sensealg,
         kwargs,
         cacheval
-    )
+    ,
+        verb_spec)
 end
 
 function Base.getproperty(cache::IntegralCache, name::Symbol)
@@ -64,12 +87,12 @@ function Base.getproperty(cache::IntegralCache, name::Symbol)
 end
 function Base.setproperty!(cache::IntegralCache, name::Symbol, x)
     if name === :lb
-        @warn "updating lb is deprecated by replacing domain"
+        @SciMLMessage("updating lb is deprecated by replacing domain", cache.verbosity, :deprecations)
         lb, ub = cache.domain
         setfield!(cache, :domain, (oftype(lb, x), ub))
         return x
     elseif name === :ub
-        @warn "updating ub is deprecated by replacing domain"
+        @SciMLMessage("updating ub is deprecated by replacing domain", cache.verbosity, :deprecations)
         lb, ub = cache.domain
         setfield!(cache, :domain, (lb, oftype(ub, x)))
         return x
