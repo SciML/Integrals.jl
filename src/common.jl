@@ -24,7 +24,13 @@ function SciMLBase.init(
     checkkwargs(kwargs...)
     do_inf_transformation === nothing ||
         @warn "do_inf_transformation is deprecated. All integral problems are transformed"
-    _alg = alg isa ChangeOfVariables ? alg : ChangeOfVariables(transformation_if_inf, alg)
+    _alg = if alg isa ChangeOfVariables
+        alg
+    elseif prob.domain isa Tuple
+        ChangeOfVariables(transformation_if_inf, alg)
+    else
+        alg
+    end
     cacheval = init_cacheval(_alg, prob)
 
     return IntegralCache{

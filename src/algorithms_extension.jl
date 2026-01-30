@@ -291,3 +291,38 @@ function VEGASMC(; kws...)
         error("VEGASMC requires `using MCIntegration`")
     return VEGASMC(NamedTuple(kws))
 end
+
+"""
+    HAdaptiveIntegrationJL(; kws...)
+
+Adaptive integration over simplices and orthotopes from HAdaptiveIntegration.jl.
+
+This algorithm supports integration over:
+- Orthotope domains specified as `(lb, ub)` tuples (converted to `Rectangle`, `Cuboid`, etc.)
+- Simplex domains specified directly as `HAdaptiveIntegration.Triangle`,
+  `HAdaptiveIntegration.Tetrahedron`, etc.
+
+Any keyword arguments are passed directly to `HAdaptiveIntegration.integrate`.
+
+## Example
+
+```julia
+using Integrals, HAdaptiveIntegration
+
+# Orthotope domain (standard lb, ub)
+prob = IntegralProblem((x, p) -> x[1] + x[2], (zeros(2), ones(2)))
+sol = solve(prob, HAdaptiveIntegrationJL())
+
+# Simplex domain (triangle)
+prob = IntegralProblem((x, p) -> x[1] + x[2], Triangle((0.0, 0.0), (1.0, 0.0), (0.0, 1.0)))
+sol = solve(prob, HAdaptiveIntegrationJL())
+```
+"""
+struct HAdaptiveIntegrationJL{K <: NamedTuple} <: AbstractIntegralExtensionAlgorithm
+    kws::K
+end
+function HAdaptiveIntegrationJL(; kws...)
+    isnothing(Base.get_extension(@__MODULE__, :IntegralsHAdaptiveIntegrationExt)) &&
+        error("HAdaptiveIntegrationJL requires `using HAdaptiveIntegration`")
+    return HAdaptiveIntegrationJL(NamedTuple(kws))
+end
