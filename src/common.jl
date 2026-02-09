@@ -24,7 +24,7 @@ function SciMLBase.init(
         kws...
     ) where {iip}
     kwargs = pairs((; prob.kwargs..., kws...))
-    
+
     checkkwargs(kwargs...)
     verb_spec = _process_verbose_param(verbose)
 
@@ -40,8 +40,6 @@ function SciMLBase.init(
     end
 
     cacheval = init_cacheval(_alg, prob)
-
-    @SciMLMessage("Cache initialization complete", verb_spec, :cache_init)
 
     @SciMLMessage("Cache initialization complete", verb_spec, :cache_init)
 
