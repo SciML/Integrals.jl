@@ -26,7 +26,8 @@ using Test
 
     @testset "Triangle" begin
         prob = IntegralProblem(
-            (x, p) -> 1.0, Triangle((0.0, 0.0), (1.0, 0.0), (0.0, 1.0)))
+            (x, p) -> 1.0, Triangle((0.0, 0.0), (1.0, 0.0), (0.0, 1.0))
+        )
         sol = solve(prob, HAdaptiveIntegrationJL(), reltol = reltol, abstol = abstol)
         @test sol.u ≈ 0.5 rtol = 1.0e-6
     end
@@ -36,7 +37,9 @@ using Test
             (x, p) -> 1.0,
             Tetrahedron(
                 (0.0, 0.0, 0.0), (1.0, 0.0, 0.0),
-                (0.0, 1.0, 0.0), (0.0, 0.0, 1.0)))
+                (0.0, 1.0, 0.0), (0.0, 0.0, 1.0)
+            )
+        )
         sol = solve(prob, HAdaptiveIntegrationJL(), reltol = reltol, abstol = abstol)
         @test sol.u ≈ 1 / 6 rtol = 1.0e-6
     end
