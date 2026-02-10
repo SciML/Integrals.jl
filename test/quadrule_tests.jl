@@ -1,4 +1,5 @@
 using Integrals
+using Integrals: IntegralVerbosity
 using FastGaussQuadrature
 using StaticArrays
 using Test
