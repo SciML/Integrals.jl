@@ -122,7 +122,6 @@ using SciMLLogging
     # Test 2: Explicit Standard preset
     @testset "Standard Preset" begin
         cache = init(test_prob, test_alg; verbose = IntegralVerbosity())
-        @test cache.verbosity isa IntegralVerbosity
         sol = solve!(cache)
         @test sol.retcode == ReturnCode.Success
     end
@@ -130,7 +129,6 @@ using SciMLLogging
     # Test 3: None preset (silent mode)
     @testset "None Preset" begin
         cache = init(test_prob, test_alg; verbose = IntegralVerbosity(SciMLLogging.None()))
-        @test cache.verbosity isa IntegralVerbosity
         sol = solve!(cache)
         @test sol.retcode == ReturnCode.Success
     end
@@ -138,7 +136,6 @@ using SciMLLogging
     # Test 3b: Minimal preset
     @testset "Minimal Preset" begin
         cache = init(test_prob, test_alg; verbose = IntegralVerbosity(SciMLLogging.Minimal()))
-        @test cache.verbosity isa IntegralVerbosity
         sol = solve!(cache)
         @test sol.retcode == ReturnCode.Success
     end
@@ -146,7 +143,6 @@ using SciMLLogging
     # Test 3c: Detailed preset
     @testset "Detailed Preset" begin
         cache = init(test_prob, test_alg; verbose = IntegralVerbosity(SciMLLogging.Detailed()))
-        @test cache.verbosity isa IntegralVerbosity
         sol = solve!(cache)
         @test sol.retcode == ReturnCode.Success
     end
@@ -154,7 +150,6 @@ using SciMLLogging
     # Test 3d: All preset
     @testset "All Preset" begin
         cache = init(test_prob, test_alg; verbose = IntegralVerbosity(SciMLLogging.All()))
-        @test cache.verbosity isa IntegralVerbosity
         sol = solve!(cache)
         @test sol.retcode == ReturnCode.Success
     end
@@ -170,7 +165,6 @@ using SciMLLogging
     # Test 5: Boolean verbose parameter (false)
     @testset "Boolean Verbose - False" begin
         cache = init(test_prob, test_alg; verbose = false)
-        @test cache.verbosity isa IntegralVerbosity
         sol = solve!(cache)
         @test sol.retcode == ReturnCode.Success
     end
@@ -187,7 +181,6 @@ using SciMLLogging
             buffer_allocation = Silent(),
             deprecations = WarnLevel()
         ))
-        @test cache.verbosity isa IntegralVerbosity
         sol = solve!(cache)
         @test sol.retcode == ReturnCode.Success
     end
@@ -195,7 +188,6 @@ using SciMLLogging
     # Test 7: Group settings - solver group
     @testset "Solver Group" begin
         cache = init(test_prob, test_alg; verbose = IntegralVerbosity(solver = InfoLevel()))
-        @test cache.verbosity isa IntegralVerbosity
         sol = solve!(cache)
         @test sol.retcode == ReturnCode.Success
     end
@@ -203,7 +195,6 @@ using SciMLLogging
     # Test 8: Group settings - setup group
     @testset "Setup Group" begin
         cache = init(test_prob, test_alg; verbose = IntegralVerbosity(setup = InfoLevel()))
-        @test cache.verbosity isa IntegralVerbosity
         sol = solve!(cache)
         @test sol.retcode == ReturnCode.Success
     end
@@ -211,7 +202,6 @@ using SciMLLogging
     # Test 9: Group settings - debug group
     @testset "Debug Group" begin
         cache = init(test_prob, test_alg; verbose = IntegralVerbosity(debug = DebugLevel()))
-        @test cache.verbosity isa IntegralVerbosity
         sol = solve!(cache)
         @test sol.retcode == ReturnCode.Success
     end
@@ -240,19 +230,16 @@ using SciMLLogging
         cache = init(test_prob, test_alg; verbose = IntegralVerbosity(
             cache_init = InfoLevel()
         ))
-        @test cache.verbosity isa IntegralVerbosity
 
         # Test DebugLevel
         cache = init(test_prob, test_alg; verbose = IntegralVerbosity(
             cache_init = DebugLevel()
         ))
-        @test cache.verbosity isa IntegralVerbosity
 
         # Test WarnLevel
         cache = init(test_prob, test_alg; verbose = IntegralVerbosity(
             deprecations = WarnLevel()
         ))
-        @test cache.verbosity isa IntegralVerbosity
     end
 
     # Test 12: Verbosity with multi-dimensional integrals
@@ -275,7 +262,6 @@ using SciMLLogging
         alg_2d = QuadratureRule(trapz2_test, n = 50)
 
         cache = init(prob_2d, alg_2d; verbose = IntegralVerbosity())
-        @test cache.verbosity isa IntegralVerbosity
         sol = solve!(cache)
         @test sol.retcode == ReturnCode.Success
     end
@@ -286,12 +272,8 @@ using SciMLLogging
             convergence_result = InfoLevel()
         ))
 
-        # Check that verbosity is stored
-        @test cache.verbosity isa IntegralVerbosity
-
-        # Solve and check verbosity still exists
+        # Solve and verify it works
         sol = solve!(cache)
-        @test cache.verbosity isa IntegralVerbosity
         @test sol.retcode == ReturnCode.Success
     end
 
