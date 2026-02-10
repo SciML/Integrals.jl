@@ -11,9 +11,9 @@ using SciMLBase: init, solve!
 using LinearAlgebra: LinearAlgebra, /, norm
 using Random: Random
 using ArrayInterface: ArrayInterface
-using SciMLLogging: SciMLLogging, @SciMLMessage, Silent, DebugLevel, 
-        InfoLevel, WarnLevel, ErrorLevel, @verbosity_specifier, AbstractVerbositySpecifier,
-        None, Minimal, Standard, Detailed, All, AbstractMessageLevel
+using SciMLLogging: SciMLLogging, @SciMLMessage, Silent, DebugLevel,
+    InfoLevel, WarnLevel, ErrorLevel, @verbosity_specifier, AbstractVerbositySpecifier,
+    None, Minimal, Standard, Detailed, All, AbstractMessageLevel
 
 include("verbosity.jl")
 include("algorithms_meta.jl")
@@ -151,8 +151,10 @@ function __solve(
     cacheval = cache.cacheval.alg
     g, vdomain = alg.fu2gv(cache.f, udomain)
 
-    @SciMLMessage(lazy"Domain transformed: $udomain → $vdomain",
-                  cache.verbosity, :domain_transformation)
+    @SciMLMessage(
+        lazy"Domain transformed: $udomain → $vdomain",
+        cache.verbosity, :domain_transformation
+    )
 
     _cache = IntegralCache(
         Val(isinplace(g)),
@@ -164,8 +166,9 @@ function __solve(
         sensealg,
         cache.kwargs,
         cacheval
-    ,
-        cache.verbosity)
+        ,
+        cache.verbosity
+    )
     sol = __solve(_cache, alg.alg, sensealg, vdomain, p; kwargs...)
     prob = build_problem(cache)
     return SciMLBase.build_solution(
@@ -204,8 +207,10 @@ function __solvebp_call(
         reltol = 1.0e-8, abstol = 1.0e-8,
         maxiters = typemax(Int)
     )
-    @SciMLMessage(lazy"QuadGKJL: starting 1D integration with reltol=$reltol, abstol=$abstol, order=$(alg.order)",
-                  cache.verbosity, :algorithm_selection)
+    @SciMLMessage(
+        lazy"QuadGKJL: starting 1D integration with reltol=$reltol, abstol=$abstol, order=$(alg.order)",
+        cache.verbosity, :algorithm_selection
+    )
 
     prob = build_problem(cache)
     lb, ub = map(first, domain)
@@ -297,8 +302,10 @@ function __solvebp_call(
         reltol = 1.0e-8, abstol = 1.0e-8,
         maxiters = typemax(Int)
     )
-    @SciMLMessage(lazy"HCubatureJL: starting multidimensional h-adaptive integration with reltol=$reltol, abstol=$abstol, initdiv=$(alg.initdiv)",
-                  cache.verbosity, :algorithm_selection)
+    @SciMLMessage(
+        lazy"HCubatureJL: starting multidimensional h-adaptive integration with reltol=$reltol, abstol=$abstol, initdiv=$(alg.initdiv)",
+        cache.verbosity, :algorithm_selection
+    )
 
     prob = build_problem(cache)
     lb, ub = domain
@@ -348,8 +355,10 @@ function __solvebp_call(
         reltol = 1.0e-4, abstol = 1.0e-4,
         maxiters = 1000
     )
-    @SciMLMessage(lazy"VEGAS: starting Monte Carlo integration with nbins=$(alg.nbins), ncalls=$(alg.ncalls), maxiters=$maxiters",
-                  cache.verbosity, :algorithm_selection)
+    @SciMLMessage(
+        lazy"VEGAS: starting Monte Carlo integration with nbins=$(alg.nbins), ncalls=$(alg.ncalls), maxiters=$maxiters",
+        cache.verbosity, :algorithm_selection
+    )
 
     prob = build_problem(cache)
     lb, ub = domain

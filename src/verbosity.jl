@@ -7,7 +7,7 @@
         :convergence_result,
         :batch_mode,
         :buffer_allocation,
-        :deprecations
+        :deprecations,
     )
 
     presets = (
@@ -19,7 +19,7 @@
             convergence_result = Silent(),
             batch_mode = Silent(),
             buffer_allocation = Silent(),
-            deprecations = Silent()
+            deprecations = Silent(),
         ),
         Minimal = (
             cache_init = Silent(),
@@ -29,7 +29,7 @@
             convergence_result = Silent(),
             batch_mode = Silent(),
             buffer_allocation = Silent(),
-            deprecations = WarnLevel()
+            deprecations = WarnLevel(),
         ),
         Standard = (
             cache_init = Silent(),
@@ -39,7 +39,7 @@
             convergence_result = Silent(),
             batch_mode = Silent(),
             buffer_allocation = Silent(),
-            deprecations = WarnLevel()
+            deprecations = WarnLevel(),
         ),
         Detailed = (
             cache_init = InfoLevel(),
@@ -49,7 +49,7 @@
             convergence_result = InfoLevel(),
             batch_mode = InfoLevel(),
             buffer_allocation = InfoLevel(),
-            deprecations = WarnLevel()
+            deprecations = WarnLevel(),
         ),
         All = (
             cache_init = InfoLevel(),
@@ -59,14 +59,14 @@
             convergence_result = InfoLevel(),
             batch_mode = InfoLevel(),
             buffer_allocation = InfoLevel(),
-            deprecations = WarnLevel()
+            deprecations = WarnLevel(),
         ),
     )
 
     groups = (
         solver = (:iteration_progress, :convergence_result),
         setup = (:cache_init, :domain_transformation, :algorithm_selection),
-        debug = (:batch_mode, :buffer_allocation)
+        debug = (:batch_mode, :buffer_allocation),
     )
 end
 
@@ -177,16 +177,16 @@ solve(prob, QuadGKJL(); verbose = IntegralVerbosity(debug = DebugLevel()))
 - All toggles → `InfoLevel()` (including `iteration_progress`)
 - `deprecations` → `WarnLevel()`
 """
-function IntegralVerbosity end 
+function IntegralVerbosity end
 
 const DEFAULT_VERBOSE = IntegralVerbosity()
 
 @inline function _process_verbose_param(verbose::SciMLLogging.AbstractVerbosityPreset)
-    IntegralVerbosity(verbose)
+    return IntegralVerbosity(verbose)
 end
 
 @inline function _process_verbose_param(verbose::Bool)
-    verbose ? DEFAULT_VERBOSE : IntegralVerbosity(SciMLLogging.None())
+    return verbose ? DEFAULT_VERBOSE : IntegralVerbosity(SciMLLogging.None())
 end
 
 @inline _process_verbose_param(verbose::IntegralVerbosity) = verbose

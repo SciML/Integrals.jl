@@ -29,8 +29,10 @@ function SciMLBase.init(
     verb_spec = _process_verbose_param(verbose)
 
     do_inf_transformation === nothing ||
-    @SciMLMessage("do_inf_transformation is deprecated. All integral problems are transformed",
-    verb_spec, :deprecations)
+        @SciMLMessage(
+        "do_inf_transformation is deprecated. All integral problems are transformed",
+        verb_spec, :deprecations
+    )
     _alg = if alg isa ChangeOfVariables
         alg
     elseif prob.domain isa Tuple
@@ -43,7 +45,8 @@ function SciMLBase.init(
 
     @SciMLMessage("Cache initialization complete", verb_spec, :cache_init)
 
-    return IntegralCache{iip,
+    return IntegralCache{
+        iip,
         typeof(prob.f),
         typeof(prob.domain),
         typeof(prob.p),
@@ -63,8 +66,9 @@ function SciMLBase.init(
         sensealg,
         kwargs,
         cacheval
-    ,
-        verb_spec)
+        ,
+        verb_spec
+    )
 end
 
 function Base.getproperty(cache::IntegralCache, name::Symbol)

@@ -71,16 +71,18 @@ using Test
 
     # Test 6: Individual toggles
     @testset "Individual Toggles" begin
-        cache = init(test_prob, test_alg; verbose = IntegralVerbosity(
-            cache_init = Silent(),
-            domain_transformation = InfoLevel(),
-            algorithm_selection = DebugLevel(),
-            iteration_progress = Silent(),
-            convergence_result = InfoLevel(),
-            batch_mode = Silent(),
-            buffer_allocation = Silent(),
-            deprecations = WarnLevel()
-        ))
+        cache = init(
+            test_prob, test_alg; verbose = IntegralVerbosity(
+                cache_init = Silent(),
+                domain_transformation = InfoLevel(),
+                algorithm_selection = DebugLevel(),
+                iteration_progress = Silent(),
+                convergence_result = InfoLevel(),
+                batch_mode = Silent(),
+                buffer_allocation = Silent(),
+                deprecations = WarnLevel()
+            )
+        )
         sol = solve!(cache)
         @test sol.retcode == ReturnCode.Success
     end
@@ -121,25 +123,33 @@ using Test
     # Test 11: Multiple verbosity levels
     @testset "Multiple Verbosity Levels" begin
         # Test Silent
-        cache = init(test_prob, test_alg; verbose = IntegralVerbosity(
-            cache_init = Silent()
-        ))
+        cache = init(
+            test_prob, test_alg; verbose = IntegralVerbosity(
+                cache_init = Silent()
+            )
+        )
         @test cache.verbosity isa IntegralVerbosity
 
         # Test InfoLevel
-        cache = init(test_prob, test_alg; verbose = IntegralVerbosity(
-            cache_init = InfoLevel()
-        ))
+        cache = init(
+            test_prob, test_alg; verbose = IntegralVerbosity(
+                cache_init = InfoLevel()
+            )
+        )
 
         # Test DebugLevel
-        cache = init(test_prob, test_alg; verbose = IntegralVerbosity(
-            cache_init = DebugLevel()
-        ))
+        cache = init(
+            test_prob, test_alg; verbose = IntegralVerbosity(
+                cache_init = DebugLevel()
+            )
+        )
 
         # Test WarnLevel
-        cache = init(test_prob, test_alg; verbose = IntegralVerbosity(
-            deprecations = WarnLevel()
-        ))
+        cache = init(
+            test_prob, test_alg; verbose = IntegralVerbosity(
+                deprecations = WarnLevel()
+            )
+        )
     end
 
     # Test 12: Verbosity with multi-dimensional integrals
@@ -168,9 +178,11 @@ using Test
 
     # Test 13: Verbosity persists in cache
     @testset "Verbosity Persistence in Cache" begin
-        cache = init(test_prob, test_alg; verbose = IntegralVerbosity(
-            convergence_result = InfoLevel()
-        ))
+        cache = init(
+            test_prob, test_alg; verbose = IntegralVerbosity(
+                convergence_result = InfoLevel()
+            )
+        )
 
         # Solve and verify it works
         sol = solve!(cache)
