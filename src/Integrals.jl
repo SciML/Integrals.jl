@@ -11,7 +11,9 @@ using SciMLBase: init, solve!
 using LinearAlgebra: LinearAlgebra, /, norm
 using Random: Random
 using ArrayInterface: ArrayInterface
-using SciMLLogging: SciMLLogging, @SciMLMessage, Silent, DebugLevel, InfoLevel, WarnLevel, ErrorLevel, @verbosity_specifier, AbstractVerbositySpecifier
+using SciMLLogging: SciMLLogging, @SciMLMessage, Silent, DebugLevel, 
+        InfoLevel, WarnLevel, ErrorLevel, @verbosity_specifier, AbstractVerbositySpecifier,
+        None, Minimal, Standard, Detailed, All
 
 include("verbosity.jl")
 include("algorithms_meta.jl")
@@ -149,7 +151,7 @@ function __solve(
     cacheval = cache.cacheval.alg
     g, vdomain = alg.fu2gv(cache.f, udomain)
 
-    @SciMLMessage(@lazy("Domain transformed: $udomain → $vdomain"),
+    @SciMLMessage(lazy"Domain transformed: $udomain → $vdomain",
                   cache.verbosity, :domain_transformation)
 
     _cache = IntegralCache(
@@ -202,7 +204,7 @@ function __solvebp_call(
         reltol = 1.0e-8, abstol = 1.0e-8,
         maxiters = typemax(Int)
     )
-    @SciMLMessage(@lazy("QuadGKJL: starting 1D integration with reltol=$reltol, abstol=$abstol, order=$(alg.order)"),
+    @SciMLMessage(lazy"QuadGKJL: starting 1D integration with reltol=$reltol, abstol=$abstol, order=$(alg.order)",
                   cache.verbosity, :algorithm_selection)
 
     prob = build_problem(cache)
@@ -280,7 +282,7 @@ function __solvebp_call(
             )
         end
     end
-    @SciMLMessage(@lazy("QuadGKJL converged: val=$val, err=$err"), cache.verbosity, :convergence_result)
+    @SciMLMessage(lazy"QuadGKJL converged: val=$val, err=$err", cache.verbosity, :convergence_result)
     return SciMLBase.build_solution(prob, alg, val, err, retcode = ReturnCode.Success)
 end
 
@@ -295,7 +297,7 @@ function __solvebp_call(
         reltol = 1.0e-8, abstol = 1.0e-8,
         maxiters = typemax(Int)
     )
-    @SciMLMessage(@lazy("HCubatureJL: starting multidimensional h-adaptive integration with reltol=$reltol, abstol=$abstol, initdiv=$(alg.initdiv)"),
+    @SciMLMessage(lazy"HCubatureJL: starting multidimensional h-adaptive integration with reltol=$reltol, abstol=$abstol, initdiv=$(alg.initdiv)",
                   cache.verbosity, :algorithm_selection)
 
     prob = build_problem(cache)
@@ -337,7 +339,7 @@ function __solvebp_call(
             initdiv = alg.initdiv
         )::Tuple{typeof(ret), typeof(alg.norm(ret))}
     end
-    @SciMLMessage(@lazy("HCubatureJL converged: val=$val, err=$err"), cache.verbosity, :convergence_result)
+    @SciMLMessage(lazy"HCubatureJL converged: val=$val, err=$err", cache.verbosity, :convergence_result)
     return SciMLBase.build_solution(prob, alg, val, err, retcode = ReturnCode.Success)
 end
 
@@ -346,7 +348,7 @@ function __solvebp_call(
         reltol = 1.0e-4, abstol = 1.0e-4,
         maxiters = 1000
     )
-    @SciMLMessage(@lazy("VEGAS: starting Monte Carlo integration with nbins=$(alg.nbins), ncalls=$(alg.ncalls), maxiters=$maxiters"),
+    @SciMLMessage(lazy"VEGAS: starting Monte Carlo integration with nbins=$(alg.nbins), ncalls=$(alg.ncalls), maxiters=$maxiters",
                   cache.verbosity, :algorithm_selection)
 
     prob = build_problem(cache)
@@ -356,7 +358,7 @@ function __solvebp_call(
 
     if alg.seed !== nothing
         Random.seed!(alg.seed)
-        @SciMLMessage(@lazy("Random seed set to $(alg.seed)"), cache.verbosity, :algorithm_selection)
+        @SciMLMessage(lazy"Random seed set to $(alg.seed)", cache.verbosity, :algorithm_selection)
     end
     if f isa BatchIntegralFunction
         @SciMLMessage("Using batch Monte Carlo sampling", cache.verbosity, :batch_mode)
@@ -408,7 +410,7 @@ function __solvebp_call(
     val, err,
         chi = out isa Tuple ? out :
         (out.integral_estimate, out.standard_deviation, out.chi_squared_average)
-    @SciMLMessage(@lazy("VEGAS converged: val=$val, err=$err, χ²=$chi"), cache.verbosity, :convergence_result)
+    @SciMLMessage(lazy"VEGAS converged: val=$val, err=$err, χ²=$chi", cache.verbosity, :convergence_result)
     return SciMLBase.build_solution(prob, alg, val, err, chi = chi, retcode = ReturnCode.Success)
 end
 
