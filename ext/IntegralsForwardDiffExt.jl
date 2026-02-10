@@ -40,7 +40,7 @@ function Integrals.__solvebp(
             sensealg,
             cache.kwargs,
             cache.cacheval,
-            cache.verbose
+            cache.verbosity
         )
         Integrals.__solvebp_call(dcache, alg, sensealg, domain, p; kwargs...)
     else
