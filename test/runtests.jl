@@ -18,6 +18,7 @@ if GROUP == "All" || GROUP == "Core"
     @time @safetestset "Gaussian Quadrature Tests" include("gaussian_quadrature_tests.jl")
     @time @safetestset "Sampled Integration Tests" include("sampled_tests.jl")
     @time @safetestset "QuadratureFunction Tests" include("quadrule_tests.jl")
+    @time @safetestset "Verbosity Tests" include("verbosity_tests.jl")
     @time @safetestset "Alternative Transformation Tests" include("alt_transformation_tests.jl")
     @time @safetestset "HAdaptiveIntegration Tests" include("hadaptiveintegration_tests.jl")
 end
