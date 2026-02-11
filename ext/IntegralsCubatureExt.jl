@@ -17,7 +17,7 @@ function Integrals.__solvebp_call(
     mid = (lb + ub) / 2
 
     @SciMLMessage(
-        lazy"$(typeof(alg).name.name): starting $(mid isa Number ? "1D" : "multi-dimensional") integration with reltol=$reltol, abstol=$abstol",
+        lazy"$(typeof(alg).name.name): starting $(mid isa Number ? \"1D\" : \"multi-dimensional\") integration with reltol=$reltol, abstol=$abstol",
         verbose, :algorithm_selection
     )
 

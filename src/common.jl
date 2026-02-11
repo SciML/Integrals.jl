@@ -140,7 +140,6 @@ end
 function SciMLBase.solve!(cache::IntegralCache)
     return __solve(
         cache, cache.alg, cache.sensealg, cache.domain, cache.p;
-        verbose = cache.verbosity,
         cache.kwargs...
     )
 end
@@ -151,7 +150,7 @@ end
 
 # fallback method for existing algorithms which use no cache
 function __solvebp_call(cache::IntegralCache, args...; kwargs...)
-    return __solvebp_call(build_problem(cache), args...; kwargs...)
+    return __solvebp_call(build_problem(cache), args...; verbose = cache.verbosity, kwargs...)
 end
 
 mutable struct SampledIntegralCache{Y, X, D, PK, A, K, Tc, VT}
