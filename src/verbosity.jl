@@ -7,6 +7,7 @@
         :convergence_result,
         :batch_mode,
         :buffer_allocation,
+        :weight_computation,
         :deprecations,
     )
 
@@ -19,6 +20,7 @@
             convergence_result = Silent(),
             batch_mode = Silent(),
             buffer_allocation = Silent(),
+            weight_computation = Silent(),
             deprecations = Silent(),
         ),
         Minimal = (
@@ -29,6 +31,7 @@
             convergence_result = Silent(),
             batch_mode = Silent(),
             buffer_allocation = Silent(),
+            weight_computation = Silent(),
             deprecations = WarnLevel(),
         ),
         Standard = (
@@ -39,6 +42,7 @@
             convergence_result = Silent(),
             batch_mode = Silent(),
             buffer_allocation = Silent(),
+            weight_computation = Silent(),
             deprecations = WarnLevel(),
         ),
         Detailed = (
@@ -49,6 +53,7 @@
             convergence_result = InfoLevel(),
             batch_mode = InfoLevel(),
             buffer_allocation = InfoLevel(),
+            weight_computation = InfoLevel(),
             deprecations = WarnLevel(),
         ),
         All = (
@@ -59,13 +64,14 @@
             convergence_result = InfoLevel(),
             batch_mode = InfoLevel(),
             buffer_allocation = InfoLevel(),
+            weight_computation = InfoLevel(),
             deprecations = WarnLevel(),
         ),
     )
 
     groups = (
         solver = (:iteration_progress, :convergence_result),
-        setup = (:cache_init, :domain_transformation, :algorithm_selection),
+        setup = (:cache_init, :domain_transformation, :algorithm_selection, :weight_computation),
         debug = (:batch_mode, :buffer_allocation),
     )
 end
@@ -84,6 +90,7 @@ Verbosity specifier for controlling logging output in Integrals.jl.
 - `:convergence_result` - Final integration result with value, error estimate, and tolerances
 - `:batch_mode` - Batch evaluation mode selection (in-place vs out-of-place)
 - `:buffer_allocation` - Pre-allocated buffer creation for reusable caches
+- `:weight_computation` - Quadrature weight calculation for sampled integration methods
 - `:deprecations` - Deprecation warnings for outdated API usage
 
 # Presets
