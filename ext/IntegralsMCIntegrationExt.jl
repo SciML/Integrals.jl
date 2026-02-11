@@ -15,10 +15,9 @@ function Integrals.__solvebp_call(
     mid = (lb + ub) / 2
     tmp = vec(collect(mid))
     var = Continuous(vec([tuple(a, b) for (a, b) in zip(lb, ub)]))
-    dof = var isa Continuous ? [1] : ones(Int, length(var))
 
     @SciMLMessage(
-        lazy"VEGASMC: starting Markov-chain Monte Carlo integration with maxiters=$maxiters, dof=$(length(dof))",
+        lazy"VEGASMC: starting Markov-chain Monte Carlo integration with maxiters=$maxiters",
         verbose, :algorithm_selection
     )
 
@@ -49,6 +48,7 @@ function Integrals.__solvebp_call(
                 y isa AbstractArray ? vec(y) : y
             end
         end
+        dof = ones(Int, length(prototype)) # each composite Continuous var gets 1 dof
         res = integrate(
             _f; var, dof, inplace = isinplace(prob), type = eltype(prototype),
             solver = :vegasmc, niter = maxiters, verbose = -2, print = -2, alg.kws...
