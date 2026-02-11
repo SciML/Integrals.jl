@@ -3,16 +3,23 @@ module IntegralsCubatureExt
 using Integrals, Cubature
 
 using Integrals: scale_x, scale_x!, CubatureJLh, CubatureJLp, AbstractCubatureJLAlgorithm
+using SciMLLogging: @SciMLMessage
 
 function Integrals.__solvebp_call(
         prob::IntegralProblem,
         alg::AbstractCubatureJLAlgorithm,
         sensealg, domain, p;
         reltol = 1.0e-8, abstol = 1.0e-8,
-        maxiters = typemax(Int)
+        maxiters = typemax(Int),
+        verbose = Integrals.IntegralVerbosity()
     )
     lb, ub = domain
     mid = (lb + ub) / 2
+
+    @SciMLMessage(
+        lazy"$(typeof(alg).name.name): starting $(mid isa Number ? "1D" : "multi-dimensional") integration with reltol=$reltol, abstol=$abstol",
+        verbose, :algorithm_selection
+    )
 
     # we get to pick fdim or not based on the IntegralFunction and its output dimensions
     f = prob.f
@@ -21,8 +28,11 @@ function Integrals.__solvebp_call(
     @assert eltype(prototype) <: Real "Cubature.jl is only compatible with real-valued integrands"
 
     if f isa BatchIntegralFunction
+        @SciMLMessage("Using batch evaluation mode", verbose, :batch_mode)
+
         if prototype isa AbstractVector # this branch could be omitted since the following one should work similarly
             if isinplace(f)
+                @SciMLMessage("Using in-place evaluation", verbose, :batch_mode)
                 # dx is a Vector, but we provide the integrand a vector of the same type as
                 # y, which needs to be resized since the number of batch points changes.
                 _f = let y = similar(prototype)
@@ -72,6 +82,7 @@ function Integrals.__solvebp_call(
             fsize = size(prototype)[begin:(end - 1)]
             fdim = prod(fsize)
             if isinplace(f)
+                @SciMLMessage("Using in-place evaluation", verbose, :batch_mode)
                 # dx is a Matrix, but to provide a buffer of the same type as y, we make
                 # would like to make views of a larger buffer, but CubatureJL doesn't set
                 # a hard limit for max_batch, so we allocate a new buffer with the needed size
@@ -207,6 +218,12 @@ function Integrals.__solvebp_call(
             error("IntegralFunctions must be scalars or arrays for Cubature.jl")
         end
     end
+
+    @SciMLMessage(
+        lazy"$(typeof(alg).name.name) converged: val=$val, err=$err",
+        verbose, :convergence_result
+    )
+
     return SciMLBase.build_solution(prob, alg, val, err, retcode = ReturnCode.Success)
 end
 

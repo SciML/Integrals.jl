@@ -4,13 +4,15 @@ using Integrals, Cuba
 import Integrals: transformation_if_inf,
     scale_x, scale_x!, CubaVegas, AbstractCubaAlgorithm,
     CubaSUAVE, CubaDivonne, CubaCuhre
+using SciMLLogging: @SciMLMessage
 
 function Integrals.__solvebp_call(
         prob::IntegralProblem, alg::AbstractCubaAlgorithm,
         sensealg,
         domain, p;
         reltol = 1.0e-4, abstol = 1.0e-12,
-        maxiters = 1000000
+        maxiters = 1000000,
+        verbose = Integrals.IntegralVerbosity()
     )
     @assert maxiters >= 1000 "maxiters for $alg should be larger than 1000"
     lb, ub = domain
@@ -30,6 +32,11 @@ function Integrals.__solvebp_call(
         # batching
         nvec > 1 ||
             throw(ArgumentError("BatchIntegralFunction must take multiple batch points"))
+
+        @SciMLMessage(
+            lazy"Using batch evaluation with nvec=$nvec points per call",
+            verbose, :batch_mode
+        )
 
         if mid isa Real
             _x = zeros(typeof(mid), nvec)
@@ -72,6 +79,28 @@ function Integrals.__solvebp_call(
         else
             _f = (u, y) -> y .= Iterators.flatten(f(scale(u), p)) .* vol
         end
+    end
+
+    if alg isa CubaVegas
+        @SciMLMessage(
+            lazy"CubaVegas: starting Monte Carlo integration with ndim=$ndim, ncomp=$ncomp, rtol=$reltol, atol=$abstol, nstart=$(alg.nstart), nincrease=$(alg.nincrease)",
+            verbose, :algorithm_selection
+        )
+    elseif alg isa CubaSUAVE
+        @SciMLMessage(
+            lazy"CubaSUAVE: starting SUAVE integration with ndim=$ndim, ncomp=$ncomp, rtol=$reltol, atol=$abstol, nnew=$(alg.nnew)",
+            verbose, :algorithm_selection
+        )
+    elseif alg isa CubaDivonne
+        @SciMLMessage(
+            lazy"CubaDivonne: starting Divonne integration with ndim=$ndim, ncomp=$ncomp, rtol=$reltol, atol=$abstol, maxpass=$(alg.maxpass)",
+            verbose, :algorithm_selection
+        )
+    elseif alg isa CubaCuhre
+        @SciMLMessage(
+            lazy"CubaCuhre: starting Cuhre integration with ndim=$ndim, ncomp=$ncomp, rtol=$reltol, atol=$abstol, key=$(alg.key)",
+            verbose, :algorithm_selection
+        )
     end
 
     out = if alg isa CubaVegas
@@ -126,6 +155,11 @@ function Integrals.__solvebp_call(
             reshape(out.integral, size(prototype))
         end
     end
+
+    @SciMLMessage(
+        lazy"$(typeof(alg).name.name) converged: val=$val, err=$(out.error), prob=$(out.probability), neval=$(out.neval)",
+        verbose, :convergence_result
+    )
 
     return SciMLBase.build_solution(
         prob, alg, val, out.error,

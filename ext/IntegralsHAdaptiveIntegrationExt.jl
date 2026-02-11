@@ -4,6 +4,8 @@ using Integrals, HAdaptiveIntegration
 
 using Integrals: HAdaptiveIntegrationJL
 
+using SciMLLogging: @SciMLMessage
+
 function _domain_from_bounds(lb::Number, ub::Number)
     return Segment(lb, ub)
 end
@@ -42,6 +44,11 @@ function Integrals.__solvebp_call(
     prob = Integrals.build_problem(cache)
     f = cache.f
 
+    @SciMLMessage(
+        lazy"HAdaptiveIntegrationJL: starting h-adaptive integration with reltol=$reltol, abstol=$abstol, maxsubdiv=$maxiters",
+        cache.verbosity, :algorithm_selection
+    )
+
     @assert f isa IntegralFunction "HAdaptiveIntegrationJL does not support BatchIntegralFunction"
     @assert !isinplace(f) "HAdaptiveIntegrationJL does not support in-place integrands"
 
@@ -53,6 +60,11 @@ function Integrals.__solvebp_call(
         _domain_from_bounds(lb, ub)
     end
 
+    @SciMLMessage(
+        lazy"Constructed $(typeof(hadaptive_domain).name.name) domain from bounds",
+        cache.verbosity, :domain_transformation
+    )
+
     _f = if hadaptive_domain isa Segment
         x -> f(x[1], p)
     else
@@ -63,6 +75,11 @@ function Integrals.__solvebp_call(
         _f, hadaptive_domain;
         atol = abstol, rtol = reltol, maxsubdiv = maxiters,
         alg.kws...
+    )
+
+    @SciMLMessage(
+        lazy"HAdaptiveIntegrationJL converged: val=$val, err=$err",
+        cache.verbosity, :convergence_result
     )
 
     return SciMLBase.build_solution(prob, alg, val, err, retcode = ReturnCode.Success)

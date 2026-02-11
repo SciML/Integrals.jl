@@ -137,11 +137,27 @@ function __solvebp_call(
     data = cache.y
     grid = cache.x
     if cache.isfresh
+        @SciMLMessage(
+            lazy"Computing $(typeof(alg).name.name) weights for grid with $(length(grid)) points",
+            cache.verbosity, :weight_computation
+        )
         cache.cacheval = find_weights(grid, alg)
         cache.isfresh = false
     end
     weights = cache.cacheval
+
+    @SciMLMessage(
+        lazy"$(typeof(alg).name.name): evaluating sampled integral",
+        cache.verbosity, :algorithm_selection
+    )
+
     I = evalrule(data, weights, dim)
+
+    @SciMLMessage(
+        lazy"$(typeof(alg).name.name) completed: val=$I",
+        cache.verbosity, :convergence_result
+    )
+
     prob = build_problem(cache)
     return SciMLBase.build_solution(prob, alg, I, err, retcode = ReturnCode.Success)
 end
