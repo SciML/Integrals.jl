@@ -140,6 +140,7 @@ end
 function SciMLBase.solve!(cache::IntegralCache)
     return __solve(
         cache, cache.alg, cache.sensealg, cache.domain, cache.p;
+        verbose = cache.verbosity,
         cache.kwargs...
     )
 end
@@ -153,7 +154,7 @@ function __solvebp_call(cache::IntegralCache, args...; kwargs...)
     return __solvebp_call(build_problem(cache), args...; kwargs...)
 end
 
-mutable struct SampledIntegralCache{Y, X, D, PK, A, K, Tc}
+mutable struct SampledIntegralCache{Y, X, D, PK, A, K, Tc, VT}
     y::Y
     x::X
     dim::D
@@ -162,6 +163,7 @@ mutable struct SampledIntegralCache{Y, X, D, PK, A, K, Tc}
     kwargs::K
     isfresh::Bool   # state of whether weights have been calculated
     cacheval::Tc    # store alg weights here
+    verbosity::VT
 end
 
 function Base.setproperty!(cache::SampledIntegralCache, name::Symbol, x)
@@ -174,11 +176,13 @@ end
 function SciMLBase.init(
         prob::SampledIntegralProblem,
         alg::SciMLBase.AbstractIntegralAlgorithm;
+        verbose = IntegralVerbosity(),
         kwargs...
     )
     NamedTuple(kwargs) == NamedTuple() ||
         throw(ArgumentError("There are no keyword arguments allowed to `solve`"))
 
+    verb_spec = _process_verbose_param(verbose)
     cacheval = init_cacheval(alg, prob)
     isfresh = true
 
@@ -190,7 +194,8 @@ function SciMLBase.init(
         alg,
         kwargs,
         isfresh,
-        cacheval
+        cacheval,
+        verb_spec
     )
 end
 
