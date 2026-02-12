@@ -128,6 +128,7 @@ These common arguments are:
   - `maxiters` (the maximum number of iterations)
   - `abstol` (absolute tolerance in changes of the objective value)
   - `reltol` (relative tolerance  in changes of the objective value)
+  - `verbose` (verbosity control via [`IntegralVerbosity`](@ref); defaults to `IntegralVerbosity()`)
 """
 function SciMLBase.solve(
         prob::IntegralProblem,

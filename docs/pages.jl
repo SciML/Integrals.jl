@@ -11,6 +11,7 @@ pages = [
         "basics/IntegralFunction.md",
         "basics/SampledIntegralProblem.md",
         "basics/solve.md",
+        "basics/verbosity.md",
         "basics/FAQ.md",
     ],
     "Solvers" => Any["solvers/IntegralSolvers.md"],
