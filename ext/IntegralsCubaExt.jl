@@ -12,7 +12,7 @@ function Integrals.__solvebp_call(
         domain, p;
         reltol = 1.0e-4, abstol = 1.0e-12,
         maxiters = 1000000,
-        verbose = Integrals.IntegralVerbosity()
+        verbose = Integrals.DEFAULT_VERBOSE
     )
     @assert maxiters >= 1000 "maxiters for $alg should be larger than 1000"
     lb, ub = domain

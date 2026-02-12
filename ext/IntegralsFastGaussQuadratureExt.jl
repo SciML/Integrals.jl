@@ -36,7 +36,7 @@ function Integrals.__solvebp_call(
         sensealg, domain, p;
         reltol = nothing, abstol = nothing,
         maxiters = nothing,
-        verbose = Integrals.IntegralVerbosity()
+        verbose = Integrals.DEFAULT_VERBOSE
     ) where {C}
     if !all(isone ∘ length, domain)
         error("GaussLegendre only accepts one-dimensional quadrature problems.")

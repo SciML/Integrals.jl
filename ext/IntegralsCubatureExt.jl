@@ -11,7 +11,7 @@ function Integrals.__solvebp_call(
         sensealg, domain, p;
         reltol = 1.0e-8, abstol = 1.0e-8,
         maxiters = typemax(Int),
-        verbose = Integrals.IntegralVerbosity()
+        verbose = Integrals.DEFAULT_VERBOSE
     )
     lb, ub = domain
     mid = (lb + ub) / 2

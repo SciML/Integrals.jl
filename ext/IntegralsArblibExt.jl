@@ -7,7 +7,7 @@ using SciMLLogging: @SciMLMessage
 function Integrals.__solvebp_call(
         prob::IntegralProblem, alg::ArblibJL, sensealg, domain, p;
         reltol = 1.0e-8, abstol = 1.0e-8, maxiters = nothing,
-        verbose = Integrals.IntegralVerbosity()
+        verbose = Integrals.DEFAULT_VERBOSE
     )
     lb_, ub_ = domain
     lb, ub = map(first, domain)

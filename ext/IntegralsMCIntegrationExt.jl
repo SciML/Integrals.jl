@@ -9,7 +9,7 @@ _oftype(y, x) = oftype(y, x)
 function Integrals.__solvebp_call(
         prob::IntegralProblem, alg::VEGASMC, sensealg, domain, p;
         reltol = nothing, abstol = nothing, maxiters = 1000,
-        verbose = Integrals.IntegralVerbosity()
+        verbose = Integrals.DEFAULT_VERBOSE
     )
     lb, ub = domain
     mid = (lb + ub) / 2
