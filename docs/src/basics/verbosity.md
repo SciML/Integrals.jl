@@ -30,5 +30,5 @@ sol = solve(prob, QuadGKJL())  # equivalent to verbose = IntegralVerbosity()
 ## API Reference
 
 ```@docs
-IntegralVerbosity
+Integrals.IntegralVerbosity
 ```
