@@ -10,6 +10,7 @@ Pass an `IntegralVerbosity` object to `solve` or `init` using the `verbose` keyw
 
 ```julia
 using Integrals
+using Integrals: IntegralVerbosity
 
 # Define an integral problem
 f(x, p) = x^2  # p is unused but required by the IntegralProblem interface

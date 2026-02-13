@@ -431,6 +431,5 @@ export ArblibJL
 export HAdaptiveIntegrationJL
 export ChangeOfVariables
 export transformation_if_inf, transformation_tan_inf, transformation_cot_inf
-export IntegralVerbosity
 
 end # module
