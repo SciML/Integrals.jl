@@ -2,6 +2,7 @@ module IntegralsFastGaussQuadratureExt
 using Integrals
 import FastGaussQuadrature
 import FastGaussQuadrature: gausslegendre
+using SciMLLogging: @SciMLMessage
 
 using LinearAlgebra
 
@@ -34,25 +35,39 @@ function Integrals.__solvebp_call(
         prob::IntegralProblem, alg::Integrals.GaussLegendre{C},
         sensealg, domain, p;
         reltol = nothing, abstol = nothing,
-        maxiters = nothing
+        maxiters = nothing,
+        verbose = Integrals.DEFAULT_VERBOSE
     ) where {C}
     if !all(isone ∘ length, domain)
         error("GaussLegendre only accepts one-dimensional quadrature problems.")
     end
     @assert prob.f isa IntegralFunction
     @assert !isinplace(prob)
+
     lb, ub = map(only, domain)
+
     if C
+        @SciMLMessage(
+            lazy"GaussLegendre: composite Gauss-Legendre quadrature with $(length(alg.nodes)) nodes and $(alg.subintervals) subintervals",
+            verbose, :algorithm_selection)
         val = composite_gauss_legendre(
             prob.f, prob.p, lb, ub,
             alg.nodes, alg.weights, alg.subintervals
         )
     else
+        @SciMLMessage(lazy"GaussLegendre: Gauss-Legendre quadrature with $(length(alg.nodes)) nodes",
+            verbose, :algorithm_selection)
         val = gauss_legendre(
             prob.f, prob.p, lb, ub,
             alg.nodes, alg.weights
         )
     end
+
+    @SciMLMessage(
+        lazy"GaussLegendre completed: val=$val",
+        verbose, :convergence_result
+    )
+
     err = nothing
     return SciMLBase.build_solution(prob, alg, val, err, retcode = ReturnCode.Success)
 end

@@ -1,6 +1,7 @@
 module IntegralsForwardDiffExt
 using Integrals
 using ForwardDiff
+using SciMLLogging: @SciMLMessage
 ### Forward-Mode AD Intercepts
 
 function Integrals._evaluate!(
@@ -39,7 +40,8 @@ function Integrals.__solvebp(
             alg,
             sensealg,
             cache.kwargs,
-            cache.cacheval
+            cache.cacheval,
+            cache.verbosity
         )
         Integrals.__solvebp_call(dcache, alg, sensealg, domain, p; kwargs...)
     else

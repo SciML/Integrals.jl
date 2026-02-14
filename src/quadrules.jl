@@ -34,8 +34,18 @@ function Integrals.__solvebp_call(
     end
     @assert prob.f isa IntegralFunction
 
+    @SciMLMessage(
+        lazy"QuadratureRule: evaluating with $(length(cache.cacheval[1])) nodes",
+        cache.verbosity, :algorithm_selection
+    )
+
     lb, ub = domain
     val = evalrule(cache.f, cache.p, lb, ub, cache.cacheval...)
+
+    @SciMLMessage(
+        lazy"QuadratureRule completed: val=$val",
+        cache.verbosity, :convergence_result
+    )
 
     err = nothing
     return SciMLBase.build_solution(prob, alg, val, err, retcode = ReturnCode.Success)

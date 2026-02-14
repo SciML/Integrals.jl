@@ -1,18 +1,25 @@
 module IntegralsMCIntegrationExt
 
 using MCIntegration, Integrals
+using SciMLLogging: @SciMLMessage
 
 _oftype(::Number, x) = only(x)
 _oftype(y, x) = oftype(y, x)
 
 function Integrals.__solvebp_call(
         prob::IntegralProblem, alg::VEGASMC, sensealg, domain, p;
-        reltol = nothing, abstol = nothing, maxiters = 1000
+        reltol = nothing, abstol = nothing, maxiters = 1000,
+        verbose = Integrals.DEFAULT_VERBOSE
     )
     lb, ub = domain
     mid = (lb + ub) / 2
     tmp = vec(collect(mid))
     var = Continuous(vec([tuple(a, b) for (a, b) in zip(lb, ub)]))
+
+    @SciMLMessage(
+        lazy"VEGASMC: starting Markov-chain Monte Carlo integration with maxiters=$maxiters",
+        verbose, :algorithm_selection
+    )
 
     f = prob.f
     return if f isa BatchIntegralFunction
@@ -20,6 +27,7 @@ function Integrals.__solvebp_call(
     else
         prototype = Integrals.get_prototype(prob)
         if isinplace(prob)
+            @SciMLMessage("Using in-place evaluation", verbose, :batch_mode)
             _f = let y = similar(prototype)
                 (u, _y, c) -> begin
                     n = 0
@@ -53,6 +61,12 @@ function Integrals.__solvebp_call(
             map(a -> reshape(a, size(prototype)), (res.mean, res.stdev, res.chi2))
         end
         chi::typeof(prototype) = map(sqrt, chi2)
+
+        @SciMLMessage(
+            lazy"VEGASMC converged: val=$out, err=$err, χ²=$chi",
+            verbose, :convergence_result
+        )
+
         SciMLBase.build_solution(
             prob, alg, out, err, chi = chi,
             retcode = ReturnCode.Success

@@ -1,4 +1,4 @@
-mutable struct IntegralCache{iip, F, D, P, PK, A, S, K, Tc}
+mutable struct IntegralCache{iip, F, D, P, PK, A, S, K, Tc, VT}
     iip::Val{iip}
     f::F
     domain::D
@@ -8,6 +8,7 @@ mutable struct IntegralCache{iip, F, D, P, PK, A, S, K, Tc}
     sensealg::S
     kwargs::K
     cacheval::Tc    # store alg cache here
+    verbosity::VT
 end
 
 SciMLBase.isinplace(::IntegralCache{iip}) where {iip} = iip
@@ -18,12 +19,20 @@ function SciMLBase.init(
         prob::IntegralProblem{iip},
         alg::SciMLBase.AbstractIntegralAlgorithm;
         sensealg = ReCallVJP(ZygoteVJP()),
-        do_inf_transformation = nothing, kws...
+        do_inf_transformation = nothing,
+        verbose = IntegralVerbosity(),
+        kws...
     ) where {iip}
     kwargs = pairs((; prob.kwargs..., kws...))
+
     checkkwargs(kwargs...)
+    verb_spec = _process_verbose_param(verbose)
+
     do_inf_transformation === nothing ||
-        @warn "do_inf_transformation is deprecated. All integral problems are transformed"
+        @SciMLMessage(
+        "do_inf_transformation is deprecated. All integral problems are transformed",
+        verb_spec, :deprecations
+    )
     _alg = if alg isa ChangeOfVariables
         alg
     elseif prob.domain isa Tuple
@@ -31,7 +40,10 @@ function SciMLBase.init(
     else
         alg
     end
+
     cacheval = init_cacheval(_alg, prob)
+
+    @SciMLMessage("Cache initialization complete", verb_spec, :cache_init)
 
     return IntegralCache{
         iip,
@@ -43,6 +55,7 @@ function SciMLBase.init(
         typeof(sensealg),
         typeof(kwargs),
         typeof(cacheval),
+        typeof(verb_spec),
     }(
         Val(iip),
         prob.f,
@@ -53,6 +66,8 @@ function SciMLBase.init(
         sensealg,
         kwargs,
         cacheval
+        ,
+        verb_spec
     )
 end
 
@@ -70,12 +85,12 @@ function Base.getproperty(cache::IntegralCache, name::Symbol)
 end
 function Base.setproperty!(cache::IntegralCache, name::Symbol, x)
     if name === :lb
-        @warn "updating lb is deprecated by replacing domain"
+        @SciMLMessage("updating lb is deprecated by replacing domain", cache.verbosity, :deprecations)
         lb, ub = cache.domain
         setfield!(cache, :domain, (oftype(lb, x), ub))
         return x
     elseif name === :ub
-        @warn "updating ub is deprecated by replacing domain"
+        @SciMLMessage("updating ub is deprecated by replacing domain", cache.verbosity, :deprecations)
         lb, ub = cache.domain
         setfield!(cache, :domain, (lb, oftype(ub, x)))
         return x
@@ -113,6 +128,7 @@ These common arguments are:
   - `maxiters` (the maximum number of iterations)
   - `abstol` (absolute tolerance in changes of the objective value)
   - `reltol` (relative tolerance  in changes of the objective value)
+  - `verbose` (verbosity control via [`IntegralVerbosity`](@ref); defaults to `IntegralVerbosity()`)
 """
 function SciMLBase.solve(
         prob::IntegralProblem,
@@ -135,10 +151,10 @@ end
 
 # fallback method for existing algorithms which use no cache
 function __solvebp_call(cache::IntegralCache, args...; kwargs...)
-    return __solvebp_call(build_problem(cache), args...; kwargs...)
+    return __solvebp_call(build_problem(cache), args...; verbose = cache.verbosity, kwargs...)
 end
 
-mutable struct SampledIntegralCache{Y, X, D, PK, A, K, Tc}
+mutable struct SampledIntegralCache{Y, X, D, PK, A, K, Tc, VT}
     y::Y
     x::X
     dim::D
@@ -147,6 +163,7 @@ mutable struct SampledIntegralCache{Y, X, D, PK, A, K, Tc}
     kwargs::K
     isfresh::Bool   # state of whether weights have been calculated
     cacheval::Tc    # store alg weights here
+    verbosity::VT
 end
 
 function Base.setproperty!(cache::SampledIntegralCache, name::Symbol, x)
@@ -159,11 +176,13 @@ end
 function SciMLBase.init(
         prob::SampledIntegralProblem,
         alg::SciMLBase.AbstractIntegralAlgorithm;
+        verbose = IntegralVerbosity(),
         kwargs...
     )
     NamedTuple(kwargs) == NamedTuple() ||
         throw(ArgumentError("There are no keyword arguments allowed to `solve`"))
 
+    verb_spec = _process_verbose_param(verbose)
     cacheval = init_cacheval(alg, prob)
     isfresh = true
 
@@ -175,7 +194,8 @@ function SciMLBase.init(
         alg,
         kwargs,
         isfresh,
-        cacheval
+        cacheval,
+        verb_spec
     )
 end
 

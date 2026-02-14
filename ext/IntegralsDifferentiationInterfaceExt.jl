@@ -6,6 +6,7 @@ using DifferentiationInterface
 using ADTypes: ADTypes, AbstractADType
 import ChainRulesCore
 import ChainRulesCore: Tangent, NoTangent, ProjectTo
+using SciMLLogging: @SciMLMessage
 
 batch_unwrap(x::AbstractArray) = dropdims(x; dims = ndims(x))
 
