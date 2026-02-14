@@ -44,20 +44,19 @@ function Integrals.__solvebp_call(
     @assert prob.f isa IntegralFunction
     @assert !isinplace(prob)
 
-    msg = if C
-        "GaussLegendre: composite Gauss-Legendre quadrature with $(length(alg.nodes)) nodes and $(alg.subintervals) subintervals"
-    else
-        "GaussLegendre: Gauss-Legendre quadrature with $(length(alg.nodes)) nodes"
-    end
-    @SciMLMessage(msg, verbose, :algorithm_selection)
-
     lb, ub = map(only, domain)
+
     if C
+        @SciMLMessage(
+            lazy"GaussLegendre: composite Gauss-Legendre quadrature with $(length(alg.nodes)) nodes and $(alg.subintervals) subintervals",
+            verbose, :algorithm_selection)
         val = composite_gauss_legendre(
             prob.f, prob.p, lb, ub,
             alg.nodes, alg.weights, alg.subintervals
         )
     else
+        @SciMLMessage(lazy"GaussLegendre: Gauss-Legendre quadrature with $(length(alg.nodes)) nodes",
+            verbose, :algorithm_selection)
         val = gauss_legendre(
             prob.f, prob.p, lb, ub,
             alg.nodes, alg.weights

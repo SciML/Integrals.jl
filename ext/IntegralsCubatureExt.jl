@@ -29,10 +29,8 @@ function Integrals.__solvebp_call(
 
     if f isa BatchIntegralFunction
         @SciMLMessage("Using batch evaluation mode", verbose, :batch_mode)
-
         if prototype isa AbstractVector # this branch could be omitted since the following one should work similarly
             if isinplace(f)
-                @SciMLMessage("Using in-place evaluation", verbose, :batch_mode)
                 # dx is a Vector, but we provide the integrand a vector of the same type as
                 # y, which needs to be resized since the number of batch points changes.
                 _f = let y = similar(prototype)
@@ -82,7 +80,6 @@ function Integrals.__solvebp_call(
             fsize = size(prototype)[begin:(end - 1)]
             fdim = prod(fsize)
             if isinplace(f)
-                @SciMLMessage("Using in-place evaluation", verbose, :batch_mode)
                 # dx is a Matrix, but to provide a buffer of the same type as y, we make
                 # would like to make views of a larger buffer, but CubatureJL doesn't set
                 # a hard limit for max_batch, so we allocate a new buffer with the needed size

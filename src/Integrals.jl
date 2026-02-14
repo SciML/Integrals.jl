@@ -317,7 +317,6 @@ function __solvebp_call(
 
     @assert f isa IntegralFunction
     if isinplace(f)
-        @SciMLMessage("Wrapping in-place function for HCubature compatibility", cache.verbosity, :batch_mode)
         # allocate a new output array at each evaluation since HCubature.jl doesn't support
         # inplace ops
         prototype = f.integrand_prototype

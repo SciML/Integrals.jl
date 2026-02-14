@@ -22,7 +22,6 @@ function Integrals.__solvebp_call(
     )
 
     if isinplace(prob)
-        @SciMLMessage("Using in-place ball arithmetic evaluation", verbose, :batch_mode)
         res = Acb(0)
         @assert res isa eltype(prob.f.integrand_prototype) "Arblib require inplace prototypes to store Acb elements"
         y_ = similar(prob.f.integrand_prototype)

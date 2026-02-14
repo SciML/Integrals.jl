@@ -88,7 +88,7 @@ Verbosity specifier for controlling logging output in Integrals.jl.
 - `:algorithm_selection` - Which algorithm is being used and its parameters
 - `:iteration_progress` - Per-iteration updates during adaptive integration (can be verbose)
 - `:convergence_result` - Final integration result with value, error estimate, and tolerances
-- `:batch_mode` - Batch evaluation mode selection (in-place vs out-of-place)
+- `:batch_mode` - Batch evaluation mode selection
 - `:buffer_allocation` - Pre-allocated buffer creation for reusable caches
 - `:weight_computation` - Quadrature weight calculation for sampled integration methods
 - `:deprecations` - Deprecation warnings for outdated API usage
