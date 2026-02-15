@@ -3,7 +3,7 @@ using Mooncake
 using LinearAlgebra: dot
 using Integrals, SciMLBase, QuadGK
 using Mooncake: @from_chainrules, @is_primitive, increment!!, MinimalCtx, rrule!!, NoFData,
-    NoRData, CoDual, primal, NoRData, zero_fcodual
+    CoDual, primal, NoRData, zero_fcodual
 import Mooncake: increment_and_get_rdata!, @zero_derivative
 using Integrals: AbstractIntegralMetaAlgorithm, IntegralProblem
 import ChainRulesCore
@@ -243,4 +243,14 @@ function Mooncake.increment!!(
     }
     return Mooncake.NoRData()
 end
+
+function Mooncake.increment!!(
+        x::Tangent{Any, Y},
+        ::Mooncake.NoRData
+    ) where {
+        T <: Base.IEEEFloat, Y <: Union{Tuple{T, T}, Tuple{Vector{T}, Vector{T}}},
+    }
+    return x
+end
+
 end
