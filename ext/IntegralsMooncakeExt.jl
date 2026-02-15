@@ -116,7 +116,7 @@ end
 # Allows clear translation from ChainRules -> Mooncake's tangent.
 function Mooncake.increment_and_get_rdata!(
         f::NoFData, r::Tuple{T, T},
-        t::Union{Tangent{Tuple{T, T}, Tuple{T, T}}, Tangent{Any, Tuple{Float64, Float64}}}
+        t::Union{Tangent{Tuple{T, T}, Tuple{T, T}}, Tangent{Any, Tuple{T, T}}}
     ) where {T <: Base.IEEEFloat}
     return r .+ t.backing
 end
