@@ -240,7 +240,7 @@ function Mooncake.increment!!(
     ) where {
         T <: Base.IEEEFloat, Y <: Union{Tuple{T, T}, Tuple{Vector{T}, Vector{T}}},
     }
-    return y
+    return NoRData()
 end
 
 function Mooncake.increment!!(
