@@ -182,7 +182,6 @@ do_tests_mooncake = function (; f, scalarize, lb, ub, p, alg, abstol, reltol)
     end
     sol_fp = testf(lb, ub, p)
 
-    # sensealg when non zygoet?
     cache = Mooncake.prepare_gradient_cache(
         testf, lb, ub, p isa Number && f isa BatchIntegralFunction ? Scalar(p) : p
     )

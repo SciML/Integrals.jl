@@ -234,14 +234,13 @@ function Mooncake.increment_and_get_rdata!(
     return t.prob.domain
 end
 
-# cannot mutate NoRData() in place, therefore return as is.
 function Mooncake.increment!!(
         ::Mooncake.NoRData,
         y::Tangent{Any, Y}
     ) where {
         T <: Base.IEEEFloat, Y <: Union{Tuple{T, T}, Tuple{Vector{T}, Vector{T}}},
     }
-    return Mooncake.NoRData()
+    return y
 end
 
 function Mooncake.increment!!(
