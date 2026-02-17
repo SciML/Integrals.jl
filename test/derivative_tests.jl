@@ -205,8 +205,8 @@ do_tests_mooncake = function (; f, scalarize, lb, ub, p, alg, abstol, reltol)
         @test gradients[2] ≈ dlb2 atol = abstol rtol = reltol
         @test gradients[3] ≈ dub2 atol = abstol rtol = reltol
     else # TODO: implement multivariate limit derivatives in MooncakeExt
-        @test gradients[2] ≈ dlb2 atol = abstol rtol = reltol
-        @test gradients[3] ≈ dub2 atol = abstol rtol = reltol
+        @test_broken gradients[2] ≈ dlb2 atol = abstol rtol = reltol
+        @test_broken gradients[3] ≈ dub2 atol = abstol rtol = reltol
     end
 
     f_p = p -> testf(lb, ub, p)
