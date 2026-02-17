@@ -79,4 +79,17 @@ function Integrals._compute_dfdp_and_f(::Integrals.MooncakeVJP, cache, p, Δ)
     return dfdp, _f
 end
 
+function increment_and_get_rdata!(
+    f::NoFData, r::Tuple{T,T}, t::CRC.Tangent{P,Tuple{T,T}}
+) where {P,T}
+    return map((ri, ti) -> increment_and_get_rdata!(f, ri, ti), r, t)
+end
+
+function increment_and_get_rdata!(
+    f::Tuple{T,T}, r::NoRData, t::CRC.Tangent{P,Tuple{T,T}}
+) where {P,M<:Base.IEEEFloat,T<:AbstractArray}
+    increment!!(f, t.backing)
+    return NoRData()
+end
+
 end
