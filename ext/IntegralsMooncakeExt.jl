@@ -2,9 +2,8 @@ module IntegralsMooncakeExt
 using Mooncake
 using LinearAlgebra: dot
 using Integrals, SciMLBase, QuadGK
-using Mooncake: @from_chainrules, @is_primitive, increment!!, MinimalCtx, rrule!!, NoFData,
-    CoDual, primal, NoRData, zero_fcodual
-import Mooncake: increment_and_get_rdata!, @zero_derivative
+using Mooncake: @from_chainrules, @is_primitive, increment!!, MinimalCtx, NoFData,
+    CoDual, primal, NoRData, zero_fcodual, increment_and_get_rdata!, @zero_derivative
 using Integrals: AbstractIntegralMetaAlgorithm, IntegralProblem
 import ChainRulesCore
 import ChainRulesCore: Tangent, NoTangent, ProjectTo
@@ -83,14 +82,14 @@ end
 function Mooncake.increment_and_get_rdata!(
         f::NoFData, r::Tuple{T, T}, t::ChainRulesCore.Tangent{P, Tuple{T, T}}
     ) where {P, T}
-    return map((ri, ti) -> increment_and_get_rdata!(f, ri, ti), r, t)
+    return map((ri, ti) -> increment_and_get_rdata!(f, ri, ti), r, t.backing)
 end
 
 function Mooncake.increment_and_get_rdata!(
         f::Tuple{T, T}, r::NoRData, t::ChainRulesCore.Tangent{P, Tuple{T, T}}
-    ) where {P, M <: Base.IEEEFloat, T <: AbstractArray}
+    ) where {P, M <: Base.IEEEFloat, T <: AbstractArray{M}}
     increment!!(f, t.backing)
-    return NoRData()
+    return r
 end
 
 end
