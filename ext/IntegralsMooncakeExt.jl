@@ -34,10 +34,10 @@ batch_unwrap(x::AbstractArray) = dropdims(x; dims = ndims(x))
     Union{<:AbstractVector, <:Number}, Union{<:AbstractVector, <:Number},
 }
 
-@from_chainrules MinimalCtx Tuple{Type{IntegralProblem{iip}},Any,Any,Any} where {iip} true
-@from_chainrules MinimalCtx Tuple{Type{IntegralProblem},Any,Any,Any} true
-@from_chainrules MinimalCtx Tuple{typeof(Integrals.u2t),Any,Any} true
-@from_chainrules MinimalCtx Tuple{typeof(Integrals.__solvebp),Any,Any,Any,Any,Any} true
+@from_chainrules MinimalCtx Tuple{Type{IntegralProblem{iip}}, Any, Any, Any} where {iip} true
+@from_chainrules MinimalCtx Tuple{Type{IntegralProblem}, Any, Any, Any} true
+@from_chainrules MinimalCtx Tuple{typeof(Integrals.u2t), Any, Any} true
+@from_chainrules MinimalCtx Tuple{typeof(Integrals.__solvebp), Any, Any, Any, Any, Any} true
 
 # Add MooncakeVJP support to the dispatch function defined in ZygoteExt
 function Integrals._compute_dfdp_and_f(::Integrals.MooncakeVJP, cache, p, Δ)
@@ -80,14 +80,14 @@ function Integrals._compute_dfdp_and_f(::Integrals.MooncakeVJP, cache, p, Δ)
 end
 
 function increment_and_get_rdata!(
-    f::NoFData, r::Tuple{T,T}, t::ChainRulesCore.Tangent{P,Tuple{T,T}}
-) where {P,T}
+        f::NoFData, r::Tuple{T, T}, t::ChainRulesCore.Tangent{P, Tuple{T, T}}
+    ) where {P, T}
     return map((ri, ti) -> increment_and_get_rdata!(f, ri, ti), r, t)
 end
 
 function increment_and_get_rdata!(
-    f::Tuple{T,T}, r::NoRData, t::ChainRulesCore.Tangent{P,Tuple{T,T}}
-) where {P,M<:Base.IEEEFloat,T<:AbstractArray}
+        f::Tuple{T, T}, r::NoRData, t::ChainRulesCore.Tangent{P, Tuple{T, T}}
+    ) where {P, M <: Base.IEEEFloat, T <: AbstractArray}
     increment!!(f, t.backing)
     return NoRData()
 end
