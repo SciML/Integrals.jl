@@ -1,6 +1,6 @@
 name = "Integrals"
 uuid = "de52edbc-65ea-441a-8357-d3a637375a31"
-version = "5.0.0"
+version = "5.1.0"
 authors = ["Chris Rackauckas <accounts@chrisrackauckas.com>"]
 
 [deps]
