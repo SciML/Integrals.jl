@@ -78,14 +78,4 @@ function Integrals._compute_dfdp_and_f(::Integrals.MooncakeVJP, cache, p, Δ)
     return dfdp, _f
 end
 
-# remove from here once https://github.com/chalk-lab/Mooncake.jl/pull/997 is merged
-function Mooncake.increment_and_get_rdata!(f::NoFData, r::Tuple, t::ChainRulesCore.Tangent{P, <:Tuple}) where {P}
-    return map((ri, ti) -> increment_and_get_rdata!(f, ri, ti), r, t.backing)
-end
-
-function Mooncake.increment_and_get_rdata!(f::Tuple, r::NoRData, t::ChainRulesCore.Tangent{P, <:Tuple}) where {P}
-    increment!!(f, t.backing)
-    return r
-end
-
 end
