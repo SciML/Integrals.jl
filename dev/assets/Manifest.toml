@@ -602,9 +602,9 @@ uuid = "d6f4376e-aef5-505a-96c1-9c027394607a"
 
 [[deps.MarkdownAST]]
 deps = ["AbstractTrees", "Markdown"]
-git-tree-sha1 = "465a70f0fc7d443a00dcdc3267a497397b8a3899"
+git-tree-sha1 = "93c718d892e73931841089cdc0e982d6dd9cc87b"
 uuid = "d0879d2d-cac2-40c8-9cee-1863dc0c7391"
-version = "0.1.2"
+version = "0.1.3"
 
 [[deps.MbedTLS_jll]]
 deps = ["Artifacts", "Libdl"]
@@ -910,9 +910,15 @@ version = "2.138.1"
 
 [[deps.SciMLLogging]]
 deps = ["Logging", "LoggingExtras", "Preferences"]
-git-tree-sha1 = "7eebb9985e35b123e12025a3a2ad020cd6059f71"
+git-tree-sha1 = "a51104fa06a784c5ddf4a9937c5e0c03de0c6878"
 uuid = "a6db7da4-7206-11f0-1eab-35f2a5dbe1d1"
-version = "1.8.0"
+version = "1.9.0"
+
+    [deps.SciMLLogging.extensions]
+    SciMLLoggingTracyExt = "Tracy"
+
+    [deps.SciMLLogging.weakdeps]
+    Tracy = "e689c965-62c8-4b79-b2c5-8359227902fd"
 
 [[deps.SciMLOperators]]
 deps = ["Accessors", "ArrayInterface", "DocStringExtensions", "LinearAlgebra"]
