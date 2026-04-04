@@ -364,7 +364,7 @@ struct FastTanhSinhQuadratureJL{T} <: AbstractIntegralExtensionAlgorithm
     tol::T
     max_levels::Int
 end
-function FastTanhSinhQuadratureJL(; tol = 1e-12, max_levels = 10)
+function FastTanhSinhQuadratureJL(; tol = 1.0e-12, max_levels = 10)
     isnothing(Base.get_extension(@__MODULE__, :IntegralsFastTanhSinhQuadratureExt)) &&
         error("FastTanhSinhQuadratureJL requires `using FastTanhSinhQuadrature`")
     return FastTanhSinhQuadratureJL(tol, max_levels)
