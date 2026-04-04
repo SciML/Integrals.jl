@@ -8,7 +8,8 @@ function Integrals.__solvebp_call(
         prob::IntegralProblem, alg::Integrals.FastTanhSinhQuadratureJL,
         sensealg, domain, p;
         reltol = nothing, abstol = nothing,
-        maxiters = nothing
+        maxiters = nothing,
+        verbose = Integrals.DEFAULT_VERBOSE
     )
     lb, ub = domain
     f = prob.f
