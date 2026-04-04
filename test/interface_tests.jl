@@ -63,7 +63,7 @@ alg_req = Dict(
         nout = 1, allows_batch = false, min_dim = 1, max_dim = 1, allows_iip = false,
     ),
     FastTanhSinhQuadratureJL() => (
-        nout = Inf, allows_batch = false, min_dim = 1, max_dim = 3, allows_iip = false,
+        nout = 1, allows_batch = false, min_dim = 1, max_dim = 3, allows_iip = false,
     )
 )
 
