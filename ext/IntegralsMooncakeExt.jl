@@ -56,7 +56,8 @@ function Integrals._compute_dfdp_and_f(::Integrals.MooncakeVJP, cache, p, Δ)
                 cache_z = Mooncake.prepare_pullback_cache(integralfunc_closure_p, p)
                 Δ_batch = Δ_val isa AbstractArray ? reshape(Δ_val, size(Δ_val)..., 1) : [Δ_val]
                 z, grads = Mooncake.value_and_pullback!!(
-                    cache_z, Δ_batch, integralfunc_closure_p, p)
+                    cache_z, Δ_batch, integralfunc_closure_p, p
+                )
                 return grads[2]
             end
             dfdp = IntegralFunction{false}(dfdp_, nothing)
@@ -83,7 +84,8 @@ function Integrals._compute_dfdp_and_f(::Integrals.MooncakeVJP, cache, p, Δ)
                 cache_z = Mooncake.prepare_pullback_cache(integralfunc_closure_p, p)
                 Δ_batch = Δ_val isa AbstractArray ? reshape(Δ_val, size(Δ_val)..., 1) : [Δ_val]
                 z, grads = Mooncake.value_and_pullback!!(
-                    cache_z, Δ_batch, integralfunc_closure_p, p)
+                    cache_z, Δ_batch, integralfunc_closure_p, p
+                )
                 return grads[2]
             end
             dfdp = IntegralFunction{false}(dfdp_, nothing)

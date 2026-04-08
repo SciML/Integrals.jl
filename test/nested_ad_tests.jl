@@ -50,12 +50,16 @@ dp3 = FiniteDiff.finite_difference_gradient(p -> testf3(lb, ub, p), p)
 
 function testf3_mooncake(lb, ub, p)
     prob = IntegralProblem(_ff3, (lb, ub), p)
-    return solve(prob, CubatureJLh(); reltol = 1.0e-3, abstol = 1.0e-3,
-        sensealg = Integrals.ReCallVJP(Integrals.MooncakeVJP()))[1]
+    return solve(
+        prob, CubatureJLh(); reltol = 1.0e-3, abstol = 1.0e-3,
+        sensealg = Integrals.ReCallVJP(Integrals.MooncakeVJP())
+    )[1]
 end
 
-testf3_mooncake_p = p -> testf3_mooncake(lb, ub, p)
-cache = Mooncake.prepare_gradient_cache(testf3_mooncake_p, p)
-_, grads = Mooncake.value_and_gradient!!(cache, testf3_mooncake_p, p)
-dp4 = grads[2]
-@test dp4 ≈ dp3
+if pkgversion(Mooncake) >= v"0.5.26"
+    testf3_mooncake_p = p -> testf3_mooncake(lb, ub, p)
+    cache = Mooncake.prepare_gradient_cache(testf3_mooncake_p, p)
+    _, grads = Mooncake.value_and_gradient!!(cache, testf3_mooncake_p, p)
+    dp4 = grads[2]
+    @test dp4 ≈ dp3
+end
