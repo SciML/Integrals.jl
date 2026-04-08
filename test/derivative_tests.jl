@@ -182,13 +182,8 @@ do_tests_mooncake = function (; f, scalarize, lb, ub, p, alg, abstol, reltol)
     end
     sol_fp = testf(lb, ub, p)
 
-    cache = Mooncake.prepare_gradient_cache(
-        testf, lb, ub, p isa Number && f isa BatchIntegralFunction ? Scalar(p) : p
-    )
-    forwpassval,
-        gradients = Mooncake.value_and_gradient!!(
-        cache, testf, lb, ub, p isa Number && f isa BatchIntegralFunction ? Scalar(p) : p
-    )
+    cache = Mooncake.prepare_gradient_cache(testf, lb, ub, p)
+    forwpassval, gradients = Mooncake.value_and_gradient!!(cache, testf, lb, ub, p)
 
     @test forwpassval == sol_fp
 
@@ -363,6 +358,7 @@ for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands),
     @info "Batched, one-dimensional, scalar, oop derivative test" alg = nameof(typeof(alg)) integrand = j scalarize = i
     bf = BatchIntegralFunction((x, p) -> batch_helper(f, x, p))
     do_tests(; f = bf, scalarize, lb = 1.0, ub = 3.0, p = 2.0, alg, abstol, reltol)
+    do_tests_mooncake(; f = bf, scalarize, lb = 1.0, ub = 3.0, p = 2.0, alg, abstol, reltol)
 end
 
 ## Batch, One-dimensional nout
@@ -378,6 +374,10 @@ for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands),
         f = bf, scalarize, lb = 1.0, ub = 3.0,
         p = [2.0i for i in 1:nout], alg, abstol, reltol
     )
+    do_tests_mooncake(;
+        f = bf, scalarize, lb = 1.0, ub = 3.0,
+        p = [2.0i for i in 1:nout], alg, abstol, reltol
+    )
 end
 
 ### Batch, N-dimensional
@@ -390,6 +390,9 @@ for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands),
     @info "Batched, multi-dimensional, scalar, oop derivative test" alg = nameof(typeof(alg)) integrand = j scalarize = i dim
     bf = BatchIntegralFunction((x, p) -> batch_helper(f, x, p))
     do_tests(;
+        f = bf, scalarize, lb = ones(dim), ub = 3ones(dim), p = 2.0, alg, abstol, reltol
+    )
+    do_tests_mooncake(;
         f = bf, scalarize, lb = ones(dim), ub = 3ones(dim), p = 2.0, alg, abstol, reltol
     )
 end
@@ -408,6 +411,10 @@ for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands),
         f = bf, scalarize, lb = ones(dim), ub = 3ones(dim),
         p = [2.0i for i in 1:nout], alg, abstol, reltol
     )
+    do_tests_mooncake(;
+        f = bf, scalarize, lb = ones(dim), ub = 3ones(dim),
+        p = [2.0i for i in 1:nout], alg, abstol, reltol
+    )
 end
 
 ### Batch, one-dimensional
@@ -421,6 +428,7 @@ for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands),
     @info "Batched, one-dimensional, scalar, iip derivative test" alg = nameof(typeof(alg)) integrand = j scalarize = i
     bfiip = BatchIntegralFunction((y, x, p) -> batch_helper!(f, y, x, p), zeros(0))
     do_tests(; f = bfiip, scalarize, lb = 1.0, ub = 3.0, p = 2.0, alg, abstol, reltol)
+    do_tests_mooncake(; f = bfiip, scalarize, lb = 1.0, ub = 3.0, p = 2.0, alg, abstol, reltol)
 end
 
 ## Batch, one-dimensional nout
@@ -434,6 +442,10 @@ for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands),
     @info "Batched, one-dimensional, multivariate, iip derivative test" alg = nameof(typeof(alg)) integrand = j scalarize = i nout
     bfiip = BatchIntegralFunction((y, x, p) -> batch_helper!(f, y, x, p), zeros(nout, 0))
     do_tests(;
+        f = bfiip, scalarize, lb = 1.0, ub = 3.0,
+        p = [2.0i for i in 1:nout], alg, abstol, reltol
+    )
+    do_tests_mooncake(;
         f = bfiip, scalarize, lb = 1.0, ub = 3.0,
         p = [2.0i for i in 1:nout], alg, abstol, reltol
     )
@@ -453,6 +465,10 @@ for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands),
         f = bfiip, scalarize, lb = ones(dim),
         ub = 3ones(dim), p = 2.0, alg, abstol, reltol
     )
+    do_tests_mooncake(;
+        f = bfiip, scalarize, lb = ones(dim),
+        ub = 3ones(dim), p = 2.0, alg, abstol, reltol
+    )
 end
 
 ### Batch, N-dimensional nout iip
@@ -467,6 +483,10 @@ for (alg, req) in pairs(alg_req), (j, f) in enumerate(integrands),
     @info "Batched, multi-dimensional, multivariate, iip derivative test" alg = nameof(typeof(alg)) integrand = j scalarize = i dim nout
     bfiip = BatchIntegralFunction((y, x, p) -> batch_helper!(f, y, x, p), zeros(nout, 0))
     do_tests(;
+        f = bfiip, scalarize, lb = ones(dim), ub = 3ones(dim),
+        p = [2.0i for i in 1:nout], alg, abstol, reltol
+    )
+    do_tests_mooncake(;
         f = bfiip, scalarize, lb = ones(dim), ub = 3ones(dim),
         p = [2.0i for i in 1:nout], alg, abstol, reltol
     )
