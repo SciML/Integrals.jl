@@ -45,7 +45,22 @@ function Integrals._compute_dfdp_and_f(::Integrals.MooncakeVJP, cache, p, Δ)
 
     if isinplace(cache)
         if cache.f isa BatchIntegralFunction
-            error("MooncakeVJP does not yet support BatchIntegralFunction with in-place functions")
+            dx = similar(
+                cache.f.integrand_prototype,
+                size(cache.f.integrand_prototype)[begin:(end - 1)]..., 1
+            )
+            _f = x -> (cache.f(dx, x, p); dx)
+            dfdp_ = function (x, p)
+                x_ = x isa AbstractArray ? reshape(x, size(x)..., 1) : [x]
+                integralfunc_closure_p = p -> (cache.f(dx, x_, p); dx)
+                cache_z = Mooncake.prepare_pullback_cache(integralfunc_closure_p, p)
+                Δ_batch = Δ_val isa AbstractArray ? reshape(Δ_val, size(Δ_val)..., 1) : [Δ_val]
+                z, grads = Mooncake.value_and_pullback!!(
+                    cache_z, Δ_batch, integralfunc_closure_p, p
+                )
+                return grads[2]
+            end
+            dfdp = IntegralFunction{false}(dfdp_, nothing)
         else
             dx = similar(cache.f.integrand_prototype)
             _f = x -> (cache.f(dx, x, p); dx)
@@ -63,7 +78,17 @@ function Integrals._compute_dfdp_and_f(::Integrals.MooncakeVJP, cache, p, Δ)
     else
         _f = x -> cache.f(x, p)
         if cache.f isa BatchIntegralFunction
-            error("MooncakeVJP does not yet support BatchIntegralFunction")
+            dfdp_ = function (x, p)
+                x_ = x isa AbstractArray ? reshape(x, size(x)..., 1) : [x]
+                integralfunc_closure_p = p -> cache.f(x_, p)
+                cache_z = Mooncake.prepare_pullback_cache(integralfunc_closure_p, p)
+                Δ_batch = Δ_val isa AbstractArray ? reshape(Δ_val, size(Δ_val)..., 1) : [Δ_val]
+                z, grads = Mooncake.value_and_pullback!!(
+                    cache_z, Δ_batch, integralfunc_closure_p, p
+                )
+                return grads[2]
+            end
+            dfdp = IntegralFunction{false}(dfdp_, nothing)
         else
             dfdp_ = function (x, p)
                 integralfunc_closure_p = p -> cache.f(x, p)

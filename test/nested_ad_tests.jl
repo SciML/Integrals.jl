@@ -1,4 +1,4 @@
-using Integrals, FiniteDiff, ForwardDiff, Cubature, Cuba, Zygote, Test
+using Integrals, FiniteDiff, ForwardDiff, Cubature, Cuba, Zygote, Mooncake, Test
 
 my_parameters = [1.0, 2.0]
 my_function(x, p) = x^2 + p[1]^3 * x + p[2]^2
@@ -47,3 +47,19 @@ dp3 = FiniteDiff.finite_difference_gradient(p -> testf3(lb, ub, p), p)
 
 @test dp1 ≈ dp3
 @test dp2 ≈ dp3
+
+function testf3_mooncake(lb, ub, p)
+    prob = IntegralProblem(_ff3, (lb, ub), p)
+    return solve(
+        prob, CubatureJLh(); reltol = 1.0e-3, abstol = 1.0e-3,
+        sensealg = Integrals.ReCallVJP(Integrals.MooncakeVJP())
+    )[1]
+end
+
+if pkgversion(Mooncake) >= v"0.5.26"
+    testf3_mooncake_p = p -> testf3_mooncake(lb, ub, p)
+    cache = Mooncake.prepare_gradient_cache(testf3_mooncake_p, p)
+    _, grads = Mooncake.value_and_gradient!!(cache, testf3_mooncake_p, p)
+    dp4 = grads[2]
+    @test dp4 ≈ dp3
+end
