@@ -328,7 +328,7 @@ function HAdaptiveIntegrationJL(; kws...)
 end
 
 """
-    FastTanhSinhQuadratureJL(; tol = 1e-12, max_levels = 10)
+    FastTanhSinhQuadratureJL(; rtol = 1e-12, atol = 0.0, max_levels = 10)
 
 One-dimensional adaptive Tanh-Sinh (double exponential) quadrature from FastTanhSinhQuadrature.jl.
 This method uses a double exponential transformation that provides excellent convergence properties,
@@ -336,7 +336,8 @@ especially for integrands with endpoint singularities or infinite derivatives at
 
 ## Keyword Arguments
 
-  - `tol`: Relative tolerance for convergence (default: `1e-12`)
+  - `rtol`: Relative tolerance for convergence (default: `1e-12`)
+  - `atol`: Absolute tolerance for convergence (default: `0.0`)
   - `max_levels`: Maximum number of refinement levels in adaptive integration (default: `10`)
 
 ## Limitations
@@ -360,12 +361,13 @@ publisher={Research Institute for Mathematical Sciences}
 }
 ```
 """
-struct FastTanhSinhQuadratureJL{T} <: AbstractIntegralExtensionAlgorithm
-    tol::T
+struct FastTanhSinhQuadratureJL{T, S} <: AbstractIntegralExtensionAlgorithm
+    rtol::T
+    atol::S
     max_levels::Int
 end
-function FastTanhSinhQuadratureJL(; tol = 1.0e-12, max_levels = 10)
+function FastTanhSinhQuadratureJL(; rtol = 1.0e-12, atol = 0.0, max_levels = 10)
     isnothing(Base.get_extension(@__MODULE__, :IntegralsFastTanhSinhQuadratureExt)) &&
         error("FastTanhSinhQuadratureJL requires `using FastTanhSinhQuadrature`")
-    return FastTanhSinhQuadratureJL(tol, max_levels)
+    return FastTanhSinhQuadratureJL(rtol, atol, max_levels)
 end
