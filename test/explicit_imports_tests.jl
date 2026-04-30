@@ -10,7 +10,7 @@ using LinearAlgebra: norm
     @test check_no_stale_explicit_imports(
         Integrals; ignore = (
             :norm, :AbstractVerbositySpecifier,
-            :DebugLevel, :Detailed, :ErrorLevel, :Minimal, :None, :Standard, :All, :AbstractMessageLevel,
+            :DebugLevel, :Detailed, :ErrorLevel, :Minimal, :None, :Standard, :All,
         )
     ) === nothing
 end
