@@ -9,7 +9,7 @@ using LinearAlgebra: norm
     # which ExplicitImports may not detect properly, so we ignore it
     @test check_no_stale_explicit_imports(
         Integrals; ignore = (
-            :norm, :AbstractVerbositySpecifier,
+            :norm, :AbstractVerbositySpecifier, :MessageLevel,
             :DebugLevel, :Detailed, :ErrorLevel, :Minimal, :None, :Standard, :All,
         )
     ) === nothing
