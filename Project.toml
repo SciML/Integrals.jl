@@ -44,10 +44,10 @@ IntegralsMooncakeExt = ["Mooncake", "Zygote", "ChainRulesCore"]
 IntegralsZygoteExt = ["Zygote", "ChainRulesCore"]
 
 [compat]
-ADTypes = "1"
+ADTypes = "1.22.0"
 Aqua = "0.8"
 Arblib = "1"
-ArrayInterface = "7"
+ArrayInterface = "7.9.0"
 ChainRulesCore = "1.18"
 CommonSolve = "0.2.4"
 Cuba = "2.2"
@@ -72,7 +72,7 @@ Reexport = "1.2"
 SafeTestsets = "0.1"
 SciMLBase = "2.104, 3.0"
 SciMLLogging = "1.10.1, 2"
-StaticArrays = "1"
+StaticArrays = "1.6.4"
 Test = "1.10"
 Zygote = "0.6.69, 0.7"
 julia = "1.10"
