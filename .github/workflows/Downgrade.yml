@@ -23,5 +23,4 @@ jobs:
       group: "${{ matrix.group }}"
       skip: "Pkg,TOML"
       projects: "."
-      allow-reresolve: false
     secrets: "inherit"
