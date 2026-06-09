@@ -11,29 +11,6 @@ on:
     paths-ignore:
       - 'docs/**'
 jobs:
-  test:
-    strategy:
-      fail-fast: false
-      matrix:
-        group:
-          - Core
-          - AD
-          - nopre
-        version:
-          - '1'
-          - 'lts'
-          - 'pre'
-        exclude:
-          # AD tests crash with SIGSEGV on Julia 1.12+ (Zygote/Mooncake issue)
-          - group: AD
-            version: '1'
-          - group: AD
-            version: 'pre'
-          # nopre tests (JET) should not run on pre-release or LTS Julia versions
-          - group: nopre
-            version: 'pre'
-    uses: "SciML/.github/.github/workflows/tests.yml@v1"
-    with:
-      julia-version: "${{ matrix.version }}"
-      group: "${{ matrix.group }}"
+  tests:
+    uses: "SciML/.github/.github/workflows/grouped-tests.yml@v1"
     secrets: "inherit"

@@ -1,6 +1,35 @@
 using Integrals
+using Aqua
+using ExplicitImports
 using JET
 using Test
+using LinearAlgebra: norm
+
+@testset "Aqua" begin
+    Aqua.find_persistent_tasks_deps(Integrals)
+    Aqua.test_ambiguities(Integrals, recursive = false)
+    Aqua.test_deps_compat(Integrals)
+    Aqua.test_piracies(
+        Integrals,
+        treat_as_own = [IntegralProblem, SampledIntegralProblem]
+    )
+    Aqua.test_project_extras(Integrals)
+    Aqua.test_stale_deps(Integrals)
+    Aqua.test_unbound_args(Integrals)
+    Aqua.test_undefined_exports(Integrals)
+end
+
+@testset "ExplicitImports" begin
+    @test check_no_implicit_imports(Integrals) === nothing
+    # Note: norm is used in default parameters in included files (algorithms.jl)
+    # which ExplicitImports may not detect properly, so we ignore it
+    @test check_no_stale_explicit_imports(
+        Integrals; ignore = (
+            :norm, :AbstractVerbositySpecifier, :MessageLevel,
+            :DebugLevel, :Detailed, :ErrorLevel, :Minimal, :None, :Standard, :All,
+        )
+    ) === nothing
+end
 
 @testset "JET static analysis" begin
     @testset "QuadGKJL" begin

@@ -1,0 +1,16 @@
+# Root Integrals.jl test-group matrix, consumed by the reusable
+# grouped-tests.yml@v1 caller (.github/workflows/CI.yml). Each group runs on
+# every Julia version it lists; runtests.jl dispatches on GROUP.
+
+[Core]
+versions = ["lts", "1", "pre"]
+
+# AD tests crash with SIGSEGV on Julia 1.12+ (Zygote/Mooncake issue), so only
+# the LTS channel is exercised.
+[AD]
+versions = ["lts"]
+
+# Aqua + ExplicitImports + JET, isolated in test/qa/Project.toml. JET is not
+# compatible with the prerelease channel.
+[QA]
+versions = ["lts", "1"]
