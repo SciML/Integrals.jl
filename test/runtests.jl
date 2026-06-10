@@ -4,15 +4,19 @@ using Test
 
 const GROUP = get(ENV, "GROUP", "All")
 
-function activate_nopre_env()
-    Pkg.activate("nopre")
-    Pkg.develop(PackageSpec(path = dirname(@__DIR__)))
+# QA (Aqua + ExplicitImports + JET) runs in an isolated environment (test/qa) so
+# its tooling deps never enter the main test target's resolve. On Julia < 1.11
+# the [sources] table is ignored, so develop the package by path to test the PR
+# branch code.
+function activate_qa_env()
+    Pkg.activate(joinpath(@__DIR__, "qa"))
+    if VERSION < v"1.11.0-DEV.0"
+        Pkg.develop(PackageSpec(path = dirname(@__DIR__)))
+    end
     return Pkg.instantiate()
 end
 
 if GROUP == "All" || GROUP == "Core"
-    @time @safetestset "Explicit Imports" include("explicit_imports_tests.jl")
-    @time @safetestset "Quality Assurance" include("qa.jl")
     @time @safetestset "Interface Tests" include("interface_tests.jl")
     @time @safetestset "Infinite Integral Tests" include("inf_integral_tests.jl")
     @time @safetestset "Gaussian Quadrature Tests" include("gaussian_quadrature_tests.jl")
@@ -28,7 +32,7 @@ if GROUP == "All" || GROUP == "AD"
     @time @safetestset "Nested AD Tests" include("nested_ad_tests.jl")
 end
 
-if GROUP == "nopre"
-    activate_nopre_env()
-    @time @safetestset "JET Static Analysis" include("nopre/jet_tests.jl")
+if GROUP == "QA"
+    activate_qa_env()
+    @time @safetestset "Quality Assurance" include("qa/qa.jl")
 end
