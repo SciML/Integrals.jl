@@ -11,8 +11,8 @@ using SciMLBase: init, solve!
 using LinearAlgebra: LinearAlgebra, /, norm
 using Random: Random
 using ArrayInterface: ArrayInterface
-using SciMLLogging: SciMLLogging, @SciMLMessage, MessageLevel, Silent, DebugLevel,
-    InfoLevel, WarnLevel, ErrorLevel, @verbosity_specifier, AbstractVerbositySpecifier,
+using SciMLLogging: SciMLLogging, @SciMLMessage, MessageLevel, Silent,
+    InfoLevel, WarnLevel, @verbosity_specifier, AbstractVerbositySpecifier,
     None, Minimal, Standard, Detailed, All
 
 include("verbosity.jl")
