@@ -13,7 +13,7 @@ using Random: Random
 using ArrayInterface: ArrayInterface
 using SciMLLogging: SciMLLogging, @SciMLMessage, MessageLevel, Silent,
     InfoLevel, WarnLevel, @verbosity_specifier, AbstractVerbositySpecifier,
-    None, Minimal, Standard, Detailed, All
+    AbstractVerbosityPreset, None, Minimal, Standard, Detailed, All
 
 include("verbosity.jl")
 include("algorithms_meta.jl")

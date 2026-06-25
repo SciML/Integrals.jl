@@ -13,12 +13,13 @@ run_qa(
         no_stale_explicit_imports = (;
             # Referenced only inside `@verbosity_specifier IntegralVerbosity` (src/verbosity.jl):
             # the macro generates `IntegralVerbosity(::None)` / `(::Minimal)` / ... preset
-            # constructors and `MessageLevel` / `AbstractVerbositySpecifier` type guards that
-            # need these bare names in `Integrals`'s scope. ExplicitImports cannot see through
-            # the macro, so it reports them stale; dropping the imports breaks precompile
-            # (UndefVarError: `None` not defined).
+            # constructors and `MessageLevel` / `AbstractVerbositySpecifier` /
+            # `AbstractVerbosityPreset` type guards that need these bare names in `Integrals`'s
+            # scope. ExplicitImports cannot see through the macro, so it reports them stale;
+            # dropping the imports breaks the constructor at runtime
+            # (`IntegralVerbosity(; preset=Standard())` -> UndefVarError: `AbstractVerbosityPreset`).
             ignore = (
-                :AbstractVerbositySpecifier, :MessageLevel,
+                :AbstractVerbositySpecifier, :AbstractVerbosityPreset, :MessageLevel,
                 :None, :Minimal, :Standard, :Detailed, :All,
             ),
         ),
