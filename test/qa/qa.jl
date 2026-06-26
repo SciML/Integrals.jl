@@ -23,18 +23,6 @@ run_qa(
                 :None, :Minimal, :Standard, :Detailed, :All,
             ),
         ),
-        all_qualified_accesses_are_public = (;
-            # Non-public names accessed qualified from other packages (stable cross-package
-            # APIs Integrals relies on; may become public as those libs release):
-            #   AbstractIntegralAlgorithm, Success, build_solution -> SciMLBase
-            #   fast_scalar_indexing                               -> ArrayInterface
-            #   get_extension                                      -> Base
-            #   seed!                                              -> Random
-            ignore = (
-                :AbstractIntegralAlgorithm, :Success, :build_solution,
-                :fast_scalar_indexing, :get_extension, :seed!,
-            ),
-        ),
     ),
 )
 
