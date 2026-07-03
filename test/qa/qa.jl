@@ -1,37 +1,34 @@
-using Integrals
-using Aqua
-using ExplicitImports
+using SciMLTesting, Integrals, Test
 using JET
-using Test
-using LinearAlgebra: norm
 
-@testset "Aqua" begin
-    Aqua.find_persistent_tasks_deps(Integrals)
-    Aqua.test_ambiguities(Integrals, recursive = false)
-    Aqua.test_deps_compat(Integrals)
-    Aqua.test_piracies(
-        Integrals,
-        treat_as_own = [IntegralProblem, SampledIntegralProblem]
-    )
-    Aqua.test_project_extras(Integrals)
-    Aqua.test_stale_deps(Integrals)
-    Aqua.test_unbound_args(Integrals)
-    Aqua.test_undefined_exports(Integrals)
-end
+run_qa(
+    Integrals;
+    explicit_imports = true,
+    aqua_kwargs = (;
+        # IntegralProblem / SampledIntegralProblem are SciMLBase types this package
+        # owns the integral-solver methods for, so dispatching on them is not piracy.
+        piracies = (; treat_as_own = [IntegralProblem, SampledIntegralProblem]),
+    ),
+    ei_kwargs = (;
+        no_stale_explicit_imports = (;
+            # Referenced only inside `@verbosity_specifier IntegralVerbosity` (src/verbosity.jl):
+            # the macro generates `IntegralVerbosity(::None)` / `(::Minimal)` / ... preset
+            # constructors and `MessageLevel` / `AbstractVerbositySpecifier` /
+            # `AbstractVerbosityPreset` type guards that need these bare names in `Integrals`'s
+            # scope. ExplicitImports cannot see through the macro, so it reports them stale;
+            # dropping the imports breaks the constructor at runtime
+            # (`IntegralVerbosity(; preset=Standard())` -> UndefVarError: `AbstractVerbosityPreset`).
+            ignore = (
+                :AbstractVerbositySpecifier, :AbstractVerbosityPreset, :MessageLevel,
+                :None, :Minimal, :Standard, :Detailed, :All,
+            ),
+        ),
+    ),
+)
 
-@testset "ExplicitImports" begin
-    @test check_no_implicit_imports(Integrals) === nothing
-    # Note: norm is used in default parameters in included files (algorithms.jl)
-    # which ExplicitImports may not detect properly, so we ignore it
-    @test check_no_stale_explicit_imports(
-        Integrals; ignore = (
-            :norm, :AbstractVerbositySpecifier, :MessageLevel,
-            :DebugLevel, :Detailed, :ErrorLevel, :Minimal, :None, :Standard, :All,
-        )
-    ) === nothing
-end
-
-@testset "JET static analysis" begin
+# Type-stability (JET opt-mode) regression guards for the hot solver paths. These are
+# repo-specific @report_opt checks, orthogonal to run_qa's package-level JET typo check.
+@testset "JET opt-mode solver paths" begin
     @testset "QuadGKJL" begin
         f = (x, p) -> x^2
         prob = IntegralProblem(f, (0.0, 1.0))
@@ -73,11 +70,10 @@ end
         # VEGAS has some inherent type instability issues due to:
         # 1. Captured variables in closures (necessary for in-place operations)
         # 2. Runtime dispatch for integrand type checking
-        # We verify the number of issues is bounded and doesn't regress
+        # We verify the number of issues is bounded and doesn't regress.
         f = (x, p) -> x^2
         prob = IntegralProblem(f, (0.0, 1.0))
         rep = @report_opt target_modules = (Integrals,) solve(prob, VEGAS())
-        # Allow up to 2 reports (captured variable + runtime dispatch for type check)
         @test length(JET.get_reports(rep)) <= 2
     end
 end
