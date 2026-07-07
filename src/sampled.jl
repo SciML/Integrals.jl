@@ -72,8 +72,12 @@ function evalrule(data::AbstractMatrix{T}, weights, dim) where {T}
         n == 0 && throw(ArgumentError("No points to integrate"))
         if dim == 2 || dim == ndims(data)
             # Integration over columns (last dimension) - the common case
-            out = zeros(T, m)
-            @inbounds for i in 1:n
+            w1 = weights[1]
+            out = Vector{Base.promote_op(*, typeof(w1), T)}(undef, m)
+            @inbounds @simd for j in 1:m
+                out[j] = w1 * data[j, 1]
+            end
+            @inbounds for i in 2:n
                 w = weights[i]
                 @simd for j in 1:m
                     out[j] += w * data[j, i]

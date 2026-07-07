@@ -1,4 +1,4 @@
-using Integrals, Test
+using Integrals, Test, Unitful
 @testset "Sampled Integration" begin
     lb = 0.4
     ub = 1.1
@@ -30,6 +30,16 @@ using Integrals, Test
             end
         end
     end
+end
+
+@testset "Sampled integration with dimensional axes" begin
+    data = ones(2, 3)
+    axis = [0.0, 1.0, 2.0]u"m"
+
+    prob = SampledIntegralProblem(data, axis; dim = 2)
+    sol = solve(prob, TrapezoidalRule())
+
+    @test sol.u == [2.0, 2.0]u"m"
 end
 
 @testset "Caching interface" begin
