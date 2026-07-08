@@ -73,7 +73,8 @@ function evalrule(data::AbstractMatrix{T}, weights, dim) where {T}
         if dim == 2 || dim == ndims(data)
             # Integration over columns (last dimension) - the common case
             w1 = weights[1]
-            out = Vector{Base.promote_op(*, typeof(w1), T)}(undef, m)
+            out_type = m == 0 ? typeof(w1 * zero(T)) : typeof(w1 * data[1, 1])
+            out = Vector{out_type}(undef, m)
             @inbounds @simd for j in 1:m
                 out[j] = w1 * data[j, 1]
             end
