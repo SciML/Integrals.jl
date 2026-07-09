@@ -4,12 +4,25 @@
     AbstractIntegralExtensionAlgorithm <: SciMLBase.AbstractIntegralAlgorithm
 
 Abstract type for integration algorithms provided through package extensions.
+
+## Interface
+
+Concrete subtypes are lightweight algorithm configuration objects. The package extension
+that owns the backend must implement `Integrals.__solvebp_call(cache, alg, sensealg,
+domain, p; kwargs...)` or another solver layer used by `solve!`. Constructors may check
+that the required extension is loaded and should store all backend options in fields.
 """
 abstract type AbstractIntegralExtensionAlgorithm <: SciMLBase.AbstractIntegralAlgorithm end
 """
     AbstractIntegralCExtensionAlgorithm <: AbstractIntegralExtensionAlgorithm
 
 Abstract type for integration algorithms that use C or C++ libraries through package extensions.
+
+## Interface
+
+Subtypes follow [`AbstractIntegralExtensionAlgorithm`](@ref). Backend wrappers are
+responsible for converting Julia integrands, domains, tolerances, and iteration limits to
+the C-compatible callback and option formats required by the wrapped library.
 """
 abstract type AbstractIntegralCExtensionAlgorithm <: AbstractIntegralExtensionAlgorithm end
 
@@ -17,14 +30,49 @@ abstract type AbstractIntegralCExtensionAlgorithm <: AbstractIntegralExtensionAl
     AbstractCubaAlgorithm <: AbstractIntegralCExtensionAlgorithm
 
 Abstract type for integration algorithms from the Cuba.jl package.
+
+## Interface
+
+Concrete Cuba algorithms store Cuba option fields and require `using Cuba` before
+construction. Their extension methods must accept multidimensional `IntegralProblem`s,
+forward common `solve` tolerances and iteration limits, and return a SciMLBase integral
+solution with the backend's estimate and residual/error estimate.
 """
 abstract type AbstractCubaAlgorithm <: AbstractIntegralCExtensionAlgorithm end
 
 """
-    CubaVegas()
+    CubaVegas(; flags = 0, seed = 0, minevals = 0, nstart = 1000,
+        nincrease = 500, gridno = 0)
 
 Multidimensional adaptive Monte Carlo integration from Cuba.jl.
 Importance sampling is used to reduce variance.
+
+## Keyword Arguments
+
+  - `flags`: Cuba flags bitmask.
+  - `seed`: Random seed passed to Cuba.
+  - `minevals`: Minimum number of integrand evaluations.
+  - `nstart`: Number of evaluations in the first iteration.
+  - `nincrease`: Increase in evaluations for later iterations.
+  - `gridno`: Cuba grid slot used for state reuse.
+
+## Fields
+
+The fields match the keyword arguments: `flags`, `seed`, `minevals`, `nstart`,
+`nincrease`, and `gridno`.
+
+## Returns
+
+Returns a `CubaVegas` algorithm object. `Cuba.jl` must be loaded before construction.
+
+## Example
+
+```julia
+using Integrals, Cuba
+
+prob = IntegralProblem((x, p) -> x[1] * x[2], (zeros(2), ones(2)))
+sol = solve(prob, CubaVegas(nstart = 2_000))
+```
 
 ## References
 
@@ -51,11 +99,30 @@ struct CubaVegas <: AbstractCubaAlgorithm
 end
 
 """
-    CubaSUAVE()
+    CubaSUAVE(; flags = 0, seed = 0, minevals = 0, nnew = 1000,
+        nmin = 2, flatness = 25.0)
 
 Multidimensional adaptive Monte Carlo integration from Cuba.jl.
 Suave stands for subregion-adaptive VEGAS.
 Importance sampling and subdivision are thus used to reduce variance.
+
+## Keyword Arguments
+
+  - `flags`: Cuba flags bitmask.
+  - `seed`: Random seed passed to Cuba.
+  - `minevals`: Minimum number of integrand evaluations.
+  - `nnew`: Number of new samples per subdivision.
+  - `nmin`: Minimum samples required before subdivision.
+  - `flatness`: Flatness parameter used by SUAVE subdivision.
+
+## Fields
+
+The fields match the keyword arguments: `flags`, `seed`, `minevals`, `nnew`, `nmin`,
+and `flatness`.
+
+## Returns
+
+Returns a `CubaSUAVE` algorithm object. `Cuba.jl` must be loaded before construction.
 
 ## References
 
@@ -82,10 +149,35 @@ struct CubaSUAVE{R} <: AbstractCubaAlgorithm where {R <: Real}
 end
 
 """
-    CubaDivonne()
+    CubaDivonne(; flags = 0, seed = 0, minevals = 0, key1 = 47, key2 = 1,
+        key3 = 1, maxpass = 5, border = 0.0, maxchisq = 10.0,
+        mindeviation = 0.25, xgiven = zeros(Cdouble, 0, 0), nextra = 0,
+        peakfinder = C_NULL)
 
 Multidimensional adaptive Monte Carlo integration from Cuba.jl.
 Stratified sampling is used to reduce variance.
+
+## Keyword Arguments
+
+  - `flags`: Cuba flags bitmask.
+  - `seed`: Random seed passed to Cuba.
+  - `minevals`: Minimum number of integrand evaluations.
+  - `key1`, `key2`, `key3`: Divonne rule-selection keys.
+  - `maxpass`: Maximum number of partitioning passes.
+  - `border`: Border width excluded from partitioning.
+  - `maxchisq`: Maximum chi-square value used for consistency checks.
+  - `mindeviation`: Minimum relative deviation used for subdivision.
+  - `xgiven`: Matrix of user-supplied points.
+  - `nextra`: Number of extra points supplied through `peakfinder`.
+  - `peakfinder`: Cuba peak-finder callback pointer.
+
+## Fields
+
+The fields match the keyword arguments.
+
+## Returns
+
+Returns a `CubaDivonne` algorithm object. `Cuba.jl` must be loaded before construction.
 
 ## References
 
@@ -120,9 +212,25 @@ struct CubaDivonne{R1, R2, R3, R4} <:
 end
 
 """
-    CubaCuhre()
+    CubaCuhre(; flags = 0, minevals = 0, key = 0)
 
 Multidimensional h-adaptive integration from Cuba.jl.
+
+## Keyword Arguments
+
+  - `flags`: Cuba flags bitmask.
+  - `minevals`: Minimum number of integrand evaluations.
+  - `key`: Cuba Cuhre rule-selection key.
+
+## Fields
+
+  - `flags::Int`: Stored flags bitmask.
+  - `minevals::Int`: Stored minimum evaluation count.
+  - `key::Int`: Stored rule-selection key.
+
+## Returns
+
+Returns a `CubaCuhre` algorithm object. `Cuba.jl` must be loaded before construction.
 
 ## References
 
@@ -188,16 +296,36 @@ end
     AbstractCubatureJLAlgorithm <: AbstractIntegralCExtensionAlgorithm
 
 Abstract type for integration algorithms from the Cubature.jl package.
+
+## Interface
+
+Subtypes require `using Cubature` before construction and store Cubature.jl option
+values. Extension methods must pass common `solve` tolerances and iteration limits to
+Cubature.jl and return a SciMLBase integral solution.
 """
 abstract type AbstractCubatureJLAlgorithm <: AbstractIntegralCExtensionAlgorithm end
 
 """
-    CubatureJLh(; error_norm=Cubature.INDIVIDUAL)
+    CubatureJLh(; error_norm = Cubature.INDIVIDUAL)
 
 Multidimensional h-adaptive integration from Cubature.jl.
 `error_norm` specifies the convergence criterion  for vector valued integrands.
 Defaults to `Cubature.INDIVIDUAL`, other options are
 `Cubature.PAIRED`, `Cubature.L1`, `Cubature.L2`, or `Cubature.LINF`.
+
+## Keyword Arguments
+
+  - `error_norm`: Cubature.jl error norm used for vector-valued integrands. The
+    constructor default `0` corresponds to `Cubature.INDIVIDUAL`.
+
+## Fields
+
+  - `error_norm::Int32`: Stored Cubature.jl error-norm code.
+
+## Returns
+
+Returns a `CubatureJLh` algorithm object. `Cubature.jl` must be loaded before
+construction.
 
 ## References
 
@@ -224,7 +352,7 @@ function CubatureJLh(; error_norm = 0)
 end
 
 """
-    CubatureJLp(; error_norm=Cubature.INDIVIDUAL)
+    CubatureJLp(; error_norm = Cubature.INDIVIDUAL)
 
 Multidimensional p-adaptive integration from Cubature.jl.
 This method is based on repeatedly doubling the degree of the cubature rules,
@@ -233,6 +361,20 @@ The used cubature rule is a tensor product of Clenshaw–Curtis quadrature rules
 `error_norm` specifies the convergence criterion  for vector valued integrands.
 Defaults to `Cubature.INDIVIDUAL`, other options are
 `Cubature.PAIRED`, `Cubature.L1`, `Cubature.L2`, or `Cubature.LINF`.
+
+## Keyword Arguments
+
+  - `error_norm`: Cubature.jl error norm used for vector-valued integrands. The
+    constructor default `0` corresponds to `Cubature.INDIVIDUAL`.
+
+## Fields
+
+  - `error_norm::Int32`: Stored Cubature.jl error-norm code.
+
+## Returns
+
+Returns a `CubatureJLp` algorithm object. `Cubature.jl` must be loaded before
+construction.
 """
 struct CubatureJLp <: AbstractCubatureJLAlgorithm
     error_norm::Int32
@@ -257,6 +399,22 @@ real- and complex-valued functions with both inplace and out-of-place forms. See
 documentation for additional details the algorithm arguments and on implementing
 high-precision integrands. Additionally, the error estimate is included in the return value
 of the integral, representing a ball.
+
+## Keyword Arguments
+
+  - `check_analytic`: Whether Arblib should check analyticity assumptions.
+  - `take_prec`: Whether to pass precision information through to the integrand.
+  - `warn_on_no_convergence`: Whether to warn when Arblib reports non-convergence.
+  - `opts`: Arblib option pointer or object passed to the backend.
+
+## Fields
+
+The fields match the keyword arguments: `check_analytic`, `take_prec`,
+`warn_on_no_convergence`, and `opts`.
+
+## Returns
+
+Returns an `ArblibJL` algorithm object. `Arblib.jl` must be loaded before construction.
 """
 struct ArblibJL{O} <: AbstractIntegralCExtensionAlgorithm
     check_analytic::Bool
@@ -276,12 +434,25 @@ end
 """
     VEGASMC(; kws...)
 
-Markov-chain based Vegas algorithm from MCIntegration.jl
+Markov-chain based Vegas algorithm from MCIntegration.jl.
 
 Refer to
 [`MCIntegration.integrate`](https://numericaleft.github.io/MCIntegration.jl/dev/lib/montecarlo/#MCIntegration.integrate-Tuple%7BFunction%7D)
 for documentation on the keywords, which are passed directly to the solver with a set of
 defaults that works for conforming integrands.
+
+## Keyword Arguments
+
+  - `kws...`: Backend keyword arguments forwarded to `MCIntegration.integrate`.
+
+## Fields
+
+  - `kws::NamedTuple`: Stored backend keyword arguments.
+
+## Returns
+
+Returns a `VEGASMC` algorithm object. `MCIntegration.jl` must be loaded before
+construction.
 """
 struct VEGASMC{K <: NamedTuple} <: AbstractIntegralExtensionAlgorithm
     kws::K
@@ -303,6 +474,19 @@ This algorithm supports integration over:
   `HAdaptiveIntegration.Tetrahedron`, etc.
 
 Any keyword arguments are passed directly to `HAdaptiveIntegration.integrate`.
+
+## Keyword Arguments
+
+  - `kws...`: Backend keyword arguments forwarded to `HAdaptiveIntegration.integrate`.
+
+## Fields
+
+  - `kws::NamedTuple`: Stored backend keyword arguments.
+
+## Returns
+
+Returns an `HAdaptiveIntegrationJL` algorithm object. `HAdaptiveIntegration.jl` must be
+loaded before construction.
 
 ## Example
 
@@ -339,6 +523,26 @@ especially for integrands with endpoint singularities or infinite derivatives at
   - `rtol`: Relative tolerance for convergence (default: `1e-12`)
   - `atol`: Absolute tolerance for convergence (default: `0.0`)
   - `max_levels`: Maximum number of refinement levels in adaptive integration (default: `10`)
+
+## Fields
+
+  - `rtol`: Stored relative tolerance.
+  - `atol`: Stored absolute tolerance.
+  - `max_levels::Int`: Stored maximum number of refinement levels.
+
+## Returns
+
+Returns a `FastTanhSinhQuadratureJL` algorithm object. FastTanhSinhQuadrature.jl must be
+loaded before construction.
+
+## Example
+
+```julia
+using Integrals, FastTanhSinhQuadrature
+
+prob = IntegralProblem((x, p) -> sqrt(x), (0.0, 1.0))
+sol = solve(prob, FastTanhSinhQuadratureJL(rtol = 1e-10))
+```
 
 ## Limitations
 

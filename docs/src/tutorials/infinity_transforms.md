@@ -23,6 +23,12 @@ with specific decay behavior.
 
 Integrals.jl provides three built-in transformations for handling infinite bounds:
 
+```@docs
+transformation_if_inf
+transformation_tan_inf
+transformation_cot_inf
+```
+
 ### Default: `transformation_if_inf`
 
 The default transformation uses rational functions to map infinite domains to finite intervals:

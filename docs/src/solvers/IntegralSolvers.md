@@ -31,4 +31,7 @@ CubaCuhre
 GaussLegendre
 QuadratureRule
 ArblibJL
+HAdaptiveIntegrationJL
+FastTanhSinhQuadratureJL
+ChangeOfVariables
 ```

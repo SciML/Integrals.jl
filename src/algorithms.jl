@@ -1,14 +1,38 @@
 """
     QuadGKJL(; order = 7, norm = norm, buffer = nothing)
 
-One-dimensional Gauss-Kronrod integration from QuadGK.jl.
-This method also takes the optional arguments `order` and `norm`.
-Which are the order of the integration rule
-and the norm for calculating the error, respectively.
-Lastly, the `buffer` keyword, if set (e.g. `buffer=true`), will allocate a buffer to reuse
-for multiple integrals and may require evaluating the integrand unless an
-`integrand_prototype` is provided. Unlike the `segbuf` keyword to `quadgk`, you do not
-allocate the buffer as this is handled automatically.
+One-dimensional adaptive Gauss-Kronrod integration from QuadGK.jl.
+
+## Keyword Arguments
+
+  - `order`: Order of the embedded Gauss-Kronrod rule. Higher values reduce the number
+    of subintervals for smooth integrands and increase work per subinterval.
+  - `norm`: Function used by QuadGK.jl to turn the integral estimate and error estimate
+    into scalar convergence criteria. This is most useful for array-valued integrands.
+  - `buffer`: If non-`nothing`, allocate and cache a QuadGK segment buffer during
+    `init`. This avoids repeated buffer allocation when `solve!` is called on the same
+    cache. Buffer construction may evaluate the integrand unless the problem supplies an
+    `integrand_prototype`.
+
+## Fields
+
+  - `order::Int`: Stored quadrature rule order.
+  - `norm`: Stored convergence norm.
+  - `buffer`: Stored buffer option.
+
+## Returns
+
+Returns a `QuadGKJL` algorithm object for use with
+`solve(prob::IntegralProblem, alg)`, `init`, and `solve!`.
+
+## Example
+
+```julia
+using Integrals
+
+prob = IntegralProblem((x, p) -> x^2, (0.0, 1.0))
+sol = solve(prob, QuadGKJL(order = 9); reltol = 1e-10)
+```
 
 ## References
 
@@ -34,15 +58,37 @@ QuadGKJL(; order = 7, norm = norm, buffer = nothing) = QuadGKJL(order, norm, buf
 """
     HCubatureJL(; norm=norm, initdiv=1, buffer = nothing)
 
-Multidimensional "h-adaptive" integration from HCubature.jl.
-This method also takes the optional arguments `initdiv` and `norm`.
-Which are the initial number of segments
-each dimension of the integration domain is divided into,
-and the norm for calculating the error, respectively.
-Lastly, the `buffer` keyword, if set (e.g. `buffer=true`), will allocate a buffer to reuse
-for multiple integrals and may require evaluating the integrand unless an
-`integrand_prototype` is provided. Unlike the `buffer` keyword to `hcubature/hquadrature`,
-you do not allocate the buffer as this is handled automatically.
+Multidimensional h-adaptive integration from HCubature.jl.
+
+## Keyword Arguments
+
+  - `initdiv`: Initial number of segments used to divide each integration dimension.
+  - `norm`: Function used by HCubature.jl to turn integral and error estimates into
+    scalar convergence criteria. This is most useful for array-valued integrands.
+  - `buffer`: If non-`nothing`, allocate and cache HCubature work buffers during
+    `init`. The buffer is managed by Integrals.jl; callers should not pass an HCubature
+    buffer directly.
+
+## Fields
+
+  - `initdiv::Int`: Stored initial subdivision count.
+  - `norm`: Stored convergence norm.
+  - `buffer`: Stored buffer option.
+
+## Returns
+
+Returns an `HCubatureJL` algorithm object for `IntegralProblem`s over scalar or vector
+box domains.
+
+## Example
+
+```julia
+using Integrals
+
+f(x, p) = x[1]^2 + x[2]^2
+prob = IntegralProblem(f, ([0.0, 0.0], [1.0, 1.0]))
+sol = solve(prob, HCubatureJL(initdiv = 2))
+```
 
 ## References
 
@@ -73,15 +119,39 @@ end
 
 Multidimensional adaptive Monte Carlo integration from MonteCarloIntegration.jl.
 Importance sampling is used to reduce variance.
-This method also takes three optional arguments `nbins`, `ncalls` and `debug`
-which are the initial number of bins
-each dimension of the integration domain is divided into,
-the number of function calls per iteration of the algorithm,
-and whether debug info should be printed, respectively.
+
+## Keyword Arguments
+
+  - `nbins`: Initial number of bins used for each integration dimension.
+  - `ncalls`: Number of integrand calls requested per Monte Carlo iteration.
+  - `debug`: Whether to request debug output from MonteCarloIntegration.jl.
+  - `seed`: Optional random seed passed to the underlying algorithm.
+
+## Fields
+
+  - `nbins::Int`: Stored bin count.
+  - `ncalls::Int`: Stored calls-per-iteration target.
+  - `debug::Bool`: Stored debug-output flag.
+  - `seed`: Stored seed value.
+
+## Returns
+
+Returns a `VEGAS` algorithm object for multidimensional scalar Monte Carlo
+integration.
+
+## Example
+
+```julia
+using Integrals
+
+f(x, p) = exp(-sum(abs2, x))
+prob = IntegralProblem(f, (zeros(3), ones(3)))
+sol = solve(prob, VEGAS(ncalls = 2_000); reltol = 1e-2)
+```
 
 ## Limitations
 
-This algorithm can only integrate `Float64`-valued functions
+This algorithm can only integrate scalar `Float64`-valued functions.
 
 ## References
 
@@ -109,22 +179,52 @@ function VEGAS(; nbins = 100, ncalls = 1000, debug = false, seed = nothing)
 end
 
 """
-    GaussLegendre{C, N, W}
+    GaussLegendre(; n = 250, subintervals = 1, nodes = nothing, weights = nothing)
+    GaussLegendre(nodes, weights, subintervals = 1)
 
-Struct for evaluating an integral via (composite) Gauss-Legendre quadrature.
-The field `C` will be `true` if `subintervals > 1`, and `false` otherwise.
+Fixed-order Gauss-Legendre quadrature, optionally applied on a composite partition of
+the integration interval.
 
-The fields `nodes::N` and `weights::W` are defined by
-`nodes, weights = gausslegendre(n)` for a given number of nodes `n`.
+## Arguments
 
-The field `subintervals::Int64 = 1` (with default value `1`) defines the
-number of intervals to partition the original interval of integration
-`[a, b]` into, splitting it into `[xⱼ, xⱼ₊₁]` for `j = 1,…,subintervals`,
-where `xⱼ = a + (j-1)h` and `h = (b-a)/subintervals`. Gauss-Legendre
-quadrature is then applied on each subinterval. For example, if
-`[a, b] = [-1, 1]` and `subintervals = 2`, then Gauss-Legendre
-quadrature will be applied separately on `[-1, 0]` and `[0, 1]`,
-summing the two results.
+  - `nodes`: Quadrature nodes on the standard interval `[-1, 1]`.
+  - `weights`: Quadrature weights corresponding to `nodes`.
+  - `subintervals`: Number of equally sized subintervals used for composite
+    Gauss-Legendre quadrature.
+
+## Keyword Arguments
+
+  - `n`: Number of quadrature nodes to construct when `nodes` or `weights` is
+    `nothing`.
+  - `subintervals`: Number of subintervals used for composite quadrature. Must be
+    positive.
+  - `nodes`: Optional precomputed nodes. If omitted, `gausslegendre(n)` is used.
+  - `weights`: Optional precomputed weights. If omitted, `gausslegendre(n)` is used.
+
+## Fields
+
+  - `nodes`: Stored quadrature nodes.
+  - `weights`: Stored quadrature weights.
+  - `subintervals::Int64`: Stored number of subintervals.
+
+The type parameter `C` is `true` when `subintervals > 1` and `false` otherwise.
+Composite mode splits `[a, b]` into `subintervals` pieces and applies the same rule to
+each piece.
+
+## Returns
+
+Returns a `GaussLegendre` algorithm object. `GaussLegendre(; n=...)` requires
+FastGaussQuadrature.jl to be loaded so that the `gausslegendre` extension method is
+available.
+
+## Example
+
+```julia
+using Integrals, FastGaussQuadrature
+
+prob = IntegralProblem((x, p) -> cos(x), (0.0, pi / 2))
+sol = solve(prob, GaussLegendre(n = 64))
+```
 """
 struct GaussLegendre{C, N, W} <: SciMLBase.AbstractIntegralAlgorithm
     nodes::N
@@ -151,12 +251,40 @@ end
 """
     QuadratureRule(q; n=250)
 
-Algorithm to construct and evaluate a quadrature rule `q` of `n` points computed from the
-inputs as `x, w = q(n)`. It assumes the nodes and weights are for the standard interval
-`[-1, 1]^d` in `d` dimensions, and rescales the nodes to the specific hypercube being
-solved. The nodes `x` may be scalars in 1d or vectors in arbitrary dimensions, and the
-weights `w` must be scalar. The algorithm computes the quadrature rule `sum(w .* f.(x))` and
-the caller must check that the result is converged with respect to `n`.
+Evaluate a user-supplied fixed quadrature rule.
+
+The rule function `q` must support `nodes, weights = q(n)` and return nodes and weights
+for the standard interval or hypercube `[-1, 1]^d`. Integrals.jl rescales the nodes to
+the problem domain before evaluating the integrand. Nodes may be scalars in one
+dimension or vectors in multiple dimensions; weights must be scalar.
+
+## Arguments
+
+  - `q`: Function that returns `(nodes, weights)` for a requested node count.
+
+## Keyword Arguments
+
+  - `n`: Number of quadrature nodes requested from `q`. Must be positive.
+
+## Fields
+
+  - `q`: Stored quadrature rule constructor.
+  - `n::Int`: Stored quadrature node count.
+
+## Returns
+
+Returns a `QuadratureRule` algorithm object. The method computes the fixed quadrature
+sum and reports success; callers are responsible for checking convergence by changing
+`n` or otherwise validating the chosen rule.
+
+## Example
+
+```julia
+using Integrals, FastGaussQuadrature
+
+prob = IntegralProblem((x, p) -> x^4, (-1.0, 1.0))
+sol = solve(prob, QuadratureRule(gausslegendre; n = 8))
+```
 """
 struct QuadratureRule{Q} <: SciMLBase.AbstractIntegralAlgorithm
     q::Q
