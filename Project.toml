@@ -43,6 +43,9 @@ IntegralsMCIntegrationExt = "MCIntegration"
 IntegralsMooncakeExt = ["Mooncake", "Zygote", "ChainRulesCore"]
 IntegralsZygoteExt = ["Zygote", "ChainRulesCore"]
 
+[sources]
+SciMLTesting = {url = "https://github.com/SciML/SciMLTesting.jl", rev = "a5cecca928f2c684c23505c3cd83921d71753e2e"}
+
 [compat]
 ADTypes = "1.22.0"
 Arblib = "1"
@@ -68,7 +71,7 @@ Reexport = "1.2"
 SafeTestsets = "0.1, 1"
 SciMLBase = "2.104, 3.0"
 SciMLLogging = "1.10.1, 2"
-SciMLTesting = "1"
+SciMLTesting = "2.1"
 StaticArrays = "1.9.8"
 Test = "1.10"
 Unitful = "1"
