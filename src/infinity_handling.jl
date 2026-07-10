@@ -137,6 +137,16 @@ intervals using the following substitutions:
 This is the default transformation applied by algorithms like `QuadGKJL` and `HCubatureJL`
 when encountering infinite integration bounds.
 
+## Arguments
+
+  - `f`: `IntegralFunction` or `BatchIntegralFunction` to transform.
+  - `domain`: Original integration domain, usually `(lb, ub)`.
+
+## Returns
+
+Returns `(g, tdomain)`, where `g` is the transformed integrand and `tdomain` is the
+finite transformed domain.
+
 ## Example
 
 ```julia
@@ -238,6 +248,16 @@ using the transformation:
 
 This transformation can provide better accuracy than the default rational transformation
 for some integrands, particularly those that decay like `1/(1+x²)`.
+
+## Arguments
+
+  - `f`: `IntegralFunction` or `BatchIntegralFunction` to transform.
+  - `domain`: Original integration domain, usually `(lb, ub)`.
+
+## Returns
+
+Returns `(g, tdomain)`, where `g` is the transformed integrand and `tdomain` is the
+finite transformed domain.
 
 ## Example
 
@@ -356,6 +376,16 @@ For `(-\\infty, a]`:
 ```math
 s = -\\cot\\left[\\frac{(\\pi + 2\\arctan(a))(\\xi+1)}{4}\\right], \\quad \\xi \\in [-1, 1]
 ```
+
+## Arguments
+
+  - `f`: `IntegralFunction` or `BatchIntegralFunction` to transform.
+  - `domain`: Original integration domain, usually `(lb, ub)`.
+
+## Returns
+
+Returns `(g, tdomain)`, where `g` is the transformed integrand and `tdomain` is the
+finite transformed domain.
 
 ## Example
 

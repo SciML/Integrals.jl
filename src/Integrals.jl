@@ -31,6 +31,12 @@ include("simpsons.jl")
     QuadSensitivityAlg
 
 Abstract type for quadrature sensitivity algorithms.
+
+## Interface
+
+Subtypes are used as `sensealg` values in `init` and `solve` for `IntegralProblem`s.
+Concrete algorithms must provide or select a vector-Jacobian product path compatible
+with the integrand calling convention and the active automatic differentiation backend.
 """
 abstract type QuadSensitivityAlg end
 """
@@ -38,9 +44,26 @@ abstract type QuadSensitivityAlg end
 
 Wrapper for custom vector-Jacobian product functions in automatic differentiation.
 
+## Arguments
+
+  - `vjp`: Vector-Jacobian product strategy or callable object.
+
 # Fields
 
-  - `vjp::V`: The vector-Jacobian product function
+  - `vjp::V`: Stored vector-Jacobian product strategy.
+
+## Returns
+
+Returns a `ReCallVJP` sensitivity wrapper for the `sensealg` keyword.
+
+## Example
+
+```julia
+using Integrals
+
+prob = IntegralProblem((x, p) -> p[1] * x, (0.0, 1.0), [2.0])
+cache = init(prob, QuadGKJL(); sensealg = Integrals.ReCallVJP(Integrals.ZygoteVJP()))
+```
 """
 struct ReCallVJP{V}
     vjp::V
@@ -51,12 +74,23 @@ end
 
 Abstract type for vector-Jacobian product (VJP) methods used in automatic differentiation
 of integrals.
+
+## Interface
+
+Subtypes identify an automatic differentiation backend. Extension methods implement the
+backend-specific `_compute_dfdp_and_f` dispatch used during differentiated solves. The
+method must return both the parameter derivative information and the integrand wrapper
+needed by the quadrature solve.
 """
 abstract type IntegralVJP end
 """
     ZygoteVJP <: IntegralVJP
 
 Uses Zygote.jl for vector-Jacobian products in automatic differentiation of integrals.
+
+## Returns
+
+Returns a `ZygoteVJP` backend marker for `ReCallVJP`.
 """
 struct ZygoteVJP <: IntegralVJP end
 """
@@ -66,7 +100,11 @@ Uses ReverseDiff.jl for vector-Jacobian products in automatic differentiation of
 
 # Fields
 
-  - `compile::Bool`: Whether to compile the tape for better performance
+  - `compile::Bool`: Whether to compile the ReverseDiff tape.
+
+## Returns
+
+Returns a `ReverseDiffVJP` backend marker for `ReCallVJP`.
 """
 struct ReverseDiffVJP <: IntegralVJP
     compile::Bool
@@ -76,6 +114,10 @@ end
     MooncakeVJP <: IntegralVJP
 
 Uses Mooncake.jl for vector-Jacobian products in automatic differentiation of integrals.
+
+## Returns
+
+Returns a `MooncakeVJP` backend marker for `ReCallVJP`.
 """
 struct MooncakeVJP <: IntegralVJP end
 
@@ -111,7 +153,12 @@ Exception thrown when unrecognized keyword arguments are passed to `solve`.
 
 # Fields
 
-  - `kwargs`: The keyword arguments that were passed
+  - `kwargs`: Keyword arguments that were passed to `solve`.
+
+## Returns
+
+Constructs an exception object. `showerror` reports the allowed common solver keywords
+and the unrecognized names.
 """
 struct CommonKwargError <: Exception
     kwargs::Any

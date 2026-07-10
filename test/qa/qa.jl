@@ -1,6 +1,8 @@
 using SciMLTesting, Integrals, Test
 using JET
 
+include("public_api_docs.jl")
+
 run_qa(
     Integrals;
     explicit_imports = true,

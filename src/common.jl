@@ -116,19 +116,41 @@ function SciMLBase.solve(::IntegralProblem; kwargs...)
 end
 
 """
-```julia
-solve(prob::IntegralProblem, alg::SciMLBase.AbstractIntegralAlgorithm; kwargs...)
-```
+    solve(prob::IntegralProblem, alg::SciMLBase.AbstractIntegralAlgorithm; kwargs...)
+
+Solve an integral problem with the specified integration algorithm.
+
+## Arguments
+
+  - `prob`: Integral problem containing the integrand, domain, parameters, and problem
+    keyword options.
+  - `alg`: Integration algorithm, such as `QuadGKJL()`, `HCubatureJL()`, or another
+    subtype of `SciMLBase.AbstractIntegralAlgorithm`.
 
 ## Keyword Arguments
 
 The arguments to `solve` are common across all of the quadrature methods.
 These common arguments are:
 
-  - `maxiters` (the maximum number of iterations)
-  - `abstol` (absolute tolerance in changes of the objective value)
-  - `reltol` (relative tolerance  in changes of the objective value)
-  - `verbose` (verbosity control via [`IntegralVerbosity`](@ref); defaults to `IntegralVerbosity()`)
+  - `maxiters`: Maximum number of algorithm iterations or backend evaluations.
+  - `abstol`: Absolute tolerance for the integral residual/error estimate.
+  - `reltol`: Relative tolerance for the integral residual/error estimate.
+  - `verbose`: Verbosity control via [`IntegralVerbosity`](@ref). Defaults to
+    `IntegralVerbosity()`.
+
+## Returns
+
+Returns a SciMLBase integral solution whose `u` field is the integral estimate and whose
+`resid` field is the backend residual or error estimate when available.
+
+## Example
+
+```julia
+using Integrals
+
+prob = IntegralProblem((x, p) -> sin(x), (0.0, pi))
+sol = solve(prob, QuadGKJL(); reltol = 1e-10, abstol = 1e-10)
+```
 """
 function SciMLBase.solve(
         prob::IntegralProblem,
@@ -200,13 +222,35 @@ function SciMLBase.init(
 end
 
 """
-```julia
-solve(prob::SampledIntegralProblem, alg::SciMLBase.AbstractIntegralAlgorithm; kwargs...)
-```
+    solve(prob::SampledIntegralProblem, alg::SciMLBase.AbstractIntegralAlgorithm; kwargs...)
+
+Integrate sampled data with a sampled-data quadrature algorithm.
+
+## Arguments
+
+  - `prob`: Sampled integral problem containing sampled values `y`, sampling points
+    `x`, and the integration dimension.
+  - `alg`: Sampled-data integration algorithm, such as `TrapezoidalRule()` or
+    `SimpsonsRule()`.
 
 ## Keyword Arguments
 
-There are no keyword arguments used to solve `SampledIntegralProblem`s
+There are no algorithm-independent keyword arguments used to solve
+`SampledIntegralProblem`s.
+
+## Returns
+
+Returns a SciMLBase integral solution whose `u` field is the sampled integral estimate.
+
+## Example
+
+```julia
+using Integrals
+
+x = range(0, 1, length = 21)
+prob = SampledIntegralProblem(x .^ 2, x)
+sol = solve(prob, SimpsonsRule())
+```
 """
 function SciMLBase.solve(
         prob::SampledIntegralProblem,
