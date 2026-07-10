@@ -1,11 +1,12 @@
 using SciMLTesting, Integrals, Test
 using JET
 
-include("public_api_docs.jl")
+const UPSTREAM_RENDERED_API = (:SciMLBase, :remake)
 
 run_qa(
     Integrals;
     explicit_imports = true,
+    api_docs_kwargs = (; rendered = true, rendered_ignore = UPSTREAM_RENDERED_API),
     aqua_kwargs = (;
         # IntegralProblem / SampledIntegralProblem are SciMLBase types this package
         # owns the integral-solver methods for, so dispatching on them is not piracy.

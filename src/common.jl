@@ -11,10 +11,71 @@ mutable struct IntegralCache{iip, F, D, P, PK, A, S, K, Tc, VT}
     verbosity::VT
 end
 
+"""
+    isinplace(cache::IntegralCache) -> Bool
+
+Return whether an initialized integral cache wraps an in-place integrand.
+
+## Arguments
+
+  - `cache`: Cache returned by [`init`](@ref) for an `IntegralProblem`.
+
+## Returns
+
+Returns `true` when the cached integral function mutates its output argument, and
+`false` otherwise.
+
+## Example
+
+```julia
+using Integrals
+
+prob = IntegralProblem((x, p) -> x^2, (0.0, 1.0))
+cache = init(prob, QuadGKJL())
+isinplace(cache)
+```
+"""
 SciMLBase.isinplace(::IntegralCache{iip}) where {iip} = iip
 
 init_cacheval(::SciMLBase.AbstractIntegralAlgorithm, args...) = nothing
 
+"""
+    init(prob::IntegralProblem, alg::SciMLBase.AbstractIntegralAlgorithm; kwargs...)
+
+Initialize a reusable integral solver cache for `prob` and `alg`.
+
+## Arguments
+
+  - `prob`: Integral problem containing the integrand, domain, parameters, and problem
+    keyword options.
+  - `alg`: Integration algorithm, such as `QuadGKJL()`, `HCubatureJL()`, or another
+    subtype of `SciMLBase.AbstractIntegralAlgorithm`.
+
+## Keyword Arguments
+
+  - `sensealg`: Sensitivity algorithm used by automatic differentiation paths. Defaults to
+    `ReCallVJP(ZygoteVJP())`.
+  - `verbose`: Verbosity control via [`IntegralVerbosity`](@ref). Defaults to
+    `IntegralVerbosity()`.
+  - `do_inf_transformation`: Deprecated. Infinite-domain transformations are always
+    applied when needed.
+  - Additional keyword arguments are forwarded to the eventual solve.
+
+## Returns
+
+Returns an internal cache object that stores the transformed algorithm, cached backend
+state, verbosity settings, and solve keyword arguments for reuse with [`solve!`](@ref).
+
+## Example
+
+```julia
+using Integrals
+
+prob = IntegralProblem((x, p) -> sin(x), (0.0, pi))
+cache = init(prob, QuadGKJL(); reltol = 1e-10)
+solve!(cache)
+```
+"""
 function SciMLBase.init(
         prob::IntegralProblem{iip},
         alg::SciMLBase.AbstractIntegralAlgorithm;
@@ -160,6 +221,30 @@ function SciMLBase.solve(
     return solve!(init(prob, alg; kwargs...))
 end
 
+"""
+    solve!(cache::IntegralCache)
+
+Solve an initialized integral cache.
+
+## Arguments
+
+  - `cache`: Cache returned by [`init`](@ref) for an `IntegralProblem`.
+
+## Returns
+
+Returns a SciMLBase integral solution whose `u` field is the integral estimate and whose
+`resid` field is the backend residual or error estimate when available.
+
+## Example
+
+```julia
+using Integrals
+
+prob = IntegralProblem((x, p) -> x^2, (0.0, 1.0))
+cache = init(prob, QuadGKJL())
+sol = solve!(cache)
+```
+"""
 function SciMLBase.solve!(cache::IntegralCache)
     return __solve(
         cache, cache.alg, cache.sensealg, cache.domain, cache.p;
@@ -195,6 +280,42 @@ function Base.setproperty!(cache::SampledIntegralCache, name::Symbol, x)
     return setfield!(cache, name, x)
 end
 
+"""
+    init(prob::SampledIntegralProblem, alg::SciMLBase.AbstractIntegralAlgorithm; kwargs...)
+
+Initialize a reusable sampled-data integral solver cache.
+
+## Arguments
+
+  - `prob`: Sampled integral problem containing sampled values, sampling points, and the
+    integration dimension.
+  - `alg`: Sampled-data integration algorithm, such as `TrapezoidalRule()` or
+    `SimpsonsRule()`.
+
+## Keyword Arguments
+
+  - `verbose`: Verbosity control via [`IntegralVerbosity`](@ref). Defaults to
+    `IntegralVerbosity()`.
+
+No other keyword arguments are accepted by this cache initializer.
+
+## Returns
+
+Returns an internal cache object that can be reused with [`solve!`](@ref). Updating the
+sample locations marks the cached weights stale so they are recomputed before the next
+solve.
+
+## Example
+
+```julia
+using Integrals
+
+x = range(0, 1, length = 21)
+prob = SampledIntegralProblem(x .^ 2, x)
+cache = init(prob, SimpsonsRule())
+solve!(cache)
+```
+"""
 function SciMLBase.init(
         prob::SampledIntegralProblem,
         alg::SciMLBase.AbstractIntegralAlgorithm;
@@ -260,6 +381,30 @@ function SciMLBase.solve(
     return solve!(init(prob, alg; kwargs...))
 end
 
+"""
+    solve!(cache::SampledIntegralCache)
+
+Solve an initialized sampled-data integral cache.
+
+## Arguments
+
+  - `cache`: Cache returned by [`init`](@ref) for a `SampledIntegralProblem`.
+
+## Returns
+
+Returns a SciMLBase integral solution whose `u` field is the sampled integral estimate.
+
+## Example
+
+```julia
+using Integrals
+
+x = range(0, 1, length = 21)
+prob = SampledIntegralProblem(x .^ 2, x)
+cache = init(prob, TrapezoidalRule())
+sol = solve!(cache)
+```
+"""
 function SciMLBase.solve!(cache::SampledIntegralCache)
     return __solvebp(cache, cache.alg; cache.kwargs...)
 end
