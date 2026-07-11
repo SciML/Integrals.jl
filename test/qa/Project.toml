@@ -8,7 +8,6 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [sources]
 Integrals = {path = "../.."}
-SciMLTesting = {url = "https://github.com/SciML/SciMLTesting.jl", rev = "a5cecca928f2c684c23505c3cd83921d71753e2e"}
 
 [compat]
 Aqua = "0.8"
