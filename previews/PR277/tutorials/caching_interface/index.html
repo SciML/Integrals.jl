@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Integrals with Caching Interface · Integrals.jl</title><meta name="title" content="Integrals with Caching Interface · Integrals.jl"/><meta property="og:title" content="Integrals with Caching Interface · Integrals.jl"/><meta property="twitter:title" content="Integrals with Caching Interface · Integrals.jl"/><meta name="description" content="Documentation for Integrals.jl."/><meta property="og:description" content="Documentation for Integrals.jl."/><meta property="twitter:description" content="Documentation for Integrals.jl."/><meta property="og:url" content="https://docs.sciml.ai/Integrals/stable/tutorials/caching_interface/"/><meta property="twitter:url" content="https://docs.sciml.ai/Integrals/stable/tutorials/caching_interface/"/><link rel="canonical" href="https://docs.sciml.ai/Integrals/stable/tutorials/caching_interface/"/><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../search_index.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script><link href="../../assets/favicon.ico" rel="icon" type="image/x-icon"/></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../"><img src="../../assets/logo.png" alt="Integrals.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../../">Integrals.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../">Integrals.jl: Unified Integral Approximation Interface</a></li><li><span class="tocitem">Tutorials</span><ul><li><a class="tocitem" href="../numerical_integrals/">Numerically Solving Integrals</a></li><li><a class="tocitem" href="../differentiating_integrals/">Differentiating Integrals</a></li></ul></li><li><span class="tocitem">Basics</span><ul><li><a class="tocitem" href="../../basics/IntegralProblem/">Integral Problems</a></li><li><a class="tocitem" href="../../basics/IntegralFunction/">Integral Functions</a></li><li><a class="tocitem" href="../../basics/SampledIntegralProblem/">Integrating pre-sampled data</a></li><li><a class="tocitem" href="../../basics/solve/">Common Solver Options (Solve Keyword Arguments)</a></li><li><a class="tocitem" href="../../basics/FAQ/">Frequently Asked Questions</a></li></ul></li><li><span class="tocitem">Solvers</span><ul><li><a class="tocitem" href="../../solvers/IntegralSolvers/">Integral Solver Algorithms</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Integrals with Caching Interface</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Integrals with Caching Interface</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/SciML/Integrals.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/SciML/Integrals.jl/blob/master/docs/src/tutorials/caching_interface.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Integrals-with-Caching-Interface"><a class="docs-heading-anchor" href="#Integrals-with-Caching-Interface">Integrals with Caching Interface</a><a id="Integrals-with-Caching-Interface-1"></a><a class="docs-heading-anchor-permalink" href="#Integrals-with-Caching-Interface" title="Permalink"></a></h1><p>Often, integral solvers allocate memory or reuse quadrature rules for solving different problems. For example, if one is going to solve the same integral for several parameters</p><pre><code class="language-julia hljs">using Integrals
+
+prob = IntegralProblem((x, p) -&gt; sin(x * p), (0, 1), 14.0)
+alg = QuadGKJL()
+
+solve(prob, alg)
+
+prob = remake(prob, p = 15.0)
+solve(prob, alg)</code></pre><p>then it would be more efficient to allocate the heap used by <code>quadgk</code> across several calls, shown below by directly calling the library</p><pre><code class="language-julia hljs">using QuadGK
+segbuf = QuadGK.alloc_segbuf()
+quadgk(x -&gt; sin(14x), 0, 1, segbuf = segbuf)
+quadgk(x -&gt; sin(15x), 0, 1, segbuf = segbuf)</code></pre><p>Integrals.jl&#39;s caching interface automates this process to reuse resources if an algorithm supports it and if the necessary types to build the cache can be inferred from <code>prob</code>. To do this with Integrals.jl, you simply <code>init</code> a cache, <code>solve!</code>, replace <code>p</code>, and solve again. This uses the <a href="https://docs.sciml.ai/SciMLBase/stable/interfaces/Init_Solve/#init-and-the-Iterator-Interface">SciML <code>init</code> interface</a></p><pre><code class="language-julia hljs">using Integrals
+
+prob = IntegralProblem((x, p) -&gt; sin(x * p), (0, 1), 14.0)
+alg = QuadGKJL()
+
+cache = init(prob, alg)
+sol1 = solve!(cache)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">retcode: Success
+u: 0.061661627270869046</code></pre><pre><code class="language-julia hljs">cache.p = 15.0
+sol2 = solve!(cache)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">retcode: Success
+u: 0.11731252752392136</code></pre><p>The caching interface is intended for updating <code>p</code> and <code>domain</code>. Note that the types of these variables is not allowed to change. If it is necessary to change the integrand <code>f</code> instead of defining a new <code>IntegralProblem</code>, consider using <a href="https://github.com/yuyichao/FunctionWrappers.jl">FunctionWrappers.jl</a>.</p><h2 id="Caching-for-sampled-integral-problems"><a class="docs-heading-anchor" href="#Caching-for-sampled-integral-problems">Caching for sampled integral problems</a><a id="Caching-for-sampled-integral-problems-1"></a><a class="docs-heading-anchor-permalink" href="#Caching-for-sampled-integral-problems" title="Permalink"></a></h2><p>For sampled integral problems, it is possible to cache the weights and reuse them for multiple data sets.</p><pre><code class="language-julia hljs">using Integrals
+
+x = 0.0:0.1:1.0
+y = sin.(x)
+
+prob = SampledIntegralProblem(y, x)
+alg = TrapezoidalRule()
+
+cache = init(prob, alg)
+sol1 = solve!(cache)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">retcode: Success
+u: 0.4593145488579764</code></pre><pre><code class="language-julia hljs">cache.y = cos.(x)   # use .= to update in-place
+sol2 = solve!(cache)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">retcode: Success
+u: 0.8407696420884198</code></pre><p>If the grid is modified, the weights are recomputed.</p><pre><code class="language-julia hljs">cache.x = 0.0:0.2:2.0
+cache.y = sin.(cache.x)
+sol3 = solve!(cache)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">retcode: Success
+u: 1.4114231970988789</code></pre><p>For multi-dimensional datasets, the integration dimension can also be changed</p><pre><code class="language-julia hljs">using Integrals
+
+x = 0.0:0.1:1.0
+y = sin.(x) .* cos.(x&#39;)
+
+prob = SampledIntegralProblem(y, x)
+alg = TrapezoidalRule()
+
+cache = init(prob, alg)
+sol1 = solve!(cache)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">retcode: Success
+u: 11-element Vector{Float64}:
+ 0.0
+ 0.08393690598261781
+ 0.16703514214650947
+ 0.2484644183845503
+ 0.3274111202855099
+ 0.4030864385003036
+ 0.474734250264264
+ 0.5416386743258631
+ 0.6031312237955397
+ 0.6585974854457273
+ 0.7074832587247253</code></pre><pre><code class="language-julia hljs">cache.dim = 1
+sol2 = solve!(cache)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">retcode: Success
+u: 11-element Vector{Float64}:
+ 0.4593145488579764
+ 0.4570198892864838
+ 0.4501588380519307
+ 0.4387999485102908
+ 0.42305671493111446
+ 0.4030864385003037
+ 0.3790886556186594
+ 0.35130314420012265
+ 0.32000752789011855
+ 0.28551450214186125
+ 0.24816870986674897</code></pre></article><nav class="docs-footer"><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.14.1 on <span class="colophon-date" title="Thursday 31 July 2025 11:06">Thursday 31 July 2025</span>. Using Julia version 1.11.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

@@ -1,0 +1,19 @@
+[deps]
+Cuba = "8a292aeb-7a57-582c-b821-06e4c11590b1"
+Cubature = "667455a9-e2ce-5579-9412-b964f529a492"
+Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+FiniteDiff = "6a86dc24-6348-571c-b903-95158fe2bd41"
+ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+Integrals = "de52edbc-65ea-441a-8357-d3a637375a31"
+Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
+
+[compat]
+Cuba = "2"
+Cubature = "1"
+Distributions = "0.25"
+Documenter = "1"
+FiniteDiff = "2"
+ForwardDiff = "0.10, 1"
+Integrals = "3, 4, 5"
+Zygote = "0.6, 0.7"
