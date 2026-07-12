@@ -356,9 +356,9 @@ version = "3.0.2"
 
 [[deps.FiniteDiff]]
 deps = ["ArrayInterface", "LinearAlgebra", "Setfield"]
-git-tree-sha1 = "2e5742cda07276e1834281ada4cc71b6bfc87586"
+git-tree-sha1 = "07e98e3f332ee60179813dd9cdf21412e3c0a96a"
 uuid = "6a86dc24-6348-571c-b903-95158fe2bd41"
-version = "2.31.1"
+version = "2.32.0"
 
     [deps.FiniteDiff.extensions]
     FiniteDiffBandedMatricesExt = "BandedMatrices"
@@ -467,9 +467,9 @@ version = "0.1.3"
 
 [[deps.Integrals]]
 deps = ["ArrayInterface", "CommonSolve", "HCubature", "LinearAlgebra", "MonteCarloIntegration", "QuadGK", "Random", "Reexport", "SciMLBase", "SciMLLogging"]
-path = "/home/runner/work/Integrals.jl/Integrals.jl"
+path = "/home/runner/_work/Integrals.jl/Integrals.jl"
 uuid = "de52edbc-65ea-441a-8357-d3a637375a31"
-version = "5.4.3"
+version = "5.4.4"
 
     [deps.Integrals.extensions]
     IntegralsArblibExt = "Arblib"
@@ -734,16 +734,18 @@ weakdeps = ["REPL"]
 
 [[deps.PreallocationTools]]
 deps = ["Adapt", "ArrayInterface", "PrecompileTools"]
-git-tree-sha1 = "1b8f36619cf3d816e44f1a45006c28c249dbaed7"
+git-tree-sha1 = "920abd8738c02528d1078885e07bbd57939fc949"
 uuid = "d236fae5-4411-538c-8e31-a6e3d9e00b46"
-version = "1.2.2"
+version = "1.3.0"
 
     [deps.PreallocationTools.extensions]
+    PreallocationToolsEnzymeCoreExt = "EnzymeCore"
     PreallocationToolsForwardDiffExt = "ForwardDiff"
     PreallocationToolsReverseDiffExt = "ReverseDiff"
     PreallocationToolsSparseConnectivityTracerExt = "SparseConnectivityTracer"
 
     [deps.PreallocationTools.weakdeps]
+    EnzymeCore = "f151be2c-9106-41f4-ab19-57ee4f262869"
     ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
     ReverseDiff = "37e2e3b7-166d-5795-8a7a-e32c996b4267"
     SparseConnectivityTracer = "9f842d2f-2579-4b1d-911e-f412cf18a3f5"
@@ -885,9 +887,9 @@ version = "0.5.1+0"
 
 [[deps.Roots]]
 deps = ["Accessors", "CommonSolve", "Printf"]
-git-tree-sha1 = "4ff67dc0de22331b65e1867e77285836b79bdc82"
+git-tree-sha1 = "125cbd31a56de53169c3eed9c17180bc6c245f83"
 uuid = "f2b01f46-fcfa-551c-844a-d8ac1e96c665"
-version = "3.0.3"
+version = "3.0.4"
 
     [deps.Roots.extensions]
     RootsChainRulesCoreExt = "ChainRulesCore"
