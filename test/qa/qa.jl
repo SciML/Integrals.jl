@@ -3,7 +3,6 @@ using JET
 
 run_qa(
     Integrals;
-    explicit_imports = true,
     aqua_kwargs = (;
         # IntegralProblem / SampledIntegralProblem are SciMLBase types this package
         # owns the integral-solver methods for, so dispatching on them is not piracy.
