@@ -13,4 +13,5 @@ solve!(cache::Integrals.IntegralCache)
 solve!(cache::Integrals.SampledIntegralCache)
 isinplace(cache::Integrals.IntegralCache)
 ReturnCode
+remake
 ```
