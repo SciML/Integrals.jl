@@ -3,6 +3,10 @@ using JET
 
 run_qa(
     Integrals;
+    reexports_allow = (
+        :BatchIntegralFunction, :IntegralFunction, :IntegralProblem, :ReturnCode,
+        :SampledIntegralProblem, :SciMLBase, :init, :isinplace, :remake, :solve, :solve!,
+    ),
     aqua_kwargs = (;
         # IntegralProblem / SampledIntegralProblem are SciMLBase types this package
         # owns the integral-solver methods for, so dispatching on them is not piracy.

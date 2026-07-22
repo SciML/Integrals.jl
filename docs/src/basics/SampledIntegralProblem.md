@@ -28,10 +28,9 @@ The exact answer is of course ``1/3``.
 
 ## Details
 
-```@docs
-SciMLBase.SampledIntegralProblem
-solve(::SampledIntegralProblem, ::SciMLBase.AbstractIntegralAlgorithm)
-```
+`SampledIntegralProblem` and the generic `solve` interface are provided by SciMLBase
+and reexported by Integrals.jl for convenience. The following sections describe how
+Integrals.jl algorithms use sampled data.
 
 ### Non-equidistant grids
 

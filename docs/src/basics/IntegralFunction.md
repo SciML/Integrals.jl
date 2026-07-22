@@ -1,6 +1,5 @@
 # [Integral Functions](@id func)
 
-```@docs
-SciMLBase.IntegralFunction
-SciMLBase.BatchIntegralFunction
-```
+`IntegralFunction` and `BatchIntegralFunction` are SciMLBase problem-interface
+wrappers reexported by Integrals.jl for convenience. Their API is documented by
+SciMLBase; Integrals.jl supplies algorithms that solve problems built with them.
