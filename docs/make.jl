@@ -8,9 +8,8 @@ include("pages.jl")
 makedocs(
     sitename = "Integrals.jl",
     authors = "Chris Rackauckas",
-    modules = [Integrals, Integrals.SciMLBase],
-    clean = true, doctest = false, linkcheck = true,
-    warnonly = [:missing_docs],
+    modules = [Integrals],
+    clean = true, doctest = true, linkcheck = true, checkdocs = :exports,
     format = Documenter.HTML(
         assets = ["assets/favicon.ico"],
         canonical = "https://docs.sciml.ai/Integrals/stable/"

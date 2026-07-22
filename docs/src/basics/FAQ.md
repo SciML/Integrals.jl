@@ -48,7 +48,7 @@ precision arithmetic may help.
 
 ## How can I integrate arbitrarily-spaced data?
 
-See [`SampledIntegralProblem`](@ref).
+See the Integrating pre-sampled data page.
 
 ## How can I integrate on arbitrary geometries?
 

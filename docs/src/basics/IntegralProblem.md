@@ -1,8 +1,8 @@
 # [Integral Problems](@id prob)
 
-```@docs
-SciMLBase.IntegralProblem
-```
+`IntegralProblem` is a SciMLBase problem type reexported by Integrals.jl for
+convenience. Its construction API is documented by SciMLBase; this page describes the
+integrand shapes accepted by Integrals.jl algorithms.
 
 The correct shape of the variables (inputs) `u` and the values (outputs) `y` of the integrand `f`
 depends on whether batching is used. Batching is enabled by using
