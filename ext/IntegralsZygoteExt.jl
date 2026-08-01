@@ -1,7 +1,8 @@
 module IntegralsZygoteExt
 using LinearAlgebra: dot
 using Integrals
-using Zygote
+using Zygote: Zygote
+using ZygoteRules: ZygoteRules, @adjoint, literal_getproperty
 import ChainRulesCore
 import ChainRulesCore: Tangent, NoTangent, ProjectTo
 
@@ -210,7 +211,7 @@ function ChainRulesCore.rrule(
     return out, quadrature_adjoint
 end
 
-Zygote.@adjoint function Zygote.literal_getproperty(
+@adjoint function literal_getproperty(
         sol::SciMLBase.IntegralSolution,
         ::Val{:u}
     )

@@ -1,6 +1,6 @@
 module IntegralsArblibExt
 
-using Arblib
+using Arblib: Arblib, Acb, abs_lbound, abs_ubound, midpoint
 using Integrals
 using SciMLLogging: @SciMLMessage
 

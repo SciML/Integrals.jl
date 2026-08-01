@@ -1,8 +1,8 @@
 module IntegralsCubaExt
 
-using Integrals, Cuba
-import Integrals: transformation_if_inf,
-    scale_x, scale_x!, CubaVegas, AbstractCubaAlgorithm,
+using Integrals
+using Cuba: Cuba
+import Integrals: scale_x, scale_x!, CubaVegas, AbstractCubaAlgorithm,
     CubaSUAVE, CubaDivonne, CubaCuhre
 using SciMLLogging: @SciMLMessage
 

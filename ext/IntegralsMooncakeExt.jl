@@ -1,13 +1,10 @@
 module IntegralsMooncakeExt
-using Mooncake
-using LinearAlgebra: dot
-using Integrals, SciMLBase, QuadGK
-using Mooncake: @from_chainrules, @is_primitive, increment!!, MinimalCtx, NoFData,
-    CoDual, primal, NoRData, zero_fcodual, increment_and_get_rdata!, @zero_derivative
+using Integrals, SciMLBase
+using QuadGK: QuadGK
+using Mooncake: Mooncake, @from_chainrules, MinimalCtx, @zero_derivative
 using Integrals: AbstractIntegralMetaAlgorithm, IntegralProblem
 import ChainRulesCore
-import ChainRulesCore: Tangent, NoTangent, ProjectTo
-using Zygote # use chainrules defined in ZygoteExt
+using Zygote: Zygote # use chainrules defined in ZygoteExt
 
 batch_unwrap(x::AbstractArray) = dropdims(x; dims = ndims(x))
 

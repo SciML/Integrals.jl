@@ -1,10 +1,7 @@
 module IntegralsFastGaussQuadratureExt
 using Integrals
 import FastGaussQuadrature
-import FastGaussQuadrature: gausslegendre
 using SciMLLogging: @SciMLMessage
-
-using LinearAlgebra
 
 Integrals.gausslegendre(n) = FastGaussQuadrature.gausslegendre(n)
 

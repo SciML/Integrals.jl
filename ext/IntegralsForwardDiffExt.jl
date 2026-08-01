@@ -1,7 +1,6 @@
 module IntegralsForwardDiffExt
 using Integrals
-using ForwardDiff
-using SciMLLogging: @SciMLMessage
+using ForwardDiff: ForwardDiff
 ### Forward-Mode AD Intercepts
 
 function Integrals._evaluate!(

@@ -1,6 +1,13 @@
 using SciMLTesting, Integrals, Test
 using JET
 
+# ExplicitImports only checks an extension module once it actually exists, and an
+# extension is only loaded once every one of its triggers is. Loading all of the
+# weakdeps here is what makes `run_qa` scan ext/ at all.
+using ADTypes, Arblib, ChainRulesCore, Cuba, Cubature, DifferentiationInterface
+using FastGaussQuadrature, FastTanhSinhQuadrature, ForwardDiff, HAdaptiveIntegration
+using MCIntegration, Mooncake, Zygote, ZygoteRules
+
 run_qa(
     Integrals;
     reexports_allow = (
@@ -24,6 +31,46 @@ run_qa(
             ignore = (
                 :AbstractVerbositySpecifier, :AbstractVerbosityPreset, :MessageLevel,
                 :None, :Minimal, :Standard, :Detailed, :All,
+            ),
+        ),
+        all_qualified_accesses_are_public = (;
+            ignore = (
+                # Integrals' own internals. The `ext/` modules are part of this package,
+                # so they implement and call its unexported solver interface directly;
+                # there is no public spelling of any of these and exporting them would
+                # commit the package to a SemVer-stable internal solver API.
+                :DEFAULT_VERBOSE, :IntegralCache, :AbstractIntegralCExtensionAlgorithm,
+                :MooncakeVJP, :ZygoteVJP, :ReverseDiffVJP,
+                :__solvebp, :__solvebp_call, :_compute_dfdp_and_f, :_evaluate!,
+                :build_problem, :checkkwargs, :gausslegendre, :get_prototype,
+                :init_cacheval, :substitute_bv, :substitute_f, :substitute_v,
+                :t2ujac, :u2t,
+                # Arblib: the ball-integration entry points and the `Acb` setter are
+                # unexported and Arblib declares nothing `public`.
+                :integrate, :integrate!, :set!,
+                # ForwardDiff: the dual-number type and its element-type guards are the
+                # documented AD interface but are not exported or declared public.
+                :Dual, :can_dual, :throw_cannot_dual,
+                # QuadGK: `cachedrule` is the rule cache the Mooncake rules must mark
+                # non-differentiable; not public.
+                :cachedrule,
+                # Zygote: `Buffer` is the documented way to write mutating code under
+                # Zygote, but it is not exported or declared public.
+                :Buffer,
+            ),
+        ),
+        all_explicit_imports_are_public = (;
+            ignore = (
+                # Integrals' own internals, imported by its own `ext/` modules (see above).
+                :AbstractCubaAlgorithm, :AbstractCubatureJLAlgorithm,
+                :AbstractIntegralMetaAlgorithm, :scale_x, :scale_x!,
+                # Mooncake's rule-definition interface: the only way to register rules
+                # with Mooncake, and none of it is exported or declared public.
+                Symbol("@from_chainrules"), Symbol("@zero_derivative"), :MinimalCtx,
+                # ZygoteRules owns `literal_getproperty` (Zygote only re-exports it) and
+                # does not declare it public; overloading it is the only way to give
+                # `sol.u` an adjoint.
+                :literal_getproperty,
             ),
         ),
     ),
