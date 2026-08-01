@@ -1,8 +1,9 @@
 module IntegralsCubatureExt
 
-using Integrals, Cubature
+using Integrals
+using Cubature: Cubature
 
-using Integrals: scale_x, scale_x!, CubatureJLh, CubatureJLp, AbstractCubatureJLAlgorithm
+using Integrals: CubatureJLh, AbstractCubatureJLAlgorithm
 using SciMLLogging: @SciMLMessage
 
 function Integrals.__solvebp_call(

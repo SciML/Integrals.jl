@@ -1,6 +1,8 @@
 module IntegralsMCIntegrationExt
 
-using MCIntegration, Integrals
+using Integrals
+using MCIntegration: MCIntegration, integrate
+using MCIntegration.Dist: Continuous
 using SciMLLogging: @SciMLMessage
 
 _oftype(::Number, x) = only(x)

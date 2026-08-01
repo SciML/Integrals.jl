@@ -1,6 +1,8 @@
 module IntegralsHAdaptiveIntegrationExt
 
-using Integrals, HAdaptiveIntegration
+using Integrals
+using HAdaptiveIntegration: HAdaptiveIntegration
+using HAdaptiveIntegration.Domain: AbstractDomain, Cuboid, Orthotope, Rectangle, Segment
 
 using Integrals: HAdaptiveIntegrationJL
 
@@ -53,7 +55,7 @@ function Integrals.__solvebp_call(
     @assert !isinplace(f) "HAdaptiveIntegrationJL does not support in-place integrands"
 
     # Determine the HAdaptiveIntegration domain
-    hadaptive_domain = if domain isa HAdaptiveIntegration.Domain.AbstractDomain
+    hadaptive_domain = if domain isa AbstractDomain
         domain
     else
         lb, ub = domain
