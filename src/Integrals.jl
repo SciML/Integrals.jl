@@ -1,6 +1,7 @@
 module Integrals
 
 using Reexport: Reexport, @reexport
+using PrecompileTools: @compile_workload, @setup_workload
 using MonteCarloIntegration: MonteCarloIntegration, vegas
 using QuadGK: QuadGK, quadgk, quadgk!, BatchIntegrand
 using HCubature: HCubature, hcubature, hquadrature
@@ -478,5 +479,7 @@ export HAdaptiveIntegrationJL
 export FastTanhSinhQuadratureJL
 export ChangeOfVariables
 export transformation_if_inf, transformation_tan_inf, transformation_cot_inf
+
+include("precompile.jl")
 
 end # module
