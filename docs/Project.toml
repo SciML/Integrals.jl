@@ -1,4 +1,5 @@
 [deps]
+CommonSolve = "38540f10-b2f7-11e9-35d8-d573e4eb0ff2"
 Cuba = "8a292aeb-7a57-582c-b821-06e4c11590b1"
 Cubature = "667455a9-e2ce-5579-9412-b964f529a492"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
@@ -9,6 +10,7 @@ Integrals = "de52edbc-65ea-441a-8357-d3a637375a31"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [compat]
+CommonSolve = "0.2"
 Cuba = "2"
 Cubature = "1"
 Distributions = "0.25"
