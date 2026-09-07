@@ -7,6 +7,13 @@ versions = ["lts", "1", "pre"]
 
 # AD tests crash with SIGSEGV on Julia 1.12+ (Zygote/Mooncake issue), so only
 # the LTS channel is exercised.
+
+["Core 32-bit"]
+group = "Core"
+versions = ["1"]
+os = ["ubuntu-latest"]
+arch = "x86"
+
 [AD]
 versions = ["lts"]
 
