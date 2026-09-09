@@ -17,7 +17,7 @@ jobs:
         group:
           - Core
         julia-version: ['lts']
-    uses: "SciML/.github/.github/workflows/downgrade.yml@v1"
+    uses: "SciML/.github/.github/workflows/downgrade.yml@master"
     with:
       julia-version: "${{ matrix.julia-version }}"
       group: "${{ matrix.group }}"

@@ -46,7 +46,6 @@ IntegralsMooncakeExt = ["Mooncake", "Zygote", "ChainRulesCore"]
 IntegralsZygoteExt = ["Zygote", "ZygoteRules", "ChainRulesCore"]
 
 [compat]
-LatticeRules = "0.0.2"
 ADTypes = "1.22.0"
 Arblib = "1"
 ArrayInterface = "7.9.0"
@@ -64,7 +63,7 @@ HAdaptiveIntegration = "1.0"
 HCubature = "1.7"
 LinearAlgebra = "1.10"
 MCIntegration = "0.4.2"
-MonteCarloIntegration = "0.2"
+MonteCarloIntegration = "0.2, 0.3"
 Mooncake = "0.5.6"
 QuadGK = "2.11"
 Random = "1.10"
@@ -81,7 +80,6 @@ ZygoteRules = "0.2.5"
 julia = "1.10"
 
 [extras]
-LatticeRules = "73f95e8e-ec14-4e6a-8b18-0d2e271c4e55"
 ADTypes = "47edcb42-4c32-4615-8424-f2b9edc5f35b"
 Arblib = "fb37089c-8514-4489-9461-98f9c8763369"
 ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
@@ -100,4 +98,7 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
 [targets]
-test = ["LatticeRules", "ADTypes", "Arblib", "StaticArrays", "SafeTestsets", "SciMLTesting", "Test", "Distributions", "ChainRulesCore", "FastGaussQuadrature", "FastTanhSinhQuadrature", "Cuba", "Cubature", "MCIntegration", "DifferentiationInterface", "HAdaptiveIntegration", "Unitful"]
+test = ["ADTypes", "Arblib", "StaticArrays", "SafeTestsets", "SciMLTesting", "Test", "Distributions", "ChainRulesCore", "FastGaussQuadrature", "FastTanhSinhQuadrature", "Cuba", "Cubature", "MCIntegration", "DifferentiationInterface", "HAdaptiveIntegration", "Unitful"]
+
+[sources]
+MonteCarloIntegration = {url = "https://github.com/ranjanan/MonteCarloIntegration.jl.git", rev = "master"}
