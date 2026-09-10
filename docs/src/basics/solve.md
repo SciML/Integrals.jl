@@ -4,8 +4,8 @@
 implements it for integral problems and the algorithms documented on this site.
 
 ```@docs
-solve(prob::IntegralProblem, alg::SciMLBase.AbstractIntegralAlgorithm)
-solve(prob::SampledIntegralProblem, alg::SciMLBase.AbstractIntegralAlgorithm)
+solve(::IntegralProblem, ::SciMLBase.AbstractIntegralAlgorithm)
+solve(::SampledIntegralProblem, ::SciMLBase.AbstractIntegralAlgorithm)
 ```
 
 ## Related SciML interface utilities
@@ -14,9 +14,9 @@ solve(prob::SampledIntegralProblem, alg::SciMLBase.AbstractIntegralAlgorithm)
 utilities reexported by Integrals.jl. Their API is documented by SciMLBase.
 
 ```@docs
-CommonSolve.init(prob::IntegralProblem, alg::SciMLBase.AbstractIntegralAlgorithm)
-CommonSolve.init(prob::SampledIntegralProblem, alg::SciMLBase.AbstractIntegralAlgorithm)
-solve!(cache::Integrals.IntegralCache)
-solve!(cache::Integrals.SampledIntegralCache)
-isinplace(cache::Integrals.IntegralCache)
+CommonSolve.init(::IntegralProblem, ::SciMLBase.AbstractIntegralAlgorithm)
+CommonSolve.init(::SampledIntegralProblem, ::SciMLBase.AbstractIntegralAlgorithm)
+solve!(::Integrals.IntegralCache)
+solve!(::Integrals.SampledIntegralCache)
+isinplace(::Integrals.IntegralCache)
 ```
