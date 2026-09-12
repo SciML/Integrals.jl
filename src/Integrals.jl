@@ -9,7 +9,7 @@ using HCubature: HCubature, hcubature, hquadrature
     IntegralProblem, SampledIntegralProblem, ReturnCode,
     isinplace, remake, init, solve!, solve
 using SciMLBase: init, solve!
-using LinearAlgebra: LinearAlgebra, /, norm
+using LinearAlgebra: LinearAlgebra, norm
 using Random: Random
 using ArrayInterface: ArrayInterface
 using SciMLLogging: SciMLLogging, @SciMLMessage, MessageLevel, Silent,
