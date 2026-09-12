@@ -90,7 +90,11 @@ run_qa(
         f = (x, p) -> x[1]^2 + x[2]^2
         prob = IntegralProblem(f, ([0.0, 0.0], [1.0, 1.0]))
         rep = @report_opt target_modules = (Integrals,) solve(prob, HCubatureJL())
-        @test length(JET.get_reports(rep)) == 0
+        # JET's opt-mode analyzer misinterprets 1.13 optimized IR: it reports runtime
+        # dispatch on fully concrete code here (and crashes outright on JET 0.12+,
+        # https://github.com/aviatesk/JET.jl/issues/863). Native `Base.return_types`
+        # on this path is concrete on 1.12 and 1.13.
+        @test length(JET.get_reports(rep)) == 0 broken = VERSION >= v"1.13"
     end
 
     @testset "SampledIntegralProblem with TrapezoidalRule" begin
@@ -124,6 +128,10 @@ run_qa(
         f = (x, p) -> x^2
         prob = IntegralProblem(f, (0.0, 1.0))
         rep = @report_opt target_modules = (Integrals,) solve(prob, VEGAS())
-        @test length(JET.get_reports(rep)) <= 2
+        # JET's opt-mode analyzer misinterprets 1.13 optimized IR: it reports runtime
+        # dispatch on fully concrete code here (and crashes outright on JET 0.12+,
+        # https://github.com/aviatesk/JET.jl/issues/863). Native `Base.return_types`
+        # on this path is concrete on 1.12 and 1.13.
+        @test length(JET.get_reports(rep)) <= 2 broken = VERSION >= v"1.13"
     end
 end
