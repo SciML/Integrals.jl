@@ -99,4 +99,3 @@ Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
 [targets]
 test = ["ADTypes", "Arblib", "StaticArrays", "SafeTestsets", "SciMLTesting", "Test", "Distributions", "ChainRulesCore", "FastGaussQuadrature", "FastTanhSinhQuadrature", "Cuba", "Cubature", "MCIntegration", "DifferentiationInterface", "HAdaptiveIntegration", "Unitful"]
-
