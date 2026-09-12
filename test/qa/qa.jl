@@ -89,12 +89,21 @@ run_qa(
     @testset "HCubatureJL" begin
         f = (x, p) -> x[1]^2 + x[2]^2
         prob = IntegralProblem(f, ([0.0, 0.0], [1.0, 1.0]))
-        rep = @report_opt target_modules = (Integrals,) solve(prob, HCubatureJL())
-        # JET's opt-mode analyzer misinterprets 1.13 optimized IR: it reports runtime
-        # dispatch on fully concrete code here (and crashes outright on JET 0.12+,
-        # https://github.com/aviatesk/JET.jl/issues/863). Native `Base.return_types`
-        # on this path is concrete on 1.12 and 1.13.
-        @test length(JET.get_reports(rep)) == 0 broken = VERSION >= v"1.13"
+        if VERSION < v"1.13.0-"
+            rep = @report_opt target_modules = (Integrals,) solve(prob, HCubatureJL())
+            @test length(JET.get_reports(rep)) == 0
+        else
+            # JET's optanalyzer does not yet model Julia 1.13 optimized IR: 0.11
+            # reports runtime dispatch at call sites Base's own optimized IR shows
+            # concrete, and 0.12+ crashes outright
+            # (https://github.com/aviatesk/JET.jl/issues/863). Until that is fixed
+            # upstream, guard this path with JET's call analyzer (unoptimized-IR
+            # method errors, unaffected on 1.13) plus the native inference result.
+            rep = @report_call target_modules = (Integrals,) solve(prob, HCubatureJL())
+            @test length(JET.get_reports(rep)) == 0
+            rt = only(Base.return_types(solve, Tuple{typeof(prob), HCubatureJL}))
+            @test rt <: SciMLBase.IntegralSolution{Float64}
+        end
     end
 
     @testset "SampledIntegralProblem with TrapezoidalRule" begin
@@ -127,11 +136,16 @@ run_qa(
         # We verify the number of issues is bounded and doesn't regress.
         f = (x, p) -> x^2
         prob = IntegralProblem(f, (0.0, 1.0))
-        rep = @report_opt target_modules = (Integrals,) solve(prob, VEGAS())
-        # JET's opt-mode analyzer misinterprets 1.13 optimized IR: it reports runtime
-        # dispatch on fully concrete code here (and crashes outright on JET 0.12+,
-        # https://github.com/aviatesk/JET.jl/issues/863). Native `Base.return_types`
-        # on this path is concrete on 1.12 and 1.13.
-        @test length(JET.get_reports(rep)) <= 2 broken = VERSION >= v"1.13"
+        if VERSION < v"1.13.0-"
+            rep = @report_opt target_modules = (Integrals,) solve(prob, VEGAS())
+            @test length(JET.get_reports(rep)) <= 2
+        else
+            # See the HCubatureJL testset above: JET's optanalyzer cannot analyze
+            # 1.13 optimized IR, so use its call analyzer and native inference.
+            rep = @report_call target_modules = (Integrals,) solve(prob, VEGAS())
+            @test length(JET.get_reports(rep)) == 0
+            rt = only(Base.return_types(solve, Tuple{typeof(prob), VEGAS}))
+            @test rt <: SciMLBase.IntegralSolution{Float64}
+        end
     end
 end
