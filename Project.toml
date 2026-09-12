@@ -1,6 +1,6 @@
 name = "Integrals"
 uuid = "de52edbc-65ea-441a-8357-d3a637375a31"
-version = "5.5.0"
+version = "5.5.1"
 authors = ["Chris Rackauckas <accounts@chrisrackauckas.com>"]
 
 [deps]
@@ -99,6 +99,3 @@ Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
 [targets]
 test = ["ADTypes", "Arblib", "StaticArrays", "SafeTestsets", "SciMLTesting", "Test", "Distributions", "ChainRulesCore", "FastGaussQuadrature", "FastTanhSinhQuadrature", "Cuba", "Cubature", "MCIntegration", "DifferentiationInterface", "HAdaptiveIntegration", "Unitful"]
-
-[sources]
-MonteCarloIntegration = {url = "https://github.com/ranjanan/MonteCarloIntegration.jl.git", rev = "master"}
