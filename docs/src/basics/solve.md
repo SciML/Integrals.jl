@@ -14,7 +14,7 @@ solve(::SampledIntegralProblem, ::SciMLBase.AbstractIntegralAlgorithm)
 utilities reexported by Integrals.jl. Their API is documented by SciMLBase.
 
 ```@docs
-CommonSolve.init(::IntegralProblem, ::SciMLBase.AbstractIntegralAlgorithm)
+CommonSolve.init(::IntegralProblem{iip}, ::SciMLBase.AbstractIntegralAlgorithm) where {iip}
 CommonSolve.init(::SampledIntegralProblem, ::SciMLBase.AbstractIntegralAlgorithm)
 solve!(::Integrals.IntegralCache)
 solve!(::Integrals.SampledIntegralCache)
