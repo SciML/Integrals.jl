@@ -17,6 +17,11 @@ arch = "x86"
 [AD]
 versions = ["lts"]
 
+# Batched AD cases (BatchIntegralFunction oop/iip). Same LTS-only constraint as AD
+# (SIGSEGV on Julia 1.12+ via Zygote/Mooncake).
+[ADBatch]
+versions = ["lts"]
+
 # Aqua + ExplicitImports + JET, isolated in test/qa/Project.toml. JET is not
 # compatible with the prerelease channel.
 [QA]
