@@ -10,7 +10,7 @@ function Integrals.__solvebp_call(
         prob::IntegralProblem,
         alg::AbstractCubatureJLAlgorithm,
         sensealg, domain, p;
-        reltol = 1.0e-8, abstol = 1.0e-8,
+        reltol = 1.0e-8, abstol = 0.0,
         maxiters = typemax(Int),
         verbose = Integrals.DEFAULT_VERBOSE
     )

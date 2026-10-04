@@ -252,7 +252,7 @@ end
 
 function __solvebp_call(
         cache::IntegralCache, alg::QuadGKJL, sensealg, domain, p;
-        reltol = 1.0e-8, abstol = 1.0e-8,
+        reltol = 1.0e-8, abstol = 0.0,
         maxiters = typemax(Int)
     )
     @SciMLMessage(
@@ -347,7 +347,7 @@ function init_cacheval(alg::HCubatureJL, prob::IntegralProblem)
 end
 function __solvebp_call(
         cache::IntegralCache, alg::HCubatureJL, sensealg, domain, p;
-        reltol = 1.0e-8, abstol = 1.0e-8,
+        reltol = 1.0e-8, abstol = 0.0,
         maxiters = typemax(Int)
     )
     @SciMLMessage(
