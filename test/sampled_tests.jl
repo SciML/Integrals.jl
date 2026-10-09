@@ -30,6 +30,21 @@ using Integrals, Test, Unitful
             end
         end
     end
+
+    # Uniform-grid SimpsonsRule end corrections overlap for n < 8; compare to Vector path.
+    @testset "SimpsonsRule small uniform grids" begin
+        for n in 3:10
+            x = range(0, 1; length = n)
+            xv = collect(x)
+            for y in (ones(n), xv .^ 2)
+                u_range = solve(SampledIntegralProblem(y, x), SimpsonsRule()).u
+                u_vec = solve(SampledIntegralProblem(y, xv), SimpsonsRule()).u
+                @test u_range ≈ u_vec
+            end
+            @test solve(SampledIntegralProblem(ones(n), x), SimpsonsRule()).u ≈ 1
+            @test solve(SampledIntegralProblem(xv .^ 2, x), SimpsonsRule()).u ≈ 1 / 3
+        end
+    end
 end
 
 @testset "Sampled integration with dimensional axes" begin

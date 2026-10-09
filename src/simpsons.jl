@@ -82,6 +82,8 @@ end
 end
 
 function find_weights(x::AbstractVector, ::SimpsonsRule)
-    x isa AbstractRange && return SimpsonUniformWeights(length(x), step(x))
+    if x isa AbstractRange && length(x) >= 8
+        return SimpsonUniformWeights(length(x), step(x))
+    end
     return SimpsonNonuniformWeights(x)
 end
