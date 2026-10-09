@@ -1,4 +1,4 @@
-using Integrals, Test, Unitful
+using Integrals, OffsetArrays, Test, Unitful
 @testset "Sampled Integration" begin
     lb = 0.4
     ub = 1.1
@@ -40,6 +40,18 @@ end
     sol = solve(prob, TrapezoidalRule())
 
     @test sol.u == [2.0, 2.0]u"m"
+end
+
+@testset "Sampled integration with OffsetArrays" begin
+    x = range(0, 1, length = 5)
+    y = OffsetArray(ones(2, 5), 0:1, 1:5)
+    sol = solve(SampledIntegralProblem(y, x; dim = 2), TrapezoidalRule())
+    @test collect(sol.u) == [1.0, 1.0]
+
+    yv = OffsetArray(ones(5), 0:4)
+    xv = OffsetArray(collect(x), 0:4)
+    solv = solve(SampledIntegralProblem(yv, xv), TrapezoidalRule())
+    @test solv.u == 1.0
 end
 
 @testset "Caching interface" begin
