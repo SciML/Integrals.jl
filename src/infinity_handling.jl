@@ -10,7 +10,7 @@ end
 # without batching point container type should match the inputs
 substitute_v(v2ujac, v, lb::Number, ub::Number) = v2ujac(only(v), lb, ub)
 function substitute_v(v2ujac, v, lb::AbstractVector, ub::AbstractVector)
-    xjac = map((l, u, v) -> v2ujac(v, l, u), lb, ub, v) # ordering may influence container type
+    xjac = map((v, l, u) -> v2ujac(v, l, u), v, lb, ub) # ordering may influence container type
     x = map(first, xjac)
     jac = prod(last, xjac)
     return x, jac

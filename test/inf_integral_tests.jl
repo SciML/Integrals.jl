@@ -256,3 +256,23 @@ end
     @test sol.prob == IntegralProblem(f, domain)
     @test sol.alg == alg
 end
+
+@testset "substitute_v follows evaluation-point container type" begin
+    v = @SVector [0.25, 0.5]
+    lb = [-1.0, 0.0]
+    ub = [1.0, 2.0]
+    x, jac = Integrals.substitute_v(Integrals.t2ujac, v, lb, ub)
+    @test x isa SVector{2, Float64}
+    @test jac isa Real
+
+    f_gauss(x, p) = pdf(MvNormal([0.0, 0.0], [0.4 0.0; 0.0 0.4]), x)
+    for domain in (([-Inf, -Inf], [Inf, Inf]), (@SVector[-Inf, -Inf], @SVector[Inf, Inf]))
+        sol = solve(IntegralProblem(f_gauss, domain), HCubatureJL(); abstol, reltol)
+        @test abs(only(sol) - 1.0) < max(abstol, reltol)
+    end
+    f_one(x, p) = 1.0
+    for domain in ((zeros(2), ones(2)), (zeros(SVector{2}), ones(SVector{2})))
+        sol = solve(IntegralProblem(f_one, domain), HCubatureJL(); abstol, reltol)
+        @test abs(only(sol) - 1.0) < max(abstol, reltol)
+    end
+end
