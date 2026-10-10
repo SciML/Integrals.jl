@@ -31,19 +31,26 @@ using Integrals, Test, Unitful
         end
     end
 
-    # Uniform-grid SimpsonsRule end corrections overlap for n < 8; compare to Vector path.
+    # Uniform-grid SimpsonsRule end corrections overlap for n < 8 without small-n weights.
     @testset "SimpsonsRule small uniform grids" begin
-        for n in 3:10
-            x = range(0, 1; length = n)
-            xv = collect(x)
-            for y in (ones(n), xv .^ 2)
-                u_range = solve(SampledIntegralProblem(y, x), SimpsonsRule()).u
-                u_vec = solve(SampledIntegralProblem(y, xv), SimpsonsRule()).u
-                @test u_range ≈ u_vec
+        for T in (Float64, Float32, BigFloat)
+            for n in 3:10
+                x = range(zero(T), one(T); length = n)
+                xv = collect(x)
+                for y in (ones(T, n), xv .^ 2)
+                    u_range = solve(SampledIntegralProblem(y, x), SimpsonsRule()).u
+                    u_vec = solve(SampledIntegralProblem(y, xv), SimpsonsRule()).u
+                    @test u_range ≈ u_vec
+                end
+                @test solve(SampledIntegralProblem(ones(T, n), x), SimpsonsRule()).u ≈ one(T)
+                @test solve(SampledIntegralProblem(xv .^ 2, x), SimpsonsRule()).u ≈ one(T) / 3
+                @test solve(SampledIntegralProblem(xv .^ 3, x), SimpsonsRule()).u ≈ one(T) / 4
             end
-            @test solve(SampledIntegralProblem(ones(n), x), SimpsonsRule()).u ≈ 1
-            @test solve(SampledIntegralProblem(xv .^ 2, x), SimpsonsRule()).u ≈ 1 / 3
         end
+        x = range(0, 1; length = 5)
+        @inferred Integrals.find_weights(x, SimpsonsRule())
+        @test Integrals.find_weights(x, SimpsonsRule()) isa Integrals.SimpsonUniformWeights
+        @test_throws ArgumentError Integrals.find_weights(range(0, 1; length = 2), SimpsonsRule())
     end
 end
 
@@ -95,4 +102,18 @@ end
     sol2 = solve!(cache)
 
     @test sol2 == solve(SampledIntegralProblem(y, x, dim = 1), alg)
+
+    @testset "SimpsonsRule cache reuse across n = 8" begin
+        alg = SimpsonsRule()
+        for (n1, n2) in ((5, 11), (11, 5))
+            x1 = range(0, 1; length = n1)
+            cache = init(SampledIntegralProblem(ones(n1), x1), alg)
+            @test solve!(cache).u ≈ 1
+            x2 = range(0, 1; length = n2)
+            cache.x = x2
+            cache.y = ones(n2)
+            @test solve!(cache).u ≈ 1
+            @test solve!(cache).u == solve(SampledIntegralProblem(ones(n2), x2), alg).u
+        end
+    end
 end

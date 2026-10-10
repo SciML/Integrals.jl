@@ -14,14 +14,29 @@ struct SimpsonUniformWeights{T} <: UniformWeights
 end
 
 @inline function Base.getindex(w::SimpsonUniformWeights, i)
-    # evenly spaced simpson's 1/3, 3/8 rule
     h = w.h
     n = w.n
-    (i == 1 || i == n) && return 17h / 48
-    (i == 2 || i == n - 1) && return 59h / 48
-    (i == 3 || i == n - 2) && return 43h / 48
-    (i == 4 || i == n - 3) && return 49h / 48
-    return h
+    if n >= 8
+        # evenly spaced simpson's 1/3, 3/8 rule
+        (i == 1 || i == n) && return 17h / 48
+        (i == 2 || i == n - 1) && return 59h / 48
+        (i == 3 || i == n - 2) && return 43h / 48
+        (i == 4 || i == n - 3) && return 49h / 48
+        return h
+    elseif isodd(n)
+        (i == 1 || i == n) && return h / 3
+        return iseven(i) ? 4h / 3 : 2h / 3
+    else
+        if i <= 4
+            i == 1 && return 3h / 8
+            i == 4 && return n == 4 ? 3h / 8 : (3h / 8 + h / 3)
+            return 9h / 8
+        else
+            i == n && return h / 3
+            s = i - 3
+            return iseven(s) ? 4h / 3 : 2h / 3
+        end
+    end
 end
 
 """
@@ -82,7 +97,9 @@ end
 end
 
 function find_weights(x::AbstractVector, ::SimpsonsRule)
-    if x isa AbstractRange && length(x) >= 8
+    if x isa AbstractRange
+        length(x) < 3 &&
+            throw(ArgumentError("The length of the grid must exceed 2 for simpsons rule."))
         return SimpsonUniformWeights(length(x), step(x))
     end
     return SimpsonNonuniformWeights(x)
