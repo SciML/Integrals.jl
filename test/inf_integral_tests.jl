@@ -257,22 +257,29 @@ end
     @test sol.alg == alg
 end
 
-@testset "substitute_v follows evaluation-point container type" begin
+@testset "substitute_v matches domain container type" begin
     v = @SVector [0.25, 0.5]
     lb = [-1.0, 0.0]
     ub = [1.0, 2.0]
     x, jac = Integrals.substitute_v(Integrals.t2ujac, v, lb, ub)
-    @test x isa SVector{2, Float64}
+    @test x isa Vector{Float64}
     @test jac isa Real
+    xs, _ = Integrals.substitute_v(
+        Integrals.t2ujac, v, (@SVector[-1.0, 0.0]), (@SVector[1.0, 2.0])
+    )
+    @test xs isa SVector{2, Float64}
+
+    # Vector-domain HCubatureJL must keep Vector points (broadcast / typed integrands)
+    sol = solve(
+        IntegralProblem((x, p) -> x .^ 2, (zeros(2), ones(2))), HCubatureJL();
+        abstol, reltol
+    )
+    @test sol.u isa Vector
+    @test sol.u ≈ [1 / 3, 1 / 3] atol = max(abstol, reltol)
 
     f_gauss(x, p) = pdf(MvNormal([0.0, 0.0], [0.4 0.0; 0.0 0.4]), x)
     for domain in (([-Inf, -Inf], [Inf, Inf]), (@SVector[-Inf, -Inf], @SVector[Inf, Inf]))
         sol = solve(IntegralProblem(f_gauss, domain), HCubatureJL(); abstol, reltol)
-        @test abs(only(sol) - 1.0) < max(abstol, reltol)
-    end
-    f_one(x, p) = 1.0
-    for domain in ((zeros(2), ones(2)), (zeros(SVector{2}), ones(SVector{2})))
-        sol = solve(IntegralProblem(f_one, domain), HCubatureJL(); abstol, reltol)
         @test abs(only(sol) - 1.0) < max(abstol, reltol)
     end
 end

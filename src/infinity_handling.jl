@@ -10,7 +10,16 @@ end
 # without batching point container type should match the inputs
 substitute_v(v2ujac, v, lb::Number, ub::Number) = v2ujac(only(v), lb, ub)
 function substitute_v(v2ujac, v, lb::AbstractVector, ub::AbstractVector)
-    xjac = map((v, l, u) -> v2ujac(v, l, u), v, lb, ub) # ordering may influence container type
+    # Immutable eval point + mutable domain: map via `v`, then one similar(lb) copy.
+    if !ArrayInterface.ismutable(v) && ArrayInterface.ismutable(lb)
+        xjac = map((vi, l, u) -> v2ujac(vi, l, u), v, lb, ub)
+        xs = map(first, xjac)
+        jac = prod(last, xjac)
+        x = similar(lb, eltype(xs))
+        copyto!(x, xs)
+        return x, jac
+    end
+    xjac = map((l, u, vi) -> v2ujac(vi, l, u), lb, ub, v) # ordering may influence container type
     x = map(first, xjac)
     jac = prod(last, xjac)
     return x, jac
