@@ -32,6 +32,28 @@ using Integrals, Test, Unitful
     end
 end
 
+@testset "1-D sampled reduction matches sequential reference sum" begin
+    for N in (8, 100, 1000, 10_000)
+        x = range(0.0, 1.0; length = N)
+        xv = collect(x)
+        y = sin.(x) .+ 0.1 .* collect(x)
+        for (grid, alg) in (
+                (x, TrapezoidalRule()),
+                (xv, TrapezoidalRule()),
+                (x, SimpsonsRule()),
+                (xv, SimpsonsRule()),
+            )
+            cache = init(SampledIntegralProblem(y, grid), alg)
+            w = cache.cacheval
+            ref = w[1] * y[1]
+            @inbounds for i in 2:length(y)
+                ref += w[i] * y[i]
+            end
+            @test solve!(cache).u ≈ ref rtol = 1.0e-12
+        end
+    end
+end
+
 @testset "Sampled integration with dimensional axes" begin
     data = ones(2, 3)
     axis = [0.0, 1.0, 2.0]u"m"

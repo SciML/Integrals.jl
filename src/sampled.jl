@@ -54,8 +54,14 @@ function evalrule(data::AbstractVector, weights, dim)
         n = length(data)
         n == 0 && throw(ArgumentError("No points to integrate"))
         out = data[1] * weights[1]
-        @inbounds for i in 2:n
-            out += weights[i] * data[i]
+        if weights isa TrapezoidalUniformWeights
+            @inbounds @simd for i in 2:n
+                out += weights[i] * data[i]
+            end
+        else
+            @inbounds for i in 2:n
+                out += weights[i] * data[i]
+            end
         end
         return out
     else
