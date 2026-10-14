@@ -40,7 +40,7 @@ end
 
 function Integrals.__solvebp_call(
         cache::Integrals.IntegralCache, alg::HAdaptiveIntegrationJL, sensealg, domain, p;
-        reltol = 1.0e-8, abstol = 1.0e-8,
+        reltol = 1.0e-8, abstol = 0.0,
         maxiters = typemax(Int)
     )
     prob = Integrals.build_problem(cache)
