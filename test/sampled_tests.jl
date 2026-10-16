@@ -129,3 +129,14 @@ end
         end
     end
 end
+
+@testset "SampledIntegration dim=1 allocations" begin
+    N = 10_000
+    x = range(0.0, 1.0; length = N)
+    Y = rand(N, 4)
+    prob = SampledIntegralProblem(Y, x; dim = 1)
+    alg = TrapezoidalRule()
+    solve(prob, alg)
+    count_allocs(prob, alg) = @allocated solve(prob, alg)
+    @test count_allocs(prob, alg) < 2_000
+end

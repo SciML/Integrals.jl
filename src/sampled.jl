@@ -101,7 +101,10 @@ function evalrule(data::AbstractArray, weights, dim)
 end
 
 function _evalrule_general(data::AbstractArray, weights, dim)
-    fw = zip(_eachslice(data, dims = dim), weights)
+    return _evalrule_slices(_eachslice(data, dims = dim), weights)
+end
+function _evalrule_slices(slices, weights)
+    fw = zip(slices, weights)
     next = iterate(fw)
     next === nothing && throw(ArgumentError("No points to integrate"))
     (f1, w1), state = next
