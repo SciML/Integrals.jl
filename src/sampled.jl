@@ -50,7 +50,7 @@ dimension(D::Int) = D
 # Specialized evalrule for 1D arrays (Vector) - returns scalar
 function evalrule(data::AbstractVector, weights, dim)
     # Only use fast indexing path when scalar indexing is efficient (e.g., not on GPU arrays)
-    if ArrayInterface.fast_scalar_indexing(data)
+    if ArrayInterface.fast_scalar_indexing(data) && !Base.has_offset_axes(data)
         n = length(data)
         n == 0 && throw(ArgumentError("No points to integrate"))
         out = data[1] * weights[1]
@@ -67,7 +67,7 @@ end
 # This is the most common case for vector-valued integrands
 function evalrule(data::AbstractMatrix{T}, weights, dim) where {T}
     # Only use fast indexing path when scalar indexing is efficient (e.g., not on GPU arrays)
-    if ArrayInterface.fast_scalar_indexing(data)
+    if ArrayInterface.fast_scalar_indexing(data) && !Base.has_offset_axes(data)
         m, n = size(data)
         n == 0 && throw(ArgumentError("No points to integrate"))
         if dim == 2 || dim == ndims(data)
