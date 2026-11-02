@@ -544,3 +544,21 @@ end
         @test sol_view.u ≈ sol_regular.u
     end
 end
+
+# https://github.com/SciML/Integrals.jl/issues/315
+@testset "a small integral is not swamped by the default abstol" begin
+    en = 1.0e-6
+    g = x -> x * ((x < en) ? 1 / sqrt(en - x + 1.0e-8) : 0.0)
+    # exact value of the integral over (0, 2en)
+    exact = (-151 + 101 * sqrt(101)) / 7.5e11
+
+    for alg in (QuadGKJL(), HCubatureJL(), CubatureJLh())
+        scaled = solve(IntegralProblem((x, p) -> g(x), (0.0, 2en)), alg).u
+        @test scaled ≈ exact rtol = 1.0e-6
+        # scaling the integrand has to scale the integral
+        for n in (100.0, 1.0e6)
+            full = solve(IntegralProblem((x, p) -> n * g(x), (0.0, 2en)), alg).u
+            @test n * scaled ≈ full rtol = 1.0e-6
+        end
+    end
+end
