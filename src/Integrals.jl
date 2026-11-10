@@ -363,6 +363,15 @@ function __solvebp_call(
         @SciMLMessage("Using pre-allocated buffer for HCubatureJL", cache.verbosity, :buffer_allocation)
     end
 
+    if f isa BatchIntegralFunction
+        throw(
+            ArgumentError(
+                "HCubatureJL does not support BatchIntegralFunction. " *
+                    "Use an algorithm that supports batching such as QuadGKJL, VEGAS, " *
+                    "CubatureJLh, CubatureJLp, CubaVegas, CubaSUAVE, CubaDivonne, or CubaCuhre."
+            )
+        )
+    end
     @assert f isa IntegralFunction
     if isinplace(f)
         # allocate a new output array at each evaluation since HCubature.jl doesn't support
@@ -428,12 +437,32 @@ function __solvebp_call(
             mid isa Number ? vec(xx) : xx
         end
         if isinplace(prob)
-            y = similar(
-                prob.f.integrand_prototype,
-                size(prob.f.integrand_prototype)[begin:(end - 1)]...,
-                prob.f.max_batch
-            )
-            _f = x -> (f(y, wrangle(x), p); vec(y))
+            # MonteCarloIntegration's `vegas` evaluates the integrand once per
+            # iteration on `alg.ncalls` points, so the output buffer must hold
+            # one value per point. When `max_batch` is smaller than the batch,
+            # evaluate in chunks of at most `max_batch` points and assemble the
+            # chunk outputs into the full-length result.
+            front = size(prob.f.integrand_prototype)[begin:(end - 1)]
+            nchunk = max(1, min(prob.f.max_batch, alg.ncalls))
+            y = similar(prob.f.integrand_prototype, front..., nchunk)
+            _f = x -> begin
+                pts = wrangle(x)
+                n = size(pts, ndims(pts))
+                yfull = similar(prob.f.integrand_prototype, front..., n)
+                if n <= nchunk
+                    f(yfull, pts, p)
+                else
+                    pax = ntuple(_ -> (:), ndims(pts) - 1)
+                    yax = ntuple(_ -> (:), length(front))
+                    for s in 1:nchunk:n
+                        e = min(s + nchunk - 1, n)
+                        ychunk = similar(prob.f.integrand_prototype, front..., e - s + 1)
+                        f(ychunk, pts[pax..., s:e], p)
+                        yfull[yax..., s:e] .= ychunk
+                    end
+                end
+                return vec(yfull)
+            end
         else
             y = mid isa Number ? f(typeof(mid)[], p) :
                 f(Matrix{eltype(mid)}(undef, length(mid), 0), p)

@@ -545,6 +545,45 @@ end
     end
 end
 
+# https://github.com/SciML/Integrals.jl/issues/377
+@testset "BatchIntegralFunction regressions" begin
+    f_iip!(y, x, p) = (y .= vec(sum(abs2, x; dims = 1)); nothing)
+    g(x, p) = sum(abs2, x; dims = 1) |> vec
+    # ∫∫ (x² + y²) dx dy over the unit square is 2/3.
+    # VEGAS with an in-place BatchIntegralFunction and default max_batch
+    # (typemax(Int)) must size its buffer by the requested batch length.
+    prob = IntegralProblem(
+        BatchIntegralFunction(f_iip!, zeros(0)),
+        ([0.0, 0.0], [1.0, 1.0])
+    )
+    sol = solve(prob, VEGAS(seed = 123); abstol = 1.0e-3, reltol = 1.0e-3)
+    @test sol.u ≈ 2 / 3 rtol = 1.0e-2
+    # max_batch smaller than ncalls must chunk the evaluation.
+    prob_chunked = IntegralProblem(
+        BatchIntegralFunction(f_iip!, zeros(0); max_batch = 10),
+        ([0.0, 0.0], [1.0, 1.0])
+    )
+    sol_chunked = solve(prob_chunked, VEGAS(seed = 123); abstol = 1.0e-3, reltol = 1.0e-3)
+    @test sol_chunked.u ≈ 2 / 3 rtol = 1.0e-2
+    @test sol_chunked.u ≈ sol.u
+    # HCubatureJL does not support BatchIntegralFunction.
+    for bf in (BatchIntegralFunction(g), BatchIntegralFunction(f_iip!, zeros(0)))
+        prob_hc = IntegralProblem(bf, ([0.0, 0.0], [1.0, 1.0]))
+        @test_throws ArgumentError solve(prob_hc, HCubatureJL())
+        err = try
+            solve(prob_hc, HCubatureJL())
+            nothing
+        catch e
+            e
+        end
+        @test err isa ArgumentError
+        @test occursin(
+            "HCubatureJL does not support BatchIntegralFunction",
+            sprint(showerror, err)
+        )
+    end
+end
+
 # https://github.com/SciML/Integrals.jl/issues/315
 @testset "a small integral is not swamped by the default abstol" begin
     en = 1.0e-6
