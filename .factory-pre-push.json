@@ -1,0 +1,5 @@
+{
+  "exceptions": {
+    ".jl": "Julia files in this branch were formatted in place with the Julia Runic package (Runic.format_file, SciML style). The worker pre-push hook cannot run the check for this repo: it detects Runic only via a fredrikekre/runic action or pre-commit config, while this repo declares Runic through the SciML reusable workflow runic.yml, and no runic binary for the Julia formatter exists on this machine."
+  }
+}
