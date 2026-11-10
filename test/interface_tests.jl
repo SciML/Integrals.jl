@@ -1,5 +1,5 @@
 using Integrals
-using Cuba, Cubature, Arblib, FastGaussQuadrature, FastTanhSinhQuadrature, MCIntegration
+using Cuba, Cubature, Arblib, FastGaussQuadrature, FastTanhSinhQuadrature, MCIntegration, HAdaptiveIntegration
 using Test
 
 max_dim_test = 2
@@ -552,12 +552,29 @@ end
     # exact value of the integral over (0, 2en)
     exact = (-151 + 101 * sqrt(101)) / 7.5e11
 
-    for alg in (QuadGKJL(), HCubatureJL(), CubatureJLh())
+    for alg in (QuadGKJL(), HCubatureJL(), CubatureJLh(), HAdaptiveIntegrationJL())
         scaled = solve(IntegralProblem((x, p) -> g(x), (0.0, 2en)), alg).u
         @test scaled ≈ exact rtol = 1.0e-6
         # scaling the integrand has to scale the integral
         for n in (100.0, 1.0e6)
             full = solve(IntegralProblem((x, p) -> n * g(x), (0.0, 2en)), alg).u
+            @test n * scaled ≈ full rtol = 1.0e-6
+        end
+    end
+end
+
+# CubatureJLp is not in the loop above: its p-adaptive rules return 0.0 on the
+# narrow-support spike there at any budget, while on smooth integrands the
+# default abstol = 0 keeps this small analytic integral resolved.
+@testset "smooth small integral with default abstol" begin
+    f = (x, p) -> 1.0e-9 * exp(x)
+    exact = 1.0e-9 * (exp(1.0) - 1.0)
+    for alg in (CubatureJLp(), HAdaptiveIntegrationJL())
+        scaled = solve(IntegralProblem(f, (0.0, 1.0)), alg).u
+        @test scaled ≈ exact rtol = 1.0e-6
+        # scaling the integrand has to scale the integral
+        for n in (100.0, 1.0e6)
+            full = solve(IntegralProblem((x, p) -> n * f(x, p), (0.0, 1.0)), alg).u
             @test n * scaled ≈ full rtol = 1.0e-6
         end
     end

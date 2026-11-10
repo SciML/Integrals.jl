@@ -194,7 +194,15 @@ The arguments to `solve` are common across all of the quadrature methods.
 These common arguments are:
 
   - `maxiters`: Maximum number of algorithm iterations or backend evaluations.
-  - `abstol`: Absolute tolerance for the integral residual/error estimate.
+  - `abstol`: Absolute tolerance for the integral residual/error estimate. The default
+    is `0` for `QuadGKJL()`, `HCubatureJL()`, `CubatureJLh()`, `CubatureJLp()`, and
+    `HAdaptiveIntegrationJL()`, so small integrals are not swamped by a nonzero floor
+    and the residual is controlled by `reltol` alone. For integrands dominated by
+    cancellation (large positive and negative contributions that nearly cancel), a
+    zero `abstol` can force the solver to refine until an unachievable relative
+    bound is met and the effort budget is exhausted; pass a positive, problem-scaled
+    `abstol` (for example proportional to the magnitude of the integrand and the
+    domain volume) in that case.
   - `reltol`: Relative tolerance for the integral residual/error estimate.
   - `verbose`: Verbosity control via [`IntegralVerbosity`](@ref). Defaults to
     `IntegralVerbosity()`.
